@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1751504527670,
+    "text": "Meine Erste Aufgabe",
+    "status": "offen",
+    "updatedAt": "2025-07-07T20:06:29.936Z"
+  },
+  {
+    "id": 1751504549098,
+    "text": "Meine zweite Aufgabe",
+    "status": "offen"
+  },
+  {
+    "id": 1751504559844,
+    "text": "Meine dritte Aufgabe",
+    "status": "offen"
+  }
+]

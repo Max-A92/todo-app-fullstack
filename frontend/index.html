@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Einfache To-Do App</title>
+    <style>
+        .task-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .task-completed {
+            background-color: #d4edda;
+            text-decoration: line-through;
+            color: #666;
+        }
+        .task-open {
+            background-color: #fff3cd;
+        }
+        .status-button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-complete {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-reopen {
+            background-color: #ffc107;
+            color: black;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            margin-left: 5px;
+        }
+        .btn-edit {
+            background-color: #007bff;
+            color: white;
+            margin-left: 5px;
+        }
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+            margin-left: 5px;
+        }
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            margin-left: 5px;
+        }
+        .btn-cleanup {
+            background-color: #6c757d;
+            color: white;
+            margin-left: 20px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .edit-input {
+            padding: 5px;
+            border: 2px solid #007bff;
+            border-radius: 3px;
+            font-size: 14px;
+            width: 250px;
+        }
+        .add-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .task-text {
+            display: inline-block;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>To-Do App</h1>
+    
+    <!-- Neue Aufgabe hinzufügen -->
+    <div class="add-section">
+        <input type="text" id="taskText" placeholder="Neue Aufgabe...">
+        <button onclick="addTask()">Hinzufügen</button>
+        <button class="btn-cleanup" onclick="deleteAllCompleted()">🧹 Alle Erledigten löschen</button>
+    </div>
+    
+    <!-- Aufgabenliste -->
+    <ul id="taskList"></ul>
+
+    <script>
+        let editingTaskId = null; // Verfolgt welche Aufgabe gerade bearbeitet wird
+
+        // Aufgaben laden und anzeigen
+        async function loadTasks() {
+            const response = await fetch('http://localhost:3000/tasks');
+            const tasks = await response.json();
+            
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const item = document.createElement('li');
+                item.className = `task-item ${task.status === 'erledigt' ? 'task-completed' : 'task-open'}`;
+                
+                // Prüfen ob diese Aufgabe gerade bearbeitet wird
+                const isEditing = editingTaskId === task.id;
+                
+                item.innerHTML = `
+                    <span class="task-text">
+                        ${isEditing ? 
+                            `<input type="text" class="edit-input" id="edit-${task.id}" value="${task.text}">` : 
+                            task.text
+                        }
+                    </span>
+                    <span style="margin-left: 10px; font-weight: bold;">[${task.status}]</span>
+                    
+                    ${!isEditing ? `
+                        <button class="status-button ${task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete'}" 
+                                onclick="toggleTask(${task.id})">
+                            ${task.status === 'erledigt' ? 'Wieder öffnen' : 'Erledigt'}
+                        </button>
+                        <button class="status-button btn-edit" onclick="startEdit(${task.id})">
+                            ✏️ Bearbeiten
+                        </button>
+                        <button class="status-button btn-delete" onclick="deleteTask(${task.id})">
+                            🗑️ Löschen
+                        </button>
+                    ` : `
+                        <button class="status-button btn-save" onclick="saveEdit(${task.id})">
+                            💾 Speichern
+                        </button>
+                        <button class="status-button btn-cancel" onclick="cancelEdit()">
+                            ❌ Abbrechen
+                        </button>
+                    `}
+                `;
+                
+                list.appendChild(item);
+            });
+        }
+
+        // Neue Aufgabe hinzufügen
+        async function addTask() {
+            const text = document.getElementById('taskText').value;
+            if (!text) return;
+
+            await fetch('http://localhost:3000/tasks', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text: text})
+            });
+
+            document.getElementById('taskText').value = '';
+            loadTasks();
+        }
+
+        // Status einer Aufgabe wechseln (offen ↔ erledigt)
+        async function toggleTask(taskId) {
+            await fetch(`http://localhost:3000/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'}
+            });
+
+            loadTasks();
+        }
+
+        // Einzelne Aufgabe löschen
+        async function deleteTask(taskId) {
+            if (!confirm('Aufgabe wirklich löschen?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadTasks();
+                    alert('Aufgabe erfolgreich gelöscht!');
+                } else {
+                    alert('Fehler beim Löschen der Aufgabe');
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Löschen der Aufgabe');
+            }
+        }
+
+        // Alle erledigten Aufgaben löschen
+        async function deleteAllCompleted() {
+            if (!confirm('Alle erledigten Aufgaben wirklich löschen?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/tasks?status=completed', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    loadTasks();
+                    alert(result.message);
+                } else {
+                    alert('Fehler beim Löschen der erledigten Aufgaben');
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Löschen der erledigten Aufgaben');
+            }
+        }
+
+        // NEU: Bearbeiten-Modus starten
+        function startEdit(taskId) {
+            editingTaskId = taskId;
+            loadTasks(); // Neu laden um Edit-Modus anzuzeigen
+        }
+
+        // NEU: Bearbeitung speichern
+        async function saveEdit(taskId) {
+            const newText = document.getElementById(`edit-${taskId}`).value.trim();
+            
+            if (!newText) {
+                alert('Aufgabentext darf nicht leer sein!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/tasks/${taskId}/text`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: newText})
+                });
+
+                if (response.ok) {
+                    editingTaskId = null; // Edit-Modus beenden
+                    loadTasks();
+                    alert('Aufgabe erfolgreich bearbeitet!');
+                } else {
+                    alert('Fehler beim Bearbeiten der Aufgabe');
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                alert('Fehler beim Bearbeiten der Aufgabe');
+            }
+        }
+
+        // NEU: Bearbeitung abbrechen
+        function cancelEdit() {
+            editingTaskId = null;
+            loadTasks(); // Zurück zur normalen Ansicht
+        }
+
+        // Beim Laden der Seite Aufgaben anzeigen
+        loadTasks();
+    </script>
+</body>
+</html>
