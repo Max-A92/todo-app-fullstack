@@ -175,52 +175,41 @@ const TaskServer = (function () {
             strict: true
         }));
         
-        // CORS für Frontend-Kommunikation (mit verbesserter Origin-Behandlung)
+        // CORS für Frontend-Kommunikation (EINFACH & FUNKTIONIEREND)
         app.use(function (req, res, next) {
-            const requestOrigin = req.headers.origin;
-            const userAgent = req.headers['user-agent'] || '';
-            const method = req.method;
+            // Einfache CORS-Konfiguration die GARANTIERT funktioniert
+            const origin = req.headers.origin;
+            console.log('🌐 Request from:', origin || 'no-origin');
+            console.log('🌐 Method:', req.method);
             
-            console.log('🌐 Request Origin:', requestOrigin);
-            console.log('🌐 User-Agent:', userAgent);
-            console.log('🌐 Method:', method);
-            
+            // Alle erlaubten Origins
             const allowedOrigins = [
+                'https://todo-app-fullstack-gamma.vercel.app',
+                'http://localhost:5500',
                 'http://127.0.0.1:5500',
-                'http://localhost:5500', 
-                'http://localhost:8000',
-                'https://todo-app-fullstack-gamma.vercel.app'
+                'http://localhost:8000'
             ];
             
-            // Bessere Origin-Behandlung
-            if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
-                console.log('✅ Origin erlaubt:', requestOrigin);
-                res.header('Access-Control-Allow-Origin', requestOrigin);
-            } else if (!requestOrigin && userAgent.includes('Go-http-client')) {
-                // Health-Checks von Render erlauben
-                console.log('🔧 Health-Check Request (kein Origin)');
-                res.header('Access-Control-Allow-Origin', '*');
-            } else if (!requestOrigin) {
-                // Requests ohne Origin (z.B. direkte API-Calls)
-                console.log('⚠️ Request ohne Origin - erlaube Vercel als Fallback');
-                res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
+            // CORS-Header setzen
+            if (!origin || allowedOrigins.includes(origin)) {
+                res.header('Access-Control-Allow-Origin', origin || 'https://todo-app-fullstack-gamma.vercel.app');
+                console.log('✅ CORS erlaubt für:', origin || 'no-origin');
             } else {
-                console.log('❌ Origin NICHT erlaubt:', requestOrigin);
-                console.log('❌ Erlaubte Origins:', allowedOrigins);
-                // Versuche es trotzdem mit Vercel
+                // Fallback für unbekannte Origins
                 res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
+                console.log('⚠️ Fallback CORS für:', origin);
             }
             
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
             res.header('Access-Control-Allow-Credentials', 'true');
             
-            // Preflight-Requests behandeln
+            // OPTIONS-Requests direkt beantworten
             if (req.method === 'OPTIONS') {
-                console.log('🔄 OPTIONS Request (Preflight) empfangen');
-                res.sendStatus(200);
-                return;
+                console.log('🔄 OPTIONS Request beantwortet');
+                return res.sendStatus(200);
             }
+            
             next();
         });
         
