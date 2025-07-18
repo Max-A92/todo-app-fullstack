@@ -373,7 +373,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 To-Do App <span class="version-badge">CORS-Fixed v2.1</span></h1>
+        <h1>📋 To-Do App <span class="version-badge">Working v2.1</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -468,14 +468,14 @@
         const TODO_APP = (function () {
             'use strict';
             
-            // Private Variablen
+            // Private Variablen - AKTUELLE BACKEND-URL
             const API_BASE_OPTIONS = [
                 'https://todo-app-fullstack-f4vh.onrender.com',
-                'https://todo-app-fullstack-gamma.vercel.app/api',
+                'http://localhost:10000',
                 'http://localhost:3000'
             ];
             
-            let API_BASE = API_BASE_OPTIONS[0]; // Standard
+            let API_BASE = API_BASE_OPTIONS[0]; // Standard: Render-URL
             let editingTaskId = null;
             let cachedTasks = [];
             let currentUser = null;
@@ -496,10 +496,10 @@
                     
                     switch (status) {
                         case 'connected':
-                            text.textContent = 'Online';
+                            text.textContent = 'Online ✅';
                             break;
                         case 'disconnected':
-                            text.textContent = 'Offline';
+                            text.textContent = 'Offline ❌';
                             break;
                         case 'connecting':
                             text.textContent = 'Verbinde...';
@@ -523,37 +523,42 @@
                             });
                             
                             if (response.ok) {
-                                console.log('✅ Backend gefunden:', testUrl);
+                                const data = await response.json();
+                                console.log('✅ Backend gefunden:', testUrl, data);
                                 API_BASE = testUrl;
-                                this.updateStatus('connected', 'Online');
+                                this.updateStatus('connected', 'Online ✅');
                                 return true;
                             }
                         } catch (error) {
-                            console.log('❌ Backend nicht erreichbar:', testUrl);
+                            console.log('❌ Backend nicht erreichbar:', testUrl, error.message);
                         }
                     }
                     
                     console.log('🚨 Kein Backend erreichbar!');
-                    this.updateStatus('disconnected', 'Offline');
-                    showErrorBanner('Backend nicht erreichbar. Prüfen Sie Ihre Internetverbindung.');
+                    this.updateStatus('disconnected', 'Offline ❌');
+                    showErrorBanner('Backend nicht erreichbar. Das Backend startet möglicherweise noch (bis zu 2 Minuten).');
                     return false;
                 }
             };
             
             // Error Management
             const showErrorBanner = function (message) {
-                elements.errorBanner.classList.add('show');
-                elements.errorMessage.textContent = message;
-                
-                // Auto-Hide nach 10 Sekunden
-                setTimeout(function () {
-                    hideErrorBanner();
-                }, 10000);
+                if (elements.errorBanner && elements.errorMessage) {
+                    elements.errorBanner.classList.add('show');
+                    elements.errorMessage.textContent = message;
+                    
+                    // Auto-Hide nach 10 Sekunden
+                    setTimeout(function () {
+                        hideErrorBanner();
+                    }, 10000);
+                }
             };
             
             const hideErrorBanner = function () {
-                elements.errorBanner.classList.remove('show');
-                elements.errorMessage.textContent = '';
+                if (elements.errorBanner && elements.errorMessage) {
+                    elements.errorBanner.classList.remove('show');
+                    elements.errorMessage.textContent = '';
+                }
             };
             
             // Token Management
@@ -710,9 +715,9 @@
                 
                 const message = userMessage || 'Ein unerwarteter Fehler ist aufgetreten';
                 
-                if (error.message && error.message.includes('NetworkError')) {
-                    showErrorBanner('Verbindungsproblem: Backend nicht erreichbar');
-                    ConnectionManager.updateStatus('disconnected', 'Offline');
+                if (error.message && (error.message.includes('NetworkError') || error.message.includes('fetch'))) {
+                    showErrorBanner('Verbindungsproblem: Backend nicht erreichbar (startet möglicherweise noch)');
+                    ConnectionManager.updateStatus('disconnected', 'Offline ❌');
                 } else {
                     showErrorBanner('❌ ' + message);
                 }
@@ -725,9 +730,9 @@
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(function () {
-                    console.log("⏰ Request Timeout nach 15 Sekunden");
+                    console.log("⏰ Request Timeout nach 20 Sekunden");
                     controller.abort();
-                }, 15000);
+                }, 20000); // Erhöht für Render Cold Start
                 
                 // Automatisch Auth-Header hinzufügen
                 const token = TokenManager.get();
@@ -770,7 +775,7 @@
                             // Backend URL möglicherweise falsch - versuche Connection Test
                             console.log("🔄 404 Error - teste Backend-Connection...");
                             await ConnectionManager.testConnection();
-                            throw new Error('Backend-URL nicht gefunden (404)');
+                            throw new Error('Backend-URL nicht gefunden (404) - startet möglicherweise noch');
                         }
                         
                         throw new Error('HTTP ' + response.status + ': ' + response.statusText);
@@ -780,7 +785,8 @@
                     console.log("✅ JSON geparst:", data);
                     
                     // Connection erfolgreich
-                    ConnectionManager.updateStatus('connected', 'Online');
+                    ConnectionManager.updateStatus('connected', 'Online ✅');
+                    hideErrorBanner();
                     
                     return data;
                 } catch (error) {
@@ -790,10 +796,10 @@
                     if (error.name === 'AbortError') {
                         console.error("⏰ Request abgebrochen wegen Timeout");
                         ConnectionManager.updateStatus('disconnected', 'Timeout');
-                        throw new Error('Request Timeout - Server antwortet nicht');
+                        throw new Error('Request Timeout - Backend startet möglicherweise noch (bis zu 2 Minuten)');
                     } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
                         console.error("🌐 Netzwerk-Fehler erkannt");
-                        ConnectionManager.updateStatus('disconnected', 'Offline');
+                        ConnectionManager.updateStatus('disconnected', 'Offline ❌');
                         throw new Error('Netzwerkfehler - Backend nicht erreichbar');
                     }
                     
@@ -836,7 +842,7 @@
                     renderTasks(tasks);
                     updateStats(tasks);
                     
-                    ConnectionManager.updateStatus('connected', 'Online');
+                    ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
                 } catch (error) {
                     console.error("🚨 Fehler beim Laden der Tasks:", error);
@@ -1200,6 +1206,7 @@
             // Initialisierung
             const initialize = async function () {
                 try {
+                    console.log('🚀 Initialisiere TODO_APP...');
                     initializeElements();
                     
                     // Event-Handler zuweisen
@@ -1215,13 +1222,24 @@
                     updateAuthUI();
                     
                     // Backend-Verbindung testen
+                    console.log('🔍 Teste Backend-Verbindung...');
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
                         // Initiale Daten laden
+                        console.log('✅ Backend erreichbar, lade Daten...');
                         await loadTasks();
                     } else {
-                        showErrorBanner('Backend nicht erreichbar. Überprüfen Sie Ihre Internetverbindung.');
+                        showErrorBanner('Backend startet noch oder ist nicht erreichbar. Render Free-Tier benötigt bis zu 2 Minuten zum Starten.');
+                        
+                        // Retry nach 30 Sekunden
+                        setTimeout(async function() {
+                            console.log('🔄 Retry Backend-Verbindung...');
+                            const retryOk = await ConnectionManager.testConnection();
+                            if (retryOk) {
+                                await loadTasks();
+                            }
+                        }, 30000);
                     }
                     
                     console.log('✅ TODO_APP erfolgreich initialisiert');

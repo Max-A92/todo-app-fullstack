@@ -1,4 +1,4 @@
-// optimized backend with SQLite Database and Authentication - ULTIMATIVE CORS-LÖSUNG
+// optimized backend with SQLite Database and Authentication - WORKING VERSION
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -11,8 +11,8 @@ const TaskServer = (function () {
     'use strict';
     
     // Private Konstanten und Konfiguration
-    const PORT = process.env.PORT || 3000;
-    const JWT_SECRET = process.env.JWT_SECRET;
+    const PORT = process.env.PORT || 10000; // RENDER VERWENDET PORT 10000
+    const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-development';
     const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
     
     const STATUS = {
@@ -23,11 +23,9 @@ const TaskServer = (function () {
     // Express App initialisieren
     const app = express();
     
-    // JWT Secret Validierung
-    if (!JWT_SECRET) {
-        console.error('🚨 FEHLER: JWT_SECRET nicht in .env definiert!');
-        process.exit(1);
-    }
+    console.log('🚀 STARTING TODO SERVER...');
+    console.log('📍 PORT:', PORT);
+    console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET');
     
     // Private Hilfsfunktionen
     
@@ -169,57 +167,42 @@ const TaskServer = (function () {
     
     // Middleware-Setup
     const setupMiddleware = function () {
+        console.log('⚙️ Setting up middleware...');
+        
         // JSON Parser
         app.use(express.json({
             limit: '1mb',
             strict: true
         }));
         
-        // ========== ULTIMATIVE CORS-LÖSUNG ==========
+        // ========== WORKING CORS SOLUTION ==========
         app.use(function (req, res, next) {
             const origin = req.headers.origin;
-            const allowedOrigins = [
-                'https://todo-app-fullstack-gamma.vercel.app',
-                'http://localhost:5500',
-                'http://127.0.0.1:5500',
-                'http://localhost:3000'
-            ];
+            const method = req.method;
+            const path = req.path;
             
-            console.log('🌐 CORS Request:', {
-                method: req.method,
-                path: req.path,
+            console.log('🌐 CORS REQUEST:', {
+                method: method,
+                path: path,
                 origin: origin || 'NO-ORIGIN',
-                userAgent: req.headers['user-agent'] ? 'present' : 'missing'
+                timestamp: new Date().toISOString()
             });
             
-            // CORS-Header für alle Requests setzen
-            if (allowedOrigins.includes(origin)) {
-                res.header('Access-Control-Allow-Origin', origin);
-                console.log('✅ CORS erlaubt für:', origin);
-            } else {
-                // Fallback für Vercel (manchmal kommt Origin nicht richtig an)
-                res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
-                console.log('⚠️ CORS Fallback für unbekannte Origin:', origin);
-            }
-            
-            // Erweiterte CORS-Header
+            // SET ALL CORS HEADERS FOR ALL REQUESTS
+            res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
-            res.header('Access-Control-Allow-Credentials', 'true');
             res.header('Access-Control-Max-Age', '86400');
             
-            // Zusätzliche Security-Header
-            res.header('X-Content-Type-Options', 'nosniff');
-            res.header('X-Frame-Options', 'DENY');
+            console.log('✅ CORS headers set for ALL origins');
             
-            // OPTIONS (Preflight) sofort beantworten
-            if (req.method === 'OPTIONS') {
-                console.log('🔄 OPTIONS Preflight - Status 200 OK');
+            // Handle OPTIONS preflight immediately
+            if (method === 'OPTIONS') {
+                console.log('🔄 OPTIONS preflight request - sending 200 OK');
                 res.status(200).end();
                 return;
             }
             
-            console.log('✅ CORS-Middleware abgeschlossen');
             next();
         });
         
@@ -230,6 +213,8 @@ const TaskServer = (function () {
             console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path}`);
             next();
         });
+        
+        console.log('✅ Middleware setup complete');
     };
     
     // ===== AUTHENTICATION ROUTE HANDLERS =====
@@ -650,6 +635,47 @@ const TaskServer = (function () {
     
     // Routen registrieren
     const setupRoutes = function () {
+        console.log('🛣️ Setting up routes...');
+        
+        // Health Check Route (FIRST - for debugging)
+        app.get('/health', function (req, res) {
+            console.log('❤️ Health check requested');
+            res.json({
+                status: 'ok',
+                message: 'Todo API with Authentication is running',
+                timestamp: new Date().toISOString(),
+                version: '2.0.0',
+                port: PORT,
+                cors: 'enabled'
+            });
+        });
+        
+        // Root route for testing
+        app.get('/', function (req, res) {
+            console.log('🏠 Root route requested');
+            res.json({
+                message: 'Todo App Backend API',
+                version: '2.0.0',
+                endpoints: {
+                    health: '/health',
+                    auth: {
+                        register: 'POST /auth/register',
+                        login: 'POST /auth/login',
+                        me: 'GET /auth/me',
+                        logout: 'POST /auth/logout'
+                    },
+                    tasks: {
+                        list: 'GET /tasks',
+                        create: 'POST /tasks',
+                        toggle: 'PUT /tasks/:id',
+                        delete: 'DELETE /tasks/:id',
+                        edit: 'PUT /tasks/:id/text',
+                        cleanup: 'DELETE /tasks?status=completed'
+                    }
+                }
+            });
+        });
+        
         // Authentication Routes (öffentlich)
         app.post('/auth/register', handleRegister);
         app.post('/auth/login', handleLogin);
@@ -664,21 +690,13 @@ const TaskServer = (function () {
         app.delete('/tasks', optionalAuth, handleDeleteCompleted);
         app.put('/tasks/:id/text', optionalAuth, handleEditTaskText);
         
-        // Health Check Route
-        app.get('/health', function (req, res) {
-            res.json({
-                status: 'ok',
-                message: 'Todo API with Authentication is running',
-                timestamp: new Date().toISOString(),
-                version: '2.0.0'
-            });
-        });
-        
         // 404-Handler für unbekannte Routen
         app.use(function (req, res) {
+            console.log('❌ 404 - Route not found:', req.path);
             res.status(404).json({
                 error: 'Route nicht gefunden',
-                message: 'Die angeforderte URL ' + req.path + ' existiert nicht'
+                message: 'Die angeforderte URL ' + req.path + ' existiert nicht',
+                availableRoutes: ['/', '/health', '/auth/*', '/tasks/*']
             });
         });
         
@@ -690,64 +708,78 @@ const TaskServer = (function () {
                 message: 'Ein unerwarteter Fehler ist aufgetreten'
             });
         });
+        
+        console.log('✅ Routes setup complete');
     };
     
     // Server starten (async für Datenbank-Initialisierung)
     const start = async function () {
         try {
-            console.log('🚀 Starte ULTIMATIVE TODO-Server mit Authentication...');
+            console.log('🚀 === STARTING TODO SERVER WITH AUTHENTICATION ===');
+            console.log('📅 Timestamp:', new Date().toISOString());
+            console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+            console.log('📍 Port:', PORT);
+            console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
             
             // Datenbank initialisieren
+            console.log('🗄️ Initializing database...');
             await Database.initialize();
+            console.log('✅ Database initialized');
             
+            // Middleware und Routen setup
             setupMiddleware();
             setupRoutes();
             
             const server = app.listen(PORT, function () {
-                console.log('🎉 ULTIMATIVE TODO-Server mit Authentication gestartet:');
-                console.log('- Port: ' + PORT);
-                console.log('- Datenbank: SQLite (todos.db)');
-                console.log('- JWT Secret: ' + (JWT_SECRET ? 'Konfiguriert ✅' : 'FEHLT ❌'));
-                console.log('- Zeit: ' + new Date().toISOString());
-                console.log('- URL: http://localhost:' + PORT);
-                console.log('- CORS: ULTIMATIVE Multi-Origin Lösung aktiviert');
                 console.log('');
-                console.log('📡 Auth-Endpunkte:');
-                console.log('- POST /auth/register - Registrierung');
-                console.log('- POST /auth/login    - Anmeldung');
-                console.log('- GET  /auth/me      - User-Info');
-                console.log('- POST /auth/logout  - Abmeldung');
+                console.log('🎉 === TODO SERVER WITH AUTHENTICATION STARTED ===');
+                console.log('📍 Port:', PORT);
+                console.log('🗄️ Database: SQLite (todos.db)');
+                console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
+                console.log('⏰ Started at:', new Date().toISOString());
+                console.log('🌐 URL: http://localhost:' + PORT);
+                console.log('🔗 Health Check: http://localhost:' + PORT + '/health');
+                console.log('🛡️ CORS: Universal support activated');
                 console.log('');
-                console.log('📋 Task-Endpunkte (Auth optional):');
-                console.log('- GET    /tasks      - Tasks abrufen');
-                console.log('- POST   /tasks      - Task erstellen');
-                console.log('- PUT    /tasks/:id  - Status ändern');
-                console.log('- DELETE /tasks/:id  - Task löschen');
+                console.log('📡 Auth-Endpoints:');
+                console.log('  • POST /auth/register - Registration');
+                console.log('  • POST /auth/login    - Login');
+                console.log('  • GET  /auth/me      - User-Info');
+                console.log('  • POST /auth/logout  - Logout');
                 console.log('');
-                console.log('🎯 Bereit für ultimative CORS-freie Authentifizierung!');
+                console.log('📋 Task-Endpoints (Auth optional):');
+                console.log('  • GET    /tasks      - Get tasks');
+                console.log('  • POST   /tasks      - Create task');
+                console.log('  • PUT    /tasks/:id  - Toggle status');
+                console.log('  • DELETE /tasks/:id  - Delete task');
+                console.log('  • PUT    /tasks/:id/text - Edit task');
+                console.log('  • DELETE /tasks?status=completed - Delete completed');
+                console.log('');
+                console.log('🎯 === READY FOR CORS-FREE AUTHENTICATION ===');
+                console.log('');
             });
             
             // Graceful Shutdown (erweitert für Datenbank)
             const shutdown = async function (signal) {
-                console.log('\n🛑 ' + signal + ' empfangen. Server wird heruntergefahren...');
+                console.log('\n🛑 ' + signal + ' received. Shutting down server...');
                 
                 server.close(async function () {
-                    console.log('📪 HTTP Server gestoppt');
+                    console.log('📪 HTTP Server stopped');
                     
                     try {
                         await Database.close();
-                        console.log('🗄️ Datenbank geschlossen');
-                        console.log('✅ Graceful Shutdown abgeschlossen');
+                        console.log('🗄️ Database closed');
+                        console.log('✅ Graceful shutdown completed');
                         process.exit(0);
                     } catch (error) {
-                        console.error('🚨 Fehler beim Datenbankschließen:', error);
+                        console.error('🚨 Error closing database:', error);
                         process.exit(1);
                     }
                 });
                 
                 // Force-Kill nach 10 Sekunden
                 setTimeout(() => {
-                    console.error('⏰ Forced Shutdown nach 10 Sekunden');
+                    console.error('⏰ Forced shutdown after 10 seconds');
                     process.exit(1);
                 }, 10000);
             };
@@ -757,7 +789,7 @@ const TaskServer = (function () {
             
             return server;
         } catch (error) {
-            console.error('🚨 Server-Start Fehler:', error);
+            console.error('🚨 Server startup error:', error);
             process.exit(1);
         }
     };
@@ -770,4 +802,5 @@ const TaskServer = (function () {
 })();
 
 // Server initialisieren und starten
+console.log('🔥 Initializing TaskServer...');
 TaskServer.start();
