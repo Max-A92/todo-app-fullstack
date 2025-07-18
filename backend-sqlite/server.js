@@ -175,34 +175,20 @@ const TaskServer = (function () {
             strict: true
         }));
         
-        // CORS für Frontend-Kommunikation (EINFACH & FUNKTIONIEREND)
+        // CORS für Frontend-Kommunikation (GARANTIERT FUNKTIONIEREND)
         app.use(function (req, res, next) {
-            // Einfache CORS-Konfiguration die GARANTIERT funktioniert
             const origin = req.headers.origin;
             console.log('🌐 Request from:', origin || 'no-origin');
             console.log('🌐 Method:', req.method);
+            console.log('🌐 User-Agent:', req.headers['user-agent'] || 'no-agent');
             
-            // Alle erlaubten Origins
-            const allowedOrigins = [
-                'https://todo-app-fullstack-gamma.vercel.app',
-                'http://localhost:5500',
-                'http://127.0.0.1:5500',
-                'http://localhost:8000'
-            ];
-            
-            // CORS-Header setzen
-            if (!origin || allowedOrigins.includes(origin)) {
-                res.header('Access-Control-Allow-Origin', origin || 'https://todo-app-fullstack-gamma.vercel.app');
-                console.log('✅ CORS erlaubt für:', origin || 'no-origin');
-            } else {
-                // Fallback für unbekannte Origins
-                res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
-                console.log('⚠️ Fallback CORS für:', origin);
-            }
-            
+            // Immer Vercel-Domain erlauben (wichtigster Fix!)
+            res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
             res.header('Access-Control-Allow-Credentials', 'true');
+            
+            console.log('✅ CORS Headers gesetzt für Vercel-Domain');
             
             // OPTIONS-Requests direkt beantworten
             if (req.method === 'OPTIONS') {
