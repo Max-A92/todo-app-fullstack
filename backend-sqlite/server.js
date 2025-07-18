@@ -1,4 +1,4 @@
-// optimized backend with SQLite Database and Authentication
+// optimized backend with SQLite Database and Authentication - ULTIMATIVE CORS-LÖSUNG
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -175,28 +175,51 @@ const TaskServer = (function () {
             strict: true
         }));
         
-        // CORS für Frontend-Kommunikation (ROBUSTE LÖSUNG)
+        // ========== ULTIMATIVE CORS-LÖSUNG ==========
         app.use(function (req, res, next) {
-            console.log('🌐 CORS Middleware - Request from:', req.headers.origin || 'no-origin');
-            console.log('🌐 Method:', req.method);
-            console.log('🌐 Path:', req.path);
+            const origin = req.headers.origin;
+            const allowedOrigins = [
+                'https://todo-app-fullstack-gamma.vercel.app',
+                'http://localhost:5500',
+                'http://127.0.0.1:5500',
+                'http://localhost:3000'
+            ];
             
-            // CORS-Header IMMER setzen (für alle Requests)
-            res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            console.log('🌐 CORS Request:', {
+                method: req.method,
+                path: req.path,
+                origin: origin || 'NO-ORIGIN',
+                userAgent: req.headers['user-agent'] ? 'present' : 'missing'
+            });
+            
+            // CORS-Header für alle Requests setzen
+            if (allowedOrigins.includes(origin)) {
+                res.header('Access-Control-Allow-Origin', origin);
+                console.log('✅ CORS erlaubt für:', origin);
+            } else {
+                // Fallback für Vercel (manchmal kommt Origin nicht richtig an)
+                res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
+                console.log('⚠️ CORS Fallback für unbekannte Origin:', origin);
+            }
+            
+            // Erweiterte CORS-Header
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
             res.header('Access-Control-Allow-Credentials', 'true');
-            res.header('Access-Control-Max-Age', '86400'); // 24 Stunden Cache für Preflight
+            res.header('Access-Control-Max-Age', '86400');
             
-            console.log('✅ CORS Headers gesetzt für alle Requests');
+            // Zusätzliche Security-Header
+            res.header('X-Content-Type-Options', 'nosniff');
+            res.header('X-Frame-Options', 'DENY');
             
-            // OPTIONS-Requests (Preflight) sofort beantworten
+            // OPTIONS (Preflight) sofort beantworten
             if (req.method === 'OPTIONS') {
-                console.log('🔄 OPTIONS (Preflight) Request - sende 204 No Content');
-                res.status(204).end();
+                console.log('🔄 OPTIONS Preflight - Status 200 OK');
+                res.status(200).end();
                 return;
             }
             
+            console.log('✅ CORS-Middleware abgeschlossen');
             next();
         });
         
@@ -672,7 +695,7 @@ const TaskServer = (function () {
     // Server starten (async für Datenbank-Initialisierung)
     const start = async function () {
         try {
-            console.log('🚀 Starte OPTIMIERTEN TODO-Server mit Authentication...');
+            console.log('🚀 Starte ULTIMATIVE TODO-Server mit Authentication...');
             
             // Datenbank initialisieren
             await Database.initialize();
@@ -681,12 +704,13 @@ const TaskServer = (function () {
             setupRoutes();
             
             const server = app.listen(PORT, function () {
-                console.log('🎉 TODO-Server mit Authentication gestartet:');
+                console.log('🎉 ULTIMATIVE TODO-Server mit Authentication gestartet:');
                 console.log('- Port: ' + PORT);
                 console.log('- Datenbank: SQLite (todos.db)');
                 console.log('- JWT Secret: ' + (JWT_SECRET ? 'Konfiguriert ✅' : 'FEHLT ❌'));
                 console.log('- Zeit: ' + new Date().toISOString());
                 console.log('- URL: http://localhost:' + PORT);
+                console.log('- CORS: ULTIMATIVE Multi-Origin Lösung aktiviert');
                 console.log('');
                 console.log('📡 Auth-Endpunkte:');
                 console.log('- POST /auth/register - Registrierung');
@@ -700,7 +724,7 @@ const TaskServer = (function () {
                 console.log('- PUT    /tasks/:id  - Status ändern');
                 console.log('- DELETE /tasks/:id  - Task löschen');
                 console.log('');
-                console.log('🎯 Bereit für Authentifizierung!');
+                console.log('🎯 Bereit für ultimative CORS-freie Authentifizierung!');
             });
             
             // Graceful Shutdown (erweitert für Datenbank)
