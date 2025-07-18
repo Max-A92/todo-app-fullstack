@@ -175,25 +175,26 @@ const TaskServer = (function () {
             strict: true
         }));
         
-        // CORS für Frontend-Kommunikation (GARANTIERT FUNKTIONIEREND)
+        // CORS für Frontend-Kommunikation (ROBUSTE LÖSUNG)
         app.use(function (req, res, next) {
-            const origin = req.headers.origin;
-            console.log('🌐 Request from:', origin || 'no-origin');
+            console.log('🌐 CORS Middleware - Request from:', req.headers.origin || 'no-origin');
             console.log('🌐 Method:', req.method);
-            console.log('🌐 User-Agent:', req.headers['user-agent'] || 'no-agent');
+            console.log('🌐 Path:', req.path);
             
-            // Immer Vercel-Domain erlauben (wichtigster Fix!)
+            // CORS-Header IMMER setzen (für alle Requests)
             res.header('Access-Control-Allow-Origin', 'https://todo-app-fullstack-gamma.vercel.app');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
             res.header('Access-Control-Allow-Credentials', 'true');
+            res.header('Access-Control-Max-Age', '86400'); // 24 Stunden Cache für Preflight
             
-            console.log('✅ CORS Headers gesetzt für Vercel-Domain');
+            console.log('✅ CORS Headers gesetzt für alle Requests');
             
-            // OPTIONS-Requests direkt beantworten
+            // OPTIONS-Requests (Preflight) sofort beantworten
             if (req.method === 'OPTIONS') {
-                console.log('🔄 OPTIONS Request beantwortet');
-                return res.sendStatus(200);
+                console.log('🔄 OPTIONS (Preflight) Request - sende 204 No Content');
+                res.status(204).end();
+                return;
             }
             
             next();
