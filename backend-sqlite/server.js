@@ -1,4 +1,4 @@
-// optimized backend with SQLite Database and Authentication - WORKING VERSION
+// optimized backend with SQLite Database and Authentication - SECURE RENDER CORS
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -23,7 +23,7 @@ const TaskServer = (function () {
     // Express App initialisieren
     const app = express();
     
-    console.log('🚀 STARTING TODO SERVER...');
+    console.log('🚀 STARTING SECURE TODO SERVER...');
     console.log('📍 PORT:', PORT);
     console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET');
     
@@ -165,9 +165,9 @@ const TaskServer = (function () {
         }
     };
     
-    // Middleware-Setup
+    // ========== SICHERE RENDER-OPTIMIERTE CORS-LÖSUNG ==========
     const setupMiddleware = function () {
-        console.log('⚙️ Setting up middleware...');
+        console.log('⚙️ Setting up Render-optimized middleware...');
         
         // JSON Parser
         app.use(express.json({
@@ -175,7 +175,7 @@ const TaskServer = (function () {
             strict: true
         }));
         
-        // ========== WORKING CORS SOLUTION ==========
+        // RENDER-OPTIMIERTE CORS-MIDDLEWARE (SICHER)
         app.use(function (req, res, next) {
             const origin = req.headers.origin;
             const method = req.method;
@@ -185,36 +185,78 @@ const TaskServer = (function () {
                 method: method,
                 path: path,
                 origin: origin || 'NO-ORIGIN',
+                userAgent: req.headers['user-agent'] ? 'present' : 'missing',
                 timestamp: new Date().toISOString()
             });
             
-            // SET ALL CORS HEADERS FOR ALL REQUESTS
-            res.header('Access-Control-Allow-Origin', '*');
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
-            res.header('Access-Control-Max-Age', '86400');
+            // SICHERE ORIGIN-LISTE (keine Wildcards)
+            const allowedOrigins = [
+                'https://todo-app-fullstack-gamma.vercel.app',
+                'http://localhost:5173',
+                'http://localhost:5500',
+                'http://localhost:3000',
+                'http://127.0.0.1:5500',
+                'http://127.0.0.1:3000'
+            ];
             
-            console.log('✅ CORS headers set for ALL origins');
+            // ORIGIN-VALIDIERUNG UND HEADER-SETZUNG
+            let corsOrigin = null;
             
-            // Handle OPTIONS preflight immediately
-            if (method === 'OPTIONS') {
-                console.log('🔄 OPTIONS preflight request - sending 200 OK');
-                res.status(200).end();
-                return;
+            if (!origin) {
+                // Kein Origin (direkte Requests, Postman, etc.)
+                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app'; // Fallback für Render
+                console.log('🔧 No origin provided - using Vercel fallback');
+            } else if (allowedOrigins.includes(origin)) {
+                // Origin ist in der erlaubten Liste
+                corsOrigin = origin;
+                console.log('✅ Origin allowed:', origin);
+            } else {
+                // Unbekannte Origin - Sicherheitslog
+                console.log('❌ Origin not allowed:', origin);
+                console.log('📋 Allowed origins:', allowedOrigins);
+                // Für Render-Debugging: Verwende Vercel als Fallback
+                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
+                console.log('🔧 Using Vercel fallback for unknown origin');
             }
             
+            // CORS-HEADERS SETZEN (immer, für alle Requests)
+            res.header('Access-Control-Allow-Origin', corsOrigin);
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+            res.header('Access-Control-Allow-Credentials', 'true');
+            res.header('Access-Control-Max-Age', '86400'); // 24h Cache
+            
+            // ZUSÄTZLICHE RENDER-SPEZIFISCHE HEADERS
+            res.header('X-Content-Type-Options', 'nosniff');
+            res.header('X-Frame-Options', 'DENY');
+            res.header('X-XSS-Protection', '1; mode=block');
+            
+            console.log('✅ CORS headers set - Origin:', corsOrigin);
+            
+            // KRITISCH: OPTIONS-REQUEST BEHANDLUNG (Render-spezifisch)
+            if (method === 'OPTIONS') {
+                console.log('🔄 OPTIONS preflight request detected');
+                console.log('📋 Preflight headers set for origin:', corsOrigin);
+                
+                // RENDER BENÖTIGT EXPLICIT STATUS + END
+                res.status(204).end();
+                return; // WICHTIG: Nicht next() nach res.end()
+            }
+            
+            console.log('➡️ Continuing to next middleware');
             next();
         });
         
-        // Request-Logging
+        // REQUEST-LOGGING (nach CORS)
         app.use(function (req, res, next) {
             const timestamp = new Date().toISOString();
             const hasAuth = req.headers.authorization ? '🔐' : '📝';
-            console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path}`);
+            const origin = req.headers.origin || 'direct';
+            console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path} from ${origin}`);
             next();
         });
         
-        console.log('✅ Middleware setup complete');
+        console.log('✅ Render-optimized middleware setup complete');
     };
     
     // ===== AUTHENTICATION ROUTE HANDLERS =====
@@ -642,11 +684,15 @@ const TaskServer = (function () {
             console.log('❤️ Health check requested');
             res.json({
                 status: 'ok',
-                message: 'Todo API with Authentication is running',
+                message: 'SECURE TODO SERVER WITH RENDER-CORS IS RUNNING',
                 timestamp: new Date().toISOString(),
-                version: '2.0.0',
+                version: 'SECURE-2.0',
                 port: PORT,
-                cors: 'enabled'
+                cors: 'SECURE_RENDER_OPTIMIZED',
+                allowedOrigins: [
+                    'https://todo-app-fullstack-gamma.vercel.app',
+                    'localhost development'
+                ]
             });
         });
         
@@ -654,8 +700,9 @@ const TaskServer = (function () {
         app.get('/', function (req, res) {
             console.log('🏠 Root route requested');
             res.json({
-                message: 'Todo App Backend API',
-                version: '2.0.0',
+                message: 'Secure Todo App Backend API',
+                version: 'SECURE-2.0',
+                cors: 'RENDER_OPTIMIZED',
                 endpoints: {
                     health: '/health',
                     auth: {
@@ -715,7 +762,7 @@ const TaskServer = (function () {
     // Server starten (async für Datenbank-Initialisierung)
     const start = async function () {
         try {
-            console.log('🚀 === STARTING TODO SERVER WITH AUTHENTICATION ===');
+            console.log('🚀 === STARTING SECURE TODO SERVER WITH RENDER-CORS ===');
             console.log('📅 Timestamp:', new Date().toISOString());
             console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
             console.log('📍 Port:', PORT);
@@ -732,14 +779,17 @@ const TaskServer = (function () {
             
             const server = app.listen(PORT, function () {
                 console.log('');
-                console.log('🎉 === TODO SERVER WITH AUTHENTICATION STARTED ===');
+                console.log('🎉 === SECURE TODO SERVER WITH RENDER-CORS STARTED ===');
                 console.log('📍 Port:', PORT);
                 console.log('🗄️ Database: SQLite (todos.db)');
                 console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
                 console.log('⏰ Started at:', new Date().toISOString());
                 console.log('🌐 URL: http://localhost:' + PORT);
                 console.log('🔗 Health Check: http://localhost:' + PORT + '/health');
-                console.log('🛡️ CORS: Universal support activated');
+                console.log('🛡️ CORS: SECURE RENDER-OPTIMIZED');
+                console.log('✅ Allowed Origins:');
+                console.log('  • https://todo-app-fullstack-gamma.vercel.app');
+                console.log('  • localhost development servers');
                 console.log('');
                 console.log('📡 Auth-Endpoints:');
                 console.log('  • POST /auth/register - Registration');
@@ -755,7 +805,7 @@ const TaskServer = (function () {
                 console.log('  • PUT    /tasks/:id/text - Edit task');
                 console.log('  • DELETE /tasks?status=completed - Delete completed');
                 console.log('');
-                console.log('🎯 === READY FOR CORS-FREE AUTHENTICATION ===');
+                console.log('🎯 === READY FOR SECURE CORS-FREE AUTHENTICATION ===');
                 console.log('');
             });
             
@@ -802,5 +852,5 @@ const TaskServer = (function () {
 })();
 
 // Server initialisieren und starten
-console.log('🔥 Initializing TaskServer...');
+console.log('🔥 Initializing Secure TaskServer...');
 TaskServer.start();
