@@ -1,4 +1,4 @@
-// optimized backend with SQLite Database and Authentication - SECURE RENDER CORS
+// optimized backend with SQLite Database and Authentication - SECURE RENDER CORS + DB TIMEOUT
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -23,7 +23,7 @@ const TaskServer = (function () {
     // Express App initialisieren
     const app = express();
     
-    console.log('🚀 STARTING SECURE TODO SERVER...');
+    console.log('🚀 STARTING SECURE TODO SERVER WITH DB-TIMEOUT...');
     console.log('📍 PORT:', PORT);
     console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET');
     
@@ -78,9 +78,18 @@ const TaskServer = (function () {
         }
     };
     
+    // Database Status
+    let databaseAvailable = false;
+    
     // Authentication Middleware
     const authenticateToken = async function (req, res, next) {
         console.log('🔐 Prüfe Authentication...');
+        
+        if (!databaseAvailable) {
+            console.log('⚠️ Database nicht verfügbar - Demo-Modus');
+            req.user = null;
+            return next();
+        }
         
         try {
             const authHeader = req.headers.authorization;
@@ -140,6 +149,12 @@ const TaskServer = (function () {
     
     // Optional Authentication (für Legacy-Kompatibilität)
     const optionalAuth = async function (req, res, next) {
+        if (!databaseAvailable) {
+            console.log('📝 Database nicht verfügbar - Demo-Modus');
+            req.user = null;
+            return next();
+        }
+        
         try {
             const authHeader = req.headers.authorization;
             
@@ -266,6 +281,13 @@ const TaskServer = (function () {
         console.log('🆕 REGISTER Request empfangen');
         console.log('📋 Request Body:', req.body);
         
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar. Registrierung temporär nicht möglich.'
+            });
+        }
+        
         try {
             const { username, email, password } = req.body;
             
@@ -335,6 +357,13 @@ const TaskServer = (function () {
         console.log('🔑 LOGIN Request empfangen');
         console.log('📋 Request Body (ohne Password):', { username: req.body.username });
         
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar. Anmeldung temporär nicht möglich.'
+            });
+        }
+        
         try {
             const { username, password } = req.body;
             
@@ -380,7 +409,14 @@ const TaskServer = (function () {
     
     // GET /auth/me - Aktuelle User-Info abrufen
     const handleGetMe = async function (req, res) {
-        console.log('👤 GET ME Request für User:', req.user.username);
+        console.log('👤 GET ME Request für User:', req.user ? req.user.username : 'none');
+        
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
         
         try {
             // User-Daten sind bereits durch authenticateToken Middleware verfügbar
@@ -418,12 +454,20 @@ const TaskServer = (function () {
     
     // GET /tasks - Tasks für eingeloggten User abrufen
     const handleGetTasks = async function (req, res) {
-        console.log("📚 GET /tasks - Lade Tasks aus SQLite");
+        console.log("📚 GET /tasks - Lade Tasks");
         
         try {
             let tasks;
             
-            if (req.user) {
+            if (!databaseAvailable) {
+                // Demo-Daten wenn Database nicht verfügbar
+                console.log("📝 Database nicht verfügbar - sende Demo-Tasks");
+                tasks = [
+                    { id: 1, text: 'Demo-Aufgabe 1', status: 'offen' },
+                    { id: 2, text: 'Demo-Aufgabe 2', status: 'erledigt' },
+                    { id: 3, text: 'Database startet noch...', status: 'offen' }
+                ];
+            } else if (req.user) {
                 // Authentifizierter User - lade nur seine Tasks
                 console.log("👤 Lade Tasks für User:", req.user.username);
                 tasks = await Database.getAllTasksForUser(req.user.id);
@@ -447,6 +491,13 @@ const TaskServer = (function () {
     // POST /tasks - Neue Task für User erstellen
     const handleCreateTask = async function (req, res) {
         console.log("🆕 POST /tasks - Erstelle neue Task");
+        
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar. Tasks können temporär nicht erstellt werden.'
+            });
+        }
         
         try {
             const text = req.body && req.body.text;
@@ -489,6 +540,13 @@ const TaskServer = (function () {
     // PUT /tasks/:id - Status einer Task ändern (nur eigene)
     const handleToggleTask = async function (req, res) {
         console.log("🔄 PUT /tasks/:id - Ändere Task Status");
+        
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
         
         try {
             const taskId = req.params.id;
@@ -536,6 +594,13 @@ const TaskServer = (function () {
     // DELETE /tasks/:id - Task löschen (nur eigene)
     const handleDeleteTask = async function (req, res) {
         console.log("🗑️ DELETE /tasks/:id - Lösche Task");
+        
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
         
         try {
             const taskId = req.params.id;
@@ -587,6 +652,13 @@ const TaskServer = (function () {
     const handleDeleteCompleted = async function (req, res) {
         console.log("🧹 DELETE /tasks?status=completed - Lösche erledigte Tasks");
         
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
+        
         try {
             const status = req.query.status;
             
@@ -624,6 +696,13 @@ const TaskServer = (function () {
     // PUT /tasks/:id/text - Task Text bearbeiten (nur eigene)
     const handleEditTaskText = async function (req, res) {
         console.log("✏️ PUT /tasks/:id/text - Bearbeite Task Text");
+        
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
         
         try {
             const taskId = req.params.id;
@@ -679,16 +758,17 @@ const TaskServer = (function () {
     const setupRoutes = function () {
         console.log('🛣️ Setting up routes...');
         
-        // Health Check Route (FIRST - for debugging)
+        // Health Check Route (CRITICAL for Render)
         app.get('/health', function (req, res) {
             console.log('❤️ Health check requested');
             res.json({
                 status: 'ok',
-                message: 'SECURE TODO SERVER WITH RENDER-CORS IS RUNNING',
+                message: 'SECURE TODO SERVER WITH DB-TIMEOUT IS RUNNING',
                 timestamp: new Date().toISOString(),
-                version: 'SECURE-2.0',
+                version: 'SECURE-DB-TIMEOUT-2.0',
                 port: PORT,
                 cors: 'SECURE_RENDER_OPTIMIZED',
+                database: databaseAvailable ? 'connected' : 'unavailable',
                 allowedOrigins: [
                     'https://todo-app-fullstack-gamma.vercel.app',
                     'localhost development'
@@ -700,9 +780,10 @@ const TaskServer = (function () {
         app.get('/', function (req, res) {
             console.log('🏠 Root route requested');
             res.json({
-                message: 'Secure Todo App Backend API',
-                version: 'SECURE-2.0',
+                message: 'Secure Todo App Backend API with DB-Timeout',
+                version: 'SECURE-DB-TIMEOUT-2.0',
                 cors: 'RENDER_OPTIMIZED',
+                database: databaseAvailable ? 'connected' : 'unavailable',
                 endpoints: {
                     health: '/health',
                     auth: {
@@ -759,19 +840,35 @@ const TaskServer = (function () {
         console.log('✅ Routes setup complete');
     };
     
-    // Server starten (async für Datenbank-Initialisierung)
+    // ===== SERVER START MIT DATABASE-TIMEOUT =====
     const start = async function () {
         try {
-            console.log('🚀 === STARTING SECURE TODO SERVER WITH RENDER-CORS ===');
+            console.log('🚀 === STARTING SECURE TODO SERVER WITH DATABASE-TIMEOUT ===');
             console.log('📅 Timestamp:', new Date().toISOString());
             console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
             console.log('📍 Port:', PORT);
             console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
             
-            // Datenbank initialisieren
-            console.log('🗄️ Initializing database...');
-            await Database.initialize();
-            console.log('✅ Database initialized');
+            // ===== DATABASE INITIALISIERUNG MIT TIMEOUT =====
+            console.log('🗄️ Initializing database with timeout...');
+            try {
+                const dbPromise = Database.initialize();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Database initialization timeout after 15 seconds')), 15000)
+                );
+                
+                await Promise.race([dbPromise, timeoutPromise]);
+                console.log('✅ Database initialized successfully within timeout');
+                databaseAvailable = true;
+                
+            } catch (error) {
+                console.error('🚨 Database initialization failed:', error.message);
+                console.log('⚠️ Server starting without database connection...');
+                console.log('📝 App will use demo mode for tasks');
+                console.log('🔄 Database connection may be established later');
+                databaseAvailable = false;
+                // Server läuft trotzdem weiter!
+            }
             
             // Middleware und Routen setup
             setupMiddleware();
@@ -779,9 +876,9 @@ const TaskServer = (function () {
             
             const server = app.listen(PORT, function () {
                 console.log('');
-                console.log('🎉 === SECURE TODO SERVER WITH RENDER-CORS STARTED ===');
+                console.log('🎉 === SECURE TODO SERVER WITH DB-TIMEOUT STARTED ===');
                 console.log('📍 Port:', PORT);
-                console.log('🗄️ Database: SQLite (todos.db)');
+                console.log('🗄️ Database:', databaseAvailable ? 'Connected ✅' : 'Demo Mode ⚠️');
                 console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
                 console.log('⏰ Started at:', new Date().toISOString());
                 console.log('🌐 URL: http://localhost:' + PORT);
@@ -792,20 +889,23 @@ const TaskServer = (function () {
                 console.log('  • localhost development servers');
                 console.log('');
                 console.log('📡 Auth-Endpoints:');
-                console.log('  • POST /auth/register - Registration');
-                console.log('  • POST /auth/login    - Login');
-                console.log('  • GET  /auth/me      - User-Info');
-                console.log('  • POST /auth/logout  - Logout');
+                console.log('  • POST /auth/register - Registration', databaseAvailable ? '✅' : '⚠️');
+                console.log('  • POST /auth/login    - Login', databaseAvailable ? '✅' : '⚠️');
+                console.log('  • GET  /auth/me      - User-Info', databaseAvailable ? '✅' : '⚠️');
+                console.log('  • POST /auth/logout  - Logout ✅');
                 console.log('');
-                console.log('📋 Task-Endpoints (Auth optional):');
-                console.log('  • GET    /tasks      - Get tasks');
-                console.log('  • POST   /tasks      - Create task');
-                console.log('  • PUT    /tasks/:id  - Toggle status');
-                console.log('  • DELETE /tasks/:id  - Delete task');
-                console.log('  • PUT    /tasks/:id/text - Edit task');
-                console.log('  • DELETE /tasks?status=completed - Delete completed');
+                console.log('📋 Task-Endpoints:');
+                console.log('  • GET    /tasks      - Get tasks', databaseAvailable ? '✅' : '📝 Demo');
+                console.log('  • POST   /tasks      - Create task', databaseAvailable ? '✅' : '⚠️');
+                console.log('  • PUT    /tasks/:id  - Toggle status', databaseAvailable ? '✅' : '⚠️');
+                console.log('  • DELETE /tasks/:id  - Delete task', databaseAvailable ? '✅' : '⚠️');
                 console.log('');
-                console.log('🎯 === READY FOR SECURE CORS-FREE AUTHENTICATION ===');
+                if (!databaseAvailable) {
+                    console.log('⚠️ === DEMO MODE ACTIVE ===');
+                    console.log('🔄 Database may connect later - server will continue running');
+                    console.log('📝 Tasks endpoint returns demo data for now');
+                }
+                console.log('🎯 === READY FOR CORS-FREE AUTHENTICATION ===');
                 console.log('');
             });
             
@@ -816,15 +916,17 @@ const TaskServer = (function () {
                 server.close(async function () {
                     console.log('📪 HTTP Server stopped');
                     
-                    try {
-                        await Database.close();
-                        console.log('🗄️ Database closed');
-                        console.log('✅ Graceful shutdown completed');
-                        process.exit(0);
-                    } catch (error) {
-                        console.error('🚨 Error closing database:', error);
-                        process.exit(1);
+                    if (databaseAvailable) {
+                        try {
+                            await Database.close();
+                            console.log('🗄️ Database closed');
+                        } catch (error) {
+                            console.error('🚨 Error closing database:', error);
+                        }
                     }
+                    
+                    console.log('✅ Graceful shutdown completed');
+                    process.exit(0);
                 });
                 
                 // Force-Kill nach 10 Sekunden
@@ -852,5 +954,5 @@ const TaskServer = (function () {
 })();
 
 // Server initialisieren und starten
-console.log('🔥 Initializing Secure TaskServer...');
+console.log('🔥 Initializing Secure TaskServer with Database-Timeout...');
 TaskServer.start();
