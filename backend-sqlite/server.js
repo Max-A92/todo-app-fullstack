@@ -1,4 +1,4 @@
-// optimized backend with SQLite Database and Authentication - SECURE RENDER CORS + DB TIMEOUT
+// PRODUCTION BACKEND - Render Optimized with SQLite Database and Authentication
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -10,10 +10,11 @@ const Database = require('./database'); // SQLite Database Module
 const TaskServer = (function () {
     'use strict';
     
-    // Private Konstanten und Konfiguration
-    const PORT = process.env.PORT || 10000; // RENDER VERWENDET PORT 10000
-    const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-development';
+    // PRODUCTION KONFIGURATION
+    const PORT = process.env.PORT || 10000;
+    const JWT_SECRET = process.env.JWT_SECRET || 'production-fallback-secret-2025';
     const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+    const NODE_ENV = process.env.NODE_ENV || 'production';
     
     const STATUS = {
         OPEN: 'offen',
@@ -23,11 +24,11 @@ const TaskServer = (function () {
     // Express App initialisieren
     const app = express();
     
-    console.log('🚀 STARTING SECURE TODO SERVER WITH DB-TIMEOUT...');
+    console.log('🏭 === STARTING PRODUCTION TODO SERVER ===');
     console.log('📍 PORT:', PORT);
-    console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET' : 'NOT SET');
-    
-    // Private Hilfsfunktionen
+    console.log('🌍 NODE_ENV:', NODE_ENV);
+    console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET ✅' : 'NOT SET ❌');
+    console.log('⏰ JWT_EXPIRES_IN:', JWT_EXPIRES_IN);
     
     // Validierungsfunktionen (strikte Typenprüfung)
     const isValidTaskText = function (text) {
@@ -83,7 +84,9 @@ const TaskServer = (function () {
     
     // Authentication Middleware
     const authenticateToken = async function (req, res, next) {
-        console.log('🔐 Prüfe Authentication...');
+        if (NODE_ENV === 'development') {
+            console.log('🔐 Prüfe Authentication...');
+        }
         
         if (!databaseAvailable) {
             console.log('⚠️ Database nicht verfügbar - Demo-Modus');
@@ -95,34 +98,27 @@ const TaskServer = (function () {
             const authHeader = req.headers.authorization;
             
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                console.log('❌ Kein Authorization Header gefunden');
                 return res.status(401).json({
                     error: 'Nicht authentifiziert',
                     message: 'Authorization Header mit Bearer Token erforderlich'
                 });
             }
             
-            const token = authHeader.substring(7); // "Bearer " entfernen
-            console.log('🎫 Token gefunden, verifiziere...');
-            
-            // Token verifizieren
+            const token = authHeader.substring(7);
             const decoded = verifyToken(token);
-            console.log('✅ Token valid für User:', decoded.username);
-            
-            // User-Daten laden (für Sicherheit)
             const user = await Database.getUserById(decoded.userId);
             
             if (!user) {
-                console.log('❌ User nicht mehr in Datenbank vorhanden');
                 return res.status(401).json({
                     error: 'User nicht gefunden',
                     message: 'Token ist gültig, aber User existiert nicht mehr'
                 });
             }
             
-            // User-Daten zu Request hinzufügen
             req.user = user;
-            console.log('👤 User authentifiziert:', user.username);
+            if (NODE_ENV === 'development') {
+                console.log('👤 User authentifiziert:', user.username);
+            }
             
             next();
         } catch (error) {
@@ -150,7 +146,6 @@ const TaskServer = (function () {
     // Optional Authentication (für Legacy-Kompatibilität)
     const optionalAuth = async function (req, res, next) {
         if (!databaseAvailable) {
-            console.log('📝 Database nicht verfügbar - Demo-Modus');
             req.user = null;
             return next();
         }
@@ -165,121 +160,122 @@ const TaskServer = (function () {
                 
                 if (user) {
                     req.user = user;
-                    console.log('👤 Optional Auth: User erkannt:', user.username);
-                } else {
-                    console.log('⚠️ Optional Auth: Token valid, aber User nicht gefunden');
+                    if (NODE_ENV === 'development') {
+                        console.log('👤 Optional Auth: User erkannt:', user.username);
+                    }
                 }
-            } else {
-                console.log('📝 Optional Auth: Kein Token - verwende Demo-User');
             }
             
             next();
         } catch (error) {
-            console.log('⚠️ Optional Auth: Token ungültig, verwende Demo-User');
+            if (NODE_ENV === 'development') {
+                console.log('⚠️ Optional Auth: Token ungültig, verwende Demo-User');
+            }
             next(); // Fehler ignorieren, Demo-User verwenden
         }
     };
     
-    // ========== SICHERE RENDER-OPTIMIERTE CORS-LÖSUNG ==========
+    // PRODUCTION-OPTIMIERTE CORS-MIDDLEWARE
     const setupMiddleware = function () {
-        console.log('⚙️ Setting up Render-optimized middleware...');
+        console.log('⚙️ Setting up Production middleware...');
         
-        // JSON Parser
+        // JSON Parser mit Limits
         app.use(express.json({
             limit: '1mb',
             strict: true
         }));
         
-        // RENDER-OPTIMIERTE CORS-MIDDLEWARE (SICHER)
+        // PRODUCTION CORS-MIDDLEWARE
         app.use(function (req, res, next) {
             const origin = req.headers.origin;
             const method = req.method;
             const path = req.path;
             
-            console.log('🌐 CORS REQUEST:', {
-                method: method,
-                path: path,
-                origin: origin || 'NO-ORIGIN',
-                userAgent: req.headers['user-agent'] ? 'present' : 'missing',
-                timestamp: new Date().toISOString()
-            });
+            // Nur in Development Mode loggen
+            if (NODE_ENV === 'development') {
+                console.log('🌐 CORS REQUEST:', {
+                    method: method,
+                    path: path,
+                    origin: origin || 'NO-ORIGIN',
+                    timestamp: new Date().toISOString()
+                });
+            }
             
-            // SICHERE ORIGIN-LISTE (keine Wildcards)
+            // PRODUCTION ALLOWED ORIGINS
             const allowedOrigins = [
-                'https://todo-app-fullstack-gamma.vercel.app',
-                'http://localhost:5173',
-                'http://localhost:5500',
-                'http://localhost:3000',
-                'http://127.0.0.1:5500',
-                'http://127.0.0.1:3000'
+                'https://todo-app-fullstack-gamma.vercel.app',  // ✅ Production Frontend
+                'http://localhost:5173',                        // Development (Vite)
+                'http://localhost:5500',                        // Development (Live Server)
+                'http://localhost:3000',                        // Development (React)
+                'http://127.0.0.1:5500',                        // Development (Live Server)
+                'http://127.0.0.1:3000'                         // Development (React)
             ];
             
-            // ORIGIN-VALIDIERUNG UND HEADER-SETZUNG
+            // CORS Origin ermitteln
             let corsOrigin = null;
             
             if (!origin) {
-                // Kein Origin (direkte Requests, Postman, etc.)
-                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app'; // Fallback für Render
-                console.log('🔧 No origin provided - using Vercel fallback');
-            } else if (allowedOrigins.includes(origin)) {
-                // Origin ist in der erlaubten Liste
-                corsOrigin = origin;
-                console.log('✅ Origin allowed:', origin);
-            } else {
-                // Unbekannte Origin - Sicherheitslog
-                console.log('❌ Origin not allowed:', origin);
-                console.log('📋 Allowed origins:', allowedOrigins);
-                // Für Render-Debugging: Verwende Vercel als Fallback
+                // Kein Origin (direkte Requests, Health Checks, etc.)
                 corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
-                console.log('🔧 Using Vercel fallback for unknown origin');
+            } else if (allowedOrigins.includes(origin)) {
+                corsOrigin = origin;
+                if (NODE_ENV === 'development') {
+                    console.log('✅ Origin allowed:', origin);
+                }
+            } else {
+                // Unbekannte Origin
+                if (NODE_ENV === 'development') {
+                    console.log('❌ Origin not allowed:', origin);
+                }
+                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
             }
             
-            // CORS-HEADERS SETZEN (immer, für alle Requests)
+            // CORS Headers setzen
             res.header('Access-Control-Allow-Origin', corsOrigin);
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
             res.header('Access-Control-Allow-Credentials', 'true');
             res.header('Access-Control-Max-Age', '86400'); // 24h Cache
             
-            // ZUSÄTZLICHE RENDER-SPEZIFISCHE HEADERS
+            // PRODUCTION Security Headers
             res.header('X-Content-Type-Options', 'nosniff');
             res.header('X-Frame-Options', 'DENY');
             res.header('X-XSS-Protection', '1; mode=block');
+            res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
             
-            console.log('✅ CORS headers set - Origin:', corsOrigin);
-            
-            // KRITISCH: OPTIONS-REQUEST BEHANDLUNG (Render-spezifisch)
+            // OPTIONS Request Behandlung
             if (method === 'OPTIONS') {
-                console.log('🔄 OPTIONS preflight request detected');
-                console.log('📋 Preflight headers set for origin:', corsOrigin);
-                
-                // RENDER BENÖTIGT EXPLICIT STATUS + END
+                if (NODE_ENV === 'development') {
+                    console.log('🔄 OPTIONS preflight request');
+                }
                 res.status(204).end();
-                return; // WICHTIG: Nicht next() nach res.end()
+                return;
             }
             
-            console.log('➡️ Continuing to next middleware');
             next();
         });
         
-        // REQUEST-LOGGING (nach CORS)
-        app.use(function (req, res, next) {
-            const timestamp = new Date().toISOString();
-            const hasAuth = req.headers.authorization ? '🔐' : '📝';
-            const origin = req.headers.origin || 'direct';
-            console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path} from ${origin}`);
-            next();
-        });
+        // REQUEST LOGGING (nur in Development)
+        if (NODE_ENV === 'development') {
+            app.use(function (req, res, next) {
+                const timestamp = new Date().toISOString();
+                const hasAuth = req.headers.authorization ? '🔐' : '📝';
+                const origin = req.headers.origin || 'direct';
+                console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path} from ${origin}`);
+                next();
+            });
+        }
         
-        console.log('✅ Render-optimized middleware setup complete');
+        console.log('✅ Production middleware setup complete');
     };
     
     // ===== AUTHENTICATION ROUTE HANDLERS =====
     
     // POST /auth/register - Neuen User registrieren
     const handleRegister = async function (req, res) {
-        console.log('🆕 REGISTER Request empfangen');
-        console.log('📋 Request Body:', req.body);
+        if (NODE_ENV === 'development') {
+            console.log('🆕 REGISTER Request empfangen');
+        }
         
         if (!databaseAvailable) {
             return res.status(503).json({
@@ -313,12 +309,8 @@ const TaskServer = (function () {
                 });
             }
             
-            console.log('✅ Validation erfolgreich, erstelle User...');
-            
             // User erstellen
             const newUser = await Database.createUser(username.trim(), email.trim(), password);
-            
-            // Token generieren
             const token = generateToken(newUser);
             
             console.log('🎉 User erfolgreich registriert:', newUser.username);
@@ -346,7 +338,7 @@ const TaskServer = (function () {
             } else {
                 res.status(500).json({
                     error: 'Fehler bei der Registrierung',
-                    message: error.message
+                    message: 'Ein interner Fehler ist aufgetreten'
                 });
             }
         }
@@ -354,8 +346,9 @@ const TaskServer = (function () {
     
     // POST /auth/login - User anmelden
     const handleLogin = async function (req, res) {
-        console.log('🔑 LOGIN Request empfangen');
-        console.log('📋 Request Body (ohne Password):', { username: req.body.username });
+        if (NODE_ENV === 'development') {
+            console.log('🔑 LOGIN Request empfangen');
+        }
         
         if (!databaseAvailable) {
             return res.status(503).json({
@@ -374,12 +367,8 @@ const TaskServer = (function () {
                 });
             }
             
-            console.log('🔐 Authentifiziere User:', username);
-            
             // User authentifizieren
             const user = await Database.authenticateUser(username.trim(), password);
-            
-            // Token generieren
             const token = generateToken(user);
             
             console.log('🎉 Login erfolgreich für User:', user.username);
@@ -409,8 +398,6 @@ const TaskServer = (function () {
     
     // GET /auth/me - Aktuelle User-Info abrufen
     const handleGetMe = async function (req, res) {
-        console.log('👤 GET ME Request für User:', req.user ? req.user.username : 'none');
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -419,7 +406,6 @@ const TaskServer = (function () {
         }
         
         try {
-            // User-Daten sind bereits durch authenticateToken Middleware verfügbar
             res.json({
                 user: {
                     id: req.user.id,
@@ -432,36 +418,28 @@ const TaskServer = (function () {
             console.error('🚨 Get Me Fehler:', error);
             res.status(500).json({
                 error: 'Fehler beim Laden der User-Daten',
-                message: error.message
+                message: 'Ein interner Fehler ist aufgetreten'
             });
         }
     };
     
     // POST /auth/logout - Abmelden (Client-side)
     const handleLogout = function (req, res) {
-        console.log('👋 LOGOUT Request empfangen');
-        
-        // Bei JWT ist Logout hauptsächlich Client-side (Token löschen)
-        // Server kann optional eine Blacklist führen, aber das ist für Basic Auth nicht nötig
-        
         res.json({
             message: 'Erfolgreich abgemeldet',
             instructions: 'Token auf Client-Seite löschen'
         });
     };
     
-    // ===== TASK ROUTE HANDLERS (Protected) =====
+    // ===== TASK ROUTE HANDLERS =====
     
     // GET /tasks - Tasks für eingeloggten User abrufen
     const handleGetTasks = async function (req, res) {
-        console.log("📚 GET /tasks - Lade Tasks");
-        
         try {
             let tasks;
             
             if (!databaseAvailable) {
                 // Demo-Daten wenn Database nicht verfügbar
-                console.log("📝 Database nicht verfügbar - sende Demo-Tasks");
                 tasks = [
                     { id: 1, text: 'Demo-Aufgabe 1', status: 'offen' },
                     { id: 2, text: 'Demo-Aufgabe 2', status: 'erledigt' },
@@ -469,29 +447,27 @@ const TaskServer = (function () {
                 ];
             } else if (req.user) {
                 // Authentifizierter User - lade nur seine Tasks
-                console.log("👤 Lade Tasks für User:", req.user.username);
                 tasks = await Database.getAllTasksForUser(req.user.id);
+                if (NODE_ENV === 'development') {
+                    console.log("👤 Lade Tasks für User:", req.user.username);
+                }
             } else {
-                // Legacy-Modus für Demo-User (Rückwärtskompatibilität)
-                console.log("📝 Legacy-Modus: Lade Tasks für Demo-User");
+                // Legacy-Modus für Demo-User
                 tasks = await Database.getAllTasks();
             }
             
-            console.log("✅ Tasks erfolgreich geladen:", tasks.length);
             res.json(tasks);
         } catch (error) {
             console.error('🚨 Fehler beim Laden der Tasks:', error);
             res.status(500).json({
                 error: 'Fehler beim Laden der Aufgaben',
-                message: error.message
+                message: 'Ein interner Fehler ist aufgetreten'
             });
         }
     };
     
     // POST /tasks - Neue Task für User erstellen
     const handleCreateTask = async function (req, res) {
-        console.log("🆕 POST /tasks - Erstelle neue Task");
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -501,10 +477,8 @@ const TaskServer = (function () {
         
         try {
             const text = req.body && req.body.text;
-            console.log("✏️ Aufgabentext:", text);
             
             if (!isValidTaskText(text)) {
-                console.log("❌ Ungültiger Text erkannt:", text);
                 return res.status(400).json({
                     error: 'Ungültiger Aufgabentext',
                     message: 'Text ist erforderlich, darf nicht leer sein und maximal 500 Zeichen haben'
@@ -515,32 +489,28 @@ const TaskServer = (function () {
             
             if (req.user) {
                 // Authentifizierter User
-                console.log("👤 Erstelle Task für User:", req.user.username);
                 newTask = await Database.createTaskForUser(req.user.id, text.trim());
+                if (NODE_ENV === 'development') {
+                    console.log("👤 Erstelle Task für User:", req.user.username);
+                }
             } else {
                 // Legacy-Modus für Demo-User
-                console.log("📝 Legacy-Modus: Erstelle Task für Demo-User");
                 newTask = await Database.createTask(text.trim());
             }
             
-            console.log("✨ Neue Task erstellt:", newTask);
-            
             res.status(201).json(newTask);
-            console.log("✅ Response gesendet an Frontend");
             
         } catch (error) {
             console.error("🚨 FEHLER in handleCreateTask:", error);
             res.status(500).json({
                 error: 'Fehler beim Erstellen der Aufgabe',
-                message: error.message
+                message: 'Ein interner Fehler ist aufgetreten'
             });
         }
     };
     
     // PUT /tasks/:id - Status einer Task ändern (nur eigene)
     const handleToggleTask = async function (req, res) {
-        console.log("🔄 PUT /tasks/:id - Ändere Task Status");
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -550,7 +520,6 @@ const TaskServer = (function () {
         
         try {
             const taskId = req.params.id;
-            console.log("🆔 Task ID:", taskId);
             
             if (!isValidTaskId(taskId)) {
                 return res.status(400).json({
@@ -563,15 +532,12 @@ const TaskServer = (function () {
             
             if (req.user) {
                 // Authentifizierter User - nur eigene Tasks
-                console.log("👤 Toggle Task für User:", req.user.username);
                 updatedTask = await Database.toggleTaskStatusForUser(Number(taskId), req.user.id);
             } else {
                 // Legacy-Modus für Demo-User
-                console.log("📝 Legacy-Modus: Toggle Task für Demo-User");
                 updatedTask = await Database.toggleTaskStatus(Number(taskId));
             }
             
-            console.log("✅ Task Status geändert:", updatedTask.status);
             res.json(updatedTask);
             
         } catch (error) {
@@ -585,7 +551,7 @@ const TaskServer = (function () {
             } else {
                 res.status(500).json({
                     error: 'Fehler beim Ändern des Status',
-                    message: error.message
+                    message: 'Ein interner Fehler ist aufgetreten'
                 });
             }
         }
@@ -593,8 +559,6 @@ const TaskServer = (function () {
     
     // DELETE /tasks/:id - Task löschen (nur eigene)
     const handleDeleteTask = async function (req, res) {
-        console.log("🗑️ DELETE /tasks/:id - Lösche Task");
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -616,15 +580,11 @@ const TaskServer = (function () {
             
             if (req.user) {
                 // Authentifizierter User - nur eigene Tasks
-                console.log("👤 Lösche Task für User:", req.user.username);
                 deletedTask = await Database.deleteTaskForUser(Number(taskId), req.user.id);
             } else {
                 // Legacy-Modus für Demo-User
-                console.log("📝 Legacy-Modus: Lösche Task für Demo-User");
                 deletedTask = await Database.deleteTask(Number(taskId));
             }
-            
-            console.log("✅ Task erfolgreich gelöscht");
             
             res.json({
                 message: 'Aufgabe erfolgreich gelöscht',
@@ -642,7 +602,7 @@ const TaskServer = (function () {
             } else {
                 res.status(500).json({
                     error: 'Fehler beim Löschen der Aufgabe',
-                    message: error.message
+                    message: 'Ein interner Fehler ist aufgetreten'
                 });
             }
         }
@@ -650,8 +610,6 @@ const TaskServer = (function () {
     
     // DELETE /tasks?status=completed - Alle erledigten Tasks löschen
     const handleDeleteCompleted = async function (req, res) {
-        console.log("🧹 DELETE /tasks?status=completed - Lösche erledigte Tasks");
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -673,30 +631,25 @@ const TaskServer = (function () {
             
             if (req.user) {
                 // Authentifizierter User - nur eigene Tasks
-                console.log("👤 Lösche erledigte Tasks für User:", req.user.username);
                 result = await Database.deleteCompletedTasksForUser(req.user.id);
             } else {
                 // Legacy-Modus für Demo-User
-                console.log("📝 Legacy-Modus: Lösche erledigte Tasks für Demo-User");
                 result = await Database.deleteCompletedTasks();
             }
             
-            console.log("✅ Erledigte Tasks gelöscht:", result.deletedCount);
             res.json(result);
             
         } catch (error) {
             console.error('🚨 Fehler beim Löschen erledigter Tasks:', error);
             res.status(500).json({
                 error: 'Fehler beim Löschen erledigter Aufgaben',
-                message: error.message
+                message: 'Ein interner Fehler ist aufgetreten'
             });
         }
     };
     
     // PUT /tasks/:id/text - Task Text bearbeiten (nur eigene)
     const handleEditTaskText = async function (req, res) {
-        console.log("✏️ PUT /tasks/:id/text - Bearbeite Task Text");
-        
         if (!databaseAvailable) {
             return res.status(503).json({
                 error: 'Service nicht verfügbar',
@@ -726,15 +679,12 @@ const TaskServer = (function () {
             
             if (req.user) {
                 // Authentifizierter User - nur eigene Tasks
-                console.log("👤 Bearbeite Task für User:", req.user.username);
                 updatedTask = await Database.updateTaskTextForUser(Number(taskId), req.user.id, newText.trim());
             } else {
                 // Legacy-Modus für Demo-User
-                console.log("📝 Legacy-Modus: Bearbeite Task für Demo-User");
                 updatedTask = await Database.updateTaskText(Number(taskId), newText.trim());
             }
             
-            console.log("✅ Task Text erfolgreich aktualisiert");
             res.json(updatedTask);
             
         } catch (error) {
@@ -748,7 +698,7 @@ const TaskServer = (function () {
             } else {
                 res.status(500).json({
                     error: 'Fehler beim Bearbeiten der Aufgabe',
-                    message: error.message
+                    message: 'Ein interner Fehler ist aufgetreten'
                 });
             }
         }
@@ -756,33 +706,32 @@ const TaskServer = (function () {
     
     // Routen registrieren
     const setupRoutes = function () {
-        console.log('🛣️ Setting up routes...');
+        console.log('🛣️ Setting up Production routes...');
         
         // Health Check Route (CRITICAL for Render)
         app.get('/health', function (req, res) {
-            console.log('❤️ Health check requested');
             res.json({
                 status: 'ok',
-                message: 'SECURE TODO SERVER WITH DB-TIMEOUT IS RUNNING',
+                message: 'PRODUCTION TODO SERVER IS RUNNING',
                 timestamp: new Date().toISOString(),
-                version: 'SECURE-DB-TIMEOUT-2.0',
+                version: 'PRODUCTION-3.0',
                 port: PORT,
-                cors: 'SECURE_RENDER_OPTIMIZED',
+                environment: NODE_ENV,
+                cors: 'PRODUCTION_OPTIMIZED',
                 database: databaseAvailable ? 'connected' : 'unavailable',
                 allowedOrigins: [
-                    'https://todo-app-fullstack-gamma.vercel.app',
-                    'localhost development'
+                    'https://todo-app-fullstack-gamma.vercel.app'
                 ]
             });
         });
         
         // Root route for testing
         app.get('/', function (req, res) {
-            console.log('🏠 Root route requested');
             res.json({
-                message: 'Secure Todo App Backend API with DB-Timeout',
-                version: 'SECURE-DB-TIMEOUT-2.0',
-                cors: 'RENDER_OPTIMIZED',
+                message: 'Production Todo App Backend API',
+                version: 'PRODUCTION-3.0',
+                environment: NODE_ENV,
+                cors: 'PRODUCTION_OPTIMIZED',
                 database: databaseAvailable ? 'connected' : 'unavailable',
                 endpoints: {
                     health: '/health',
@@ -804,7 +753,7 @@ const TaskServer = (function () {
             });
         });
         
-        // Authentication Routes (öffentlich)
+        // Authentication Routes
         app.post('/auth/register', handleRegister);
         app.post('/auth/login', handleLogin);
         app.post('/auth/logout', handleLogout);
@@ -820,7 +769,6 @@ const TaskServer = (function () {
         
         // 404-Handler für unbekannte Routen
         app.use(function (req, res) {
-            console.log('❌ 404 - Route not found:', req.path);
             res.status(404).json({
                 error: 'Route nicht gefunden',
                 message: 'Die angeforderte URL ' + req.path + ' existiert nicht',
@@ -837,20 +785,20 @@ const TaskServer = (function () {
             });
         });
         
-        console.log('✅ Routes setup complete');
+        console.log('✅ Production routes setup complete');
     };
     
-    // ===== SERVER START MIT DATABASE-TIMEOUT =====
+    // ===== SERVER START MIT PRODUCTION CONFIGURATION =====
     const start = async function () {
         try {
-            console.log('🚀 === STARTING SECURE TODO SERVER WITH DATABASE-TIMEOUT ===');
+            console.log('🏭 === STARTING PRODUCTION TODO SERVER ===');
             console.log('📅 Timestamp:', new Date().toISOString());
-            console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+            console.log('🌍 Environment:', NODE_ENV);
             console.log('📍 Port:', PORT);
             console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
             
-            // ===== DATABASE INITIALISIERUNG MIT TIMEOUT =====
-            console.log('🗄️ Initializing database with timeout...');
+            // DATABASE INITIALISIERUNG
+            console.log('🗄️ Initializing production database...');
             try {
                 const dbPromise = Database.initialize();
                 const timeoutPromise = new Promise((_, reject) => 
@@ -858,16 +806,14 @@ const TaskServer = (function () {
                 );
                 
                 await Promise.race([dbPromise, timeoutPromise]);
-                console.log('✅ Database initialized successfully within timeout');
+                console.log('✅ Database initialized successfully');
                 databaseAvailable = true;
                 
             } catch (error) {
                 console.error('🚨 Database initialization failed:', error.message);
                 console.log('⚠️ Server starting without database connection...');
                 console.log('📝 App will use demo mode for tasks');
-                console.log('🔄 Database connection may be established later');
                 databaseAvailable = false;
-                // Server läuft trotzdem weiter!
             }
             
             // Middleware und Routen setup
@@ -876,40 +822,50 @@ const TaskServer = (function () {
             
             const server = app.listen(PORT, function () {
                 console.log('');
-                console.log('🎉 === SECURE TODO SERVER WITH DB-TIMEOUT STARTED ===');
+                console.log('🎉 === PRODUCTION TODO SERVER STARTED ===');
                 console.log('📍 Port:', PORT);
+                console.log('🌍 Environment:', NODE_ENV);
                 console.log('🗄️ Database:', databaseAvailable ? 'Connected ✅' : 'Demo Mode ⚠️');
                 console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
                 console.log('⏰ Started at:', new Date().toISOString());
-                console.log('🌐 URL: http://localhost:' + PORT);
-                console.log('🔗 Health Check: http://localhost:' + PORT + '/health');
-                console.log('🛡️ CORS: SECURE RENDER-OPTIMIZED');
+                
+                if (NODE_ENV === 'development') {
+                    console.log('🌐 URL: http://localhost:' + PORT);
+                    console.log('🔗 Health Check: http://localhost:' + PORT + '/health');
+                }
+                
+                console.log('🛡️ CORS: PRODUCTION-OPTIMIZED');
                 console.log('✅ Allowed Origins:');
-                console.log('  • https://todo-app-fullstack-gamma.vercel.app');
-                console.log('  • localhost development servers');
+                console.log('  • https://todo-app-fullstack-gamma.vercel.app (Production)');
+                
+                if (NODE_ENV === 'development') {
+                    console.log('  • localhost development servers');
+                }
+                
                 console.log('');
-                console.log('📡 Auth-Endpoints:');
+                console.log('📡 Endpoints:');
                 console.log('  • POST /auth/register - Registration', databaseAvailable ? '✅' : '⚠️');
                 console.log('  • POST /auth/login    - Login', databaseAvailable ? '✅' : '⚠️');
                 console.log('  • GET  /auth/me      - User-Info', databaseAvailable ? '✅' : '⚠️');
                 console.log('  • POST /auth/logout  - Logout ✅');
-                console.log('');
-                console.log('📋 Task-Endpoints:');
                 console.log('  • GET    /tasks      - Get tasks', databaseAvailable ? '✅' : '📝 Demo');
                 console.log('  • POST   /tasks      - Create task', databaseAvailable ? '✅' : '⚠️');
                 console.log('  • PUT    /tasks/:id  - Toggle status', databaseAvailable ? '✅' : '⚠️');
                 console.log('  • DELETE /tasks/:id  - Delete task', databaseAvailable ? '✅' : '⚠️');
                 console.log('');
+                
                 if (!databaseAvailable) {
                     console.log('⚠️ === DEMO MODE ACTIVE ===');
                     console.log('🔄 Database may connect later - server will continue running');
                     console.log('📝 Tasks endpoint returns demo data for now');
+                    console.log('');
                 }
-                console.log('🎯 === READY FOR CORS-FREE AUTHENTICATION ===');
+                
+                console.log('🚀 === PRODUCTION SERVER READY ===');
                 console.log('');
             });
             
-            // Graceful Shutdown (erweitert für Datenbank)
+            // Graceful Shutdown
             const shutdown = async function (signal) {
                 console.log('\n🛑 ' + signal + ' received. Shutting down server...');
                 
@@ -949,10 +905,10 @@ const TaskServer = (function () {
     // Öffentliche API
     return {
         start: start,
-        app: app // Für Tests exportieren
+        app: app
     };
 })();
 
 // Server initialisieren und starten
-console.log('🔥 Initializing Secure TaskServer with Database-Timeout...');
+console.log('🏭 Initializing Production TaskServer...');
 TaskServer.start();
