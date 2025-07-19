@@ -175,98 +175,79 @@ const TaskServer = (function () {
         }
     };
     
-    // PRODUCTION-OPTIMIERTE CORS-MIDDLEWARE
+    // 🔒 SICHERE CORS-MIDDLEWARE mit verbessertem Debugging
     const setupMiddleware = function () {
-        console.log('⚙️ Setting up Production middleware...');
+        console.log('⚙️ Setting up SECURE CORS with enhanced debugging...');
         
-        // JSON Parser mit Limits
+        // JSON Parser
         app.use(express.json({
             limit: '1mb',
             strict: true
         }));
         
-        // PRODUCTION CORS-MIDDLEWARE
+        // 🔒 SICHERE CORS mit expliziter Vercel-Domain
         app.use(function (req, res, next) {
             const origin = req.headers.origin;
             const method = req.method;
             const path = req.path;
+            const userAgent = req.headers['user-agent'];
             
-            // Nur in Development Mode loggen
-            if (NODE_ENV === 'development') {
-                console.log('🌐 CORS REQUEST:', {
-                    method: method,
-                    path: path,
-                    origin: origin || 'NO-ORIGIN',
-                    timestamp: new Date().toISOString()
-                });
-            }
+            // AUSFÜHRLICHES DEBUGGING (immer aktiv)
+            console.log('🌐 === CORS REQUEST DEBUG ===');
+            console.log('🔍 Method:', method);
+            console.log('🔍 Path:', path);
+            console.log('🔍 Origin:', origin || 'NO-ORIGIN');
+            console.log('🔍 User-Agent:', userAgent ? userAgent.substring(0, 50) + '...' : 'NO-USER-AGENT');
+            console.log('🔍 All Headers:', JSON.stringify(req.headers, null, 2));
             
-            // PRODUCTION ALLOWED ORIGINS
-            const allowedOrigins = [
-                'https://todo-app-fullstack-gamma.vercel.app',  // ✅ Production Frontend
-                'http://localhost:5173',                        // Development (Vite)
-                'http://localhost:5500',                        // Development (Live Server)
-                'http://localhost:3000',                        // Development (React)
-                'http://127.0.0.1:5500',                        // Development (Live Server)
-                'http://127.0.0.1:3000'                         // Development (React)
-            ];
+            // EXPLIZITE VERCEL-DOMAIN (sicher)
+            const allowedOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
             
-            // CORS Origin ermitteln
-            let corsOrigin = null;
-            
-            if (!origin) {
-                // Kein Origin (direkte Requests, Health Checks, etc.)
-                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
-            } else if (allowedOrigins.includes(origin)) {
-                corsOrigin = origin;
-                if (NODE_ENV === 'development') {
-                    console.log('✅ Origin allowed:', origin);
-                }
-            } else {
-                // Unbekannte Origin
-                if (NODE_ENV === 'development') {
-                    console.log('❌ Origin not allowed:', origin);
-                }
-                corsOrigin = 'https://todo-app-fullstack-gamma.vercel.app';
-            }
-            
-            // CORS Headers setzen
-            res.header('Access-Control-Allow-Origin', corsOrigin);
-            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+            // CORS Headers IMMER setzen (auch ohne Origin)
+            res.header('Access-Control-Allow-Origin', allowedOrigin);
+            res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
             res.header('Access-Control-Allow-Credentials', 'true');
-            res.header('Access-Control-Max-Age', '86400'); // 24h Cache
+            res.header('Access-Control-Max-Age', '86400');
             
-            // PRODUCTION Security Headers
-            res.header('X-Content-Type-Options', 'nosniff');
-            res.header('X-Frame-Options', 'DENY');
-            res.header('X-XSS-Protection', '1; mode=block');
-            res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+            console.log('✅ CORS Headers gesetzt für:', allowedOrigin);
+            console.log('🔍 Response Headers:', {
+                'Access-Control-Allow-Origin': allowedOrigin,
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+            });
             
-            // OPTIONS Request Behandlung
+            // OPTIONS Preflight (AUSFÜHRLICH)
             if (method === 'OPTIONS') {
-                if (NODE_ENV === 'development') {
-                    console.log('🔄 OPTIONS preflight request');
-                }
-                res.status(204).end();
+                console.log('🔄 === OPTIONS PREFLIGHT DETECTED ===');
+                console.log('🔍 Request Headers for Preflight:', req.headers);
+                console.log('🔍 Sending OPTIONS response with status 200');
+                
+                // Explizite Antwort für OPTIONS
+                res.status(200).json({
+                    message: 'CORS Preflight OK',
+                    allowedOrigin: allowedOrigin,
+                    allowedMethods: 'GET, POST, PUT, DELETE, OPTIONS',
+                    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+                });
                 return;
             }
             
+            console.log('➡️ Continuing to route handler');
+            console.log('🌐 === END CORS DEBUG ===');
             next();
         });
         
-        // REQUEST LOGGING (nur in Development)
-        if (NODE_ENV === 'development') {
-            app.use(function (req, res, next) {
-                const timestamp = new Date().toISOString();
-                const hasAuth = req.headers.authorization ? '🔐' : '📝';
-                const origin = req.headers.origin || 'direct';
-                console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path} from ${origin}`);
-                next();
-            });
-        }
+        // REQUEST LOGGING (ausführlich)
+        app.use(function (req, res, next) {
+            const timestamp = new Date().toISOString();
+            const hasAuth = req.headers.authorization ? '🔐' : '📝';
+            const origin = req.headers.origin || 'direct';
+            console.log(`${timestamp} - ${hasAuth} ${req.method} ${req.path} from ${origin}`);
+            next();
+        });
         
-        console.log('✅ Production middleware setup complete');
+        console.log('✅ Secure CORS setup complete');
     };
     
     // ===== AUTHENTICATION ROUTE HANDLERS =====
@@ -712,26 +693,24 @@ const TaskServer = (function () {
         app.get('/health', function (req, res) {
             res.json({
                 status: 'ok',
-                message: 'PRODUCTION TODO SERVER IS RUNNING',
+                message: 'SECURE CORS TODO SERVER IS RUNNING',
                 timestamp: new Date().toISOString(),
-                version: 'PRODUCTION-3.0',
+                version: 'SECURE-CORS-1.0',
                 port: PORT,
                 environment: NODE_ENV,
-                cors: 'PRODUCTION_OPTIMIZED',
+                cors: 'SECURE_VERCEL_ONLY',
                 database: databaseAvailable ? 'connected' : 'unavailable',
-                allowedOrigins: [
-                    'https://todo-app-fullstack-gamma.vercel.app'
-                ]
+                allowedOrigins: ['https://todo-app-fullstack-gamma.vercel.app']
             });
         });
         
         // Root route for testing
         app.get('/', function (req, res) {
             res.json({
-                message: 'Production Todo App Backend API',
-                version: 'PRODUCTION-3.0',
+                message: 'Secure CORS Todo App Backend API',
+                version: 'SECURE-CORS-1.0',
                 environment: NODE_ENV,
-                cors: 'PRODUCTION_OPTIMIZED',
+                cors: 'SECURE_VERCEL_ONLY',
                 database: databaseAvailable ? 'connected' : 'unavailable',
                 endpoints: {
                     health: '/health',
@@ -785,13 +764,13 @@ const TaskServer = (function () {
             });
         });
         
-        console.log('✅ Production routes setup complete');
+        console.log('✅ Secure CORS routes setup complete');
     };
     
     // ===== SERVER START MIT PRODUCTION CONFIGURATION =====
     const start = async function () {
         try {
-            console.log('🏭 === STARTING PRODUCTION TODO SERVER ===');
+            console.log('🏭 === STARTING SECURE CORS TODO SERVER ===');
             console.log('📅 Timestamp:', new Date().toISOString());
             console.log('🌍 Environment:', NODE_ENV);
             console.log('📍 Port:', PORT);
@@ -822,25 +801,16 @@ const TaskServer = (function () {
             
             const server = app.listen(PORT, function () {
                 console.log('');
-                console.log('🎉 === PRODUCTION TODO SERVER STARTED ===');
+                console.log('🎉 === SECURE CORS TODO SERVER STARTED ===');
                 console.log('📍 Port:', PORT);
                 console.log('🌍 Environment:', NODE_ENV);
                 console.log('🗄️ Database:', databaseAvailable ? 'Connected ✅' : 'Demo Mode ⚠️');
                 console.log('🔑 JWT Secret:', JWT_SECRET ? 'Configured ✅' : 'Missing ❌');
                 console.log('⏰ Started at:', new Date().toISOString());
                 
-                if (NODE_ENV === 'development') {
-                    console.log('🌐 URL: http://localhost:' + PORT);
-                    console.log('🔗 Health Check: http://localhost:' + PORT + '/health');
-                }
-                
-                console.log('🛡️ CORS: PRODUCTION-OPTIMIZED');
+                console.log('🛡️ CORS: SECURE (Vercel-only)');
                 console.log('✅ Allowed Origins:');
-                console.log('  • https://todo-app-fullstack-gamma.vercel.app (Production)');
-                
-                if (NODE_ENV === 'development') {
-                    console.log('  • localhost development servers');
-                }
+                console.log('  • https://todo-app-fullstack-gamma.vercel.app');
                 
                 console.log('');
                 console.log('📡 Endpoints:');
@@ -861,7 +831,8 @@ const TaskServer = (function () {
                     console.log('');
                 }
                 
-                console.log('🚀 === PRODUCTION SERVER READY ===');
+                console.log('🚀 === SECURE CORS SERVER READY ===');
+                console.log('🔍 Enhanced debugging active - check logs for CORS details');
                 console.log('');
             });
             
@@ -910,5 +881,5 @@ const TaskServer = (function () {
 })();
 
 // Server initialisieren und starten
-console.log('🏭 Initializing Production TaskServer...');
+console.log('🏭 Initializing Secure CORS TaskServer...');
 TaskServer.start();
