@@ -383,7 +383,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 To-Do App <span class="version-badge">Production v3.0</span></h1>
+        <h1>📋 To-Do App <span class="version-badge">Fixed URL v4.0</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -478,9 +478,9 @@
         const TODO_APP = (function () {
             'use strict';
             
-            // 🌐 PRODUCTION: NUR RENDER BACKEND
+            // ✅ KORREKTE RENDER-URL (fdvh nicht f4vh!)
             const API_BASE_OPTIONS = [
-                'https://todo-app-fullstack-f4vh.onrender.com'  // ✅ NUR Render Cloud Backend
+                'https://todo-app-fullstack-fdvh.onrender.com'  // ✅ KORRIGIERT: fdvh
             ];
             
             let API_BASE = API_BASE_OPTIONS[0];
@@ -1333,9 +1333,9 @@
         // Debug-Zugriff in der Console
         window.TODO_DEBUG = TODO_APP.debug;
         
-        // Production Ready
-        console.log('✅ TODO APP LOADED - Production Mode');
-        console.log('🌐 API Base:', TODO_APP.debug.getStats().apiBase);
+        // URL-Fix Ready
+        console.log('✅ TODO APP LOADED - URL CORRECTED');
+        console.log('🌐 API Base:', API_BASE_OPTIONS[0]);
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
 </body>
