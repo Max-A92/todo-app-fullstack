@@ -96,6 +96,16 @@
         .error-banner.show {
             display: block;
         }
+        .error-banner.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+        .error-banner.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-color: #bee5eb;
+        }
         
         /* Modal für Login/Register */
         .modal {
@@ -464,93 +474,150 @@
     </div>
 
     <script>
-        // Module Pattern nach Crockford - erweitert um Connection Management
+        // Module Pattern nach Crockford - RENDER COLD START OPTIMIERT
         const TODO_APP = (function () {
             'use strict';
             
-            // Private Variablen - AKTUELLE BACKEND-URL
+            // 🔧 RENDER-OPTIMIERTE KONFIGURATION
             const API_BASE_OPTIONS = [
-                'https://todo-app-fullstack-f4vh.onrender.com',
-                'http://localhost:10000',
-                'http://localhost:3000'
+                'https://todo-app-fullstack-f4vh.onrender.com'  // Nur noch Render - kein localhost
             ];
             
-            let API_BASE = API_BASE_OPTIONS[0]; // Standard: Render-URL
+            let API_BASE = API_BASE_OPTIONS[0];
             let editingTaskId = null;
             let cachedTasks = [];
             let currentUser = null;
-            let connectionStatus = 'connecting';
+            let connectionStatus = 'connecting'; // Startet mit connecting statt cold-start
+            let retryCount = 0;
+            let maxRetries = 8; // 8 Versuche = ca. 4 Minuten
+            let retryInterval = 30000; // 30 Sekunden zwischen Versuchen
+            let countdownTimer = null;
             
             // DOM-Referenzen cachen
             let elements = {};
             
-            // Connection Status Management
+            // 🔥 RENDER COLD START MANAGER - UNSICHTBAR
+            const ColdStartManager = {
+                // Funktionen bleiben für Kompatibilität, tun aber nichts Visuelles
+                showNotice: function () {
+                    // Keine visuelle Anzeige mehr
+                    console.log('🔥 Cold Start erkannt - läuft im Hintergrund');
+                },
+                
+                hideNotice: function () {
+                    // Keine visuelle Anzeige mehr
+                    console.log('✅ Cold Start beendet');
+                },
+                
+                startCountdown: function () {
+                    // Kein Countdown mehr
+                },
+                
+                stopCountdown: function () {
+                    // Kein Countdown mehr
+                }
+            };
+            
+            // Connection Status Management - ERWEITERT
             const ConnectionManager = {
                 updateStatus: function (status, message) {
                     connectionStatus = status;
                     const indicator = elements.connectionStatus;
                     const text = elements.connectionText;
                     
-                    indicator.className = 'status-indicator ' + status;
-                    text.textContent = message;
-                    
-                    switch (status) {
-                        case 'connected':
-                            text.textContent = 'Online ✅';
-                            break;
-                        case 'disconnected':
-                            text.textContent = 'Offline ❌';
-                            break;
-                        case 'connecting':
-                            text.textContent = 'Verbinde...';
-                            break;
+                    if (indicator && text) {
+                        indicator.className = 'status-indicator ' + status;
+                        
+                        switch (status) {
+                            case 'connected':
+                                text.textContent = 'Online ✅';
+                                ColdStartManager.hideNotice();
+                                hideErrorBanner();
+                                break;
+                            case 'disconnected':
+                                text.textContent = 'Offline ❌';
+                                break;
+                            case 'connecting':
+                                text.textContent = 'Verbinde...';
+                                break;
+                            case 'cold-start':
+                                text.textContent = 'Verbinde...'; // Zeige nur "Verbinde..." statt Cold Start
+                                break;
+                        }
                     }
                 },
                 
+                // 🎯 INTELLIGENTE RENDER-VERBINDUNG MIT COLD START ERKENNUNG
                 testConnection: async function () {
-                    console.log('🔄 Teste Backend-Verbindung...');
+                    console.log('🔄 Teste Render-Backend Verbindung... Versuch:', retryCount + 1);
                     
-                    for (let i = 0; i < API_BASE_OPTIONS.length; i++) {
-                        const testUrl = API_BASE_OPTIONS[i];
-                        console.log('🌐 Teste:', testUrl);
+                    try {
+                        // LÄNGERER TIMEOUT FÜR RENDER COLD START
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 Sekunden!
                         
-                        try {
-                            const response = await fetch(testUrl + '/health', {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                            
-                            if (response.ok) {
-                                const data = await response.json();
-                                console.log('✅ Backend gefunden:', testUrl, data);
-                                API_BASE = testUrl;
-                                this.updateStatus('connected', 'Online ✅');
-                                return true;
-                            }
-                        } catch (error) {
-                            console.log('❌ Backend nicht erreichbar:', testUrl, error.message);
+                        const response = await fetch(API_BASE + '/health', {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' },
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('✅ Render Backend online:', data);
+                            retryCount = 0; // Reset retry count
+                            this.updateStatus('connected', 'Online ✅');
+                            return true;
+                        } else {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
+                    } catch (error) {
+                        console.log('❌ Render Backend nicht erreichbar:', error.message);
+                        
+                        retryCount++;
+                        
+                        if (error.name === 'AbortError') {
+                            console.log('⏰ Timeout - wahrscheinlich Cold Start');
+                            this.updateStatus('connecting', 'Verbinde...'); // Verwende connecting statt cold-start
+                        } else {
+                            this.updateStatus('disconnected', 'Offline ❌');
+                        }
+                        
+                        // AUTOMATISCHER RETRY FÜR COLD START
+                        if (retryCount < maxRetries) {
+                            console.log(`🔄 Retry in ${retryInterval/1000} Sekunden... (${retryCount}/${maxRetries})`);
+                            
+                            setTimeout(async () => {
+                                console.log('🎯 Automatischer Retry gestartet...');
+                                const success = await this.testConnection();
+                                if (success) {
+                                    console.log('🎉 Backend nach Retry erreichbar!');
+                                }
+                            }, retryInterval);
+                        } else {
+                            console.log('🚨 Maximale Retry-Anzahl erreicht');
+                            this.updateStatus('disconnected', 'Backend nicht erreichbar');
+                            showErrorBanner('Backend nicht erreichbar nach ' + maxRetries + ' Versuchen. Bitte prüfen Sie Render-Status.', 'error');
+                            ColdStartManager.hideNotice();
+                        }
+                        
+                        return false;
                     }
-                    
-                    console.log('🚨 Kein Backend erreichbar!');
-                    this.updateStatus('disconnected', 'Offline ❌');
-                    showErrorBanner('Backend nicht erreichbar. Das Backend startet möglicherweise noch (bis zu 2 Minuten).');
-                    return false;
                 }
             };
             
-            // Error Management
-            const showErrorBanner = function (message) {
+            // Error Management - ERWEITERT
+            const showErrorBanner = function (message, type = 'error') {
                 if (elements.errorBanner && elements.errorMessage) {
-                    elements.errorBanner.classList.add('show');
+                    elements.errorBanner.className = 'error-banner show ' + type;
                     elements.errorMessage.textContent = message;
                     
-                    // Auto-Hide nach 10 Sekunden
+                    // Auto-Hide nach 15 Sekunden (länger für wichtige Nachrichten)
                     setTimeout(function () {
                         hideErrorBanner();
-                    }, 10000);
+                    }, 15000);
                 }
             };
             
@@ -561,7 +628,7 @@
                 }
             };
             
-            // Token Management
+            // Token Management - UNVERÄNDERT
             const TokenManager = {
                 save: function (token) {
                     localStorage.setItem('authToken', token);
@@ -601,7 +668,7 @@
                 }
             };
             
-            // Auth API
+            // Auth API - UNVERÄNDERT
             const AuthAPI = {
                 register: async function (username, email, password) {
                     const response = await fetch(API_BASE + '/auth/register', {
@@ -622,7 +689,7 @@
                 }
             };
             
-            // Private Hilfsfunktionen
+            // Private Hilfsfunktionen - ERWEITERT
             const initializeElements = function () {
                 elements = {
                     taskText: document.getElementById('taskText'),
@@ -654,7 +721,7 @@
                 }
             };
             
-            // Auth UI Management
+            // Auth UI Management - UNVERÄNDERT
             const updateAuthUI = function () {
                 const isLoggedIn = TokenManager.isValid();
                 currentUser = TokenManager.getUser();
@@ -684,7 +751,7 @@
                 }, 5000);
             };
             
-            // Sichere DOM-Manipulation
+            // Sichere DOM-Manipulation - UNVERÄNDERT
             const createElement = function (tag, className, content) {
                 const element = document.createElement(tag);
                 if (className) {
@@ -696,7 +763,7 @@
                 return element;
             };
             
-            // Validierung
+            // Validierung - UNVERÄNDERT
             const isValidTaskText = function (text) {
                 return typeof text === 'string' && text.trim() !== '' && text.trim().length <= 500;
             };
@@ -705,7 +772,7 @@
                 return typeof id === 'number' && id > 0;
             };
             
-            // Fehlerbehandlung
+            // Fehlerbehandlung - ERWEITERT FÜR RENDER
             const handleError = function (error, userMessage, context) {
                 console.error('🚨 Fehler in TODO_APP:', {
                     error: error,
@@ -715,24 +782,31 @@
                 
                 const message = userMessage || 'Ein unerwarteter Fehler ist aufgetreten';
                 
-                if (error.message && (error.message.includes('NetworkError') || error.message.includes('fetch'))) {
-                    showErrorBanner('Verbindungsproblem: Backend nicht erreichbar (startet möglicherweise noch)');
-                    ConnectionManager.updateStatus('disconnected', 'Offline ❌');
+                if (error.message && (error.message.includes('NetworkError') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+                    // Render Cold Start erkannt - diskrete Behandlung
+                    ConnectionManager.updateStatus('connecting', 'Verbinde...');
+                    // Keine aufdringliche Nachricht mehr
+                    
+                    // Automatischer Retry
+                    setTimeout(async () => {
+                        await ConnectionManager.testConnection();
+                    }, retryInterval);
                 } else {
-                    showErrorBanner('❌ ' + message);
+                    showErrorBanner('❌ ' + message, 'error');
                 }
             };
             
-            // API-Aufrufe mit automatischen Auth-Headers und Retry-Logic
+            // API-Aufrufe mit RENDER-OPTIMIERUNG
             const apiCall = async function (url, options) {
-                console.log("🌐 API Call gestartet");
+                console.log("🌐 API Call gestartet - RENDER OPTIMIERT");
                 console.log("📍 URL:", API_BASE + url);
                 
                 const controller = new AbortController();
+                // LÄNGERER TIMEOUT FÜR RENDER COLD START
                 const timeoutId = setTimeout(function () {
-                    console.log("⏰ Request Timeout nach 20 Sekunden");
+                    console.log("⏰ Request Timeout nach 60 Sekunden (Render Cold Start)");
                     controller.abort();
-                }, 20000); // Erhöht für Render Cold Start
+                }, 60000); // 60 Sekunden für Cold Start!
                 
                 // Automatisch Auth-Header hinzufügen
                 const token = TokenManager.get();
@@ -757,7 +831,7 @@
                 };
                 
                 try {
-                    console.log("📤 Sende fetch Request...");
+                    console.log("📤 Sende fetch Request zu Render...");
                     const startTime = Date.now();
                     
                     const response = await fetch(API_BASE + url, finalOptions);
@@ -770,23 +844,16 @@
                     
                     if (!response.ok) {
                         console.error("❌ HTTP Error:", response.status, response.statusText);
-                        
-                        if (response.status === 404) {
-                            // Backend URL möglicherweise falsch - versuche Connection Test
-                            console.log("🔄 404 Error - teste Backend-Connection...");
-                            await ConnectionManager.testConnection();
-                            throw new Error('Backend-URL nicht gefunden (404) - startet möglicherweise noch');
-                        }
-                        
                         throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                     }
                     
                     const data = await response.json();
                     console.log("✅ JSON geparst:", data);
                     
-                    // Connection erfolgreich
+                    // Connection erfolgreich - Backend ist wach!
                     ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
+                    retryCount = 0; // Reset retry count
                     
                     return data;
                 } catch (error) {
@@ -794,20 +861,20 @@
                     console.error("🚨 apiCall Fehler:", error);
                     
                     if (error.name === 'AbortError') {
-                        console.error("⏰ Request abgebrochen wegen Timeout");
-                        ConnectionManager.updateStatus('disconnected', 'Timeout');
-                        throw new Error('Request Timeout - Backend startet möglicherweise noch (bis zu 2 Minuten)');
+                        console.error("⏰ Request abgebrochen wegen Timeout - Render Cold Start vermutet");
+                        ConnectionManager.updateStatus('connecting', 'Verbinde...');
+                        throw new Error('Render Backend startet noch. Bitte warten...');
                     } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-                        console.error("🌐 Netzwerk-Fehler erkannt");
-                        ConnectionManager.updateStatus('disconnected', 'Offline ❌');
-                        throw new Error('Netzwerkfehler - Backend nicht erreichbar');
+                        console.error("🌐 Netzwerk-Fehler - Render möglicherweise offline");
+                        ConnectionManager.updateStatus('connecting', 'Verbinde...');
+                        throw new Error('Render Backend nicht erreichbar - startet möglicherweise');
                     }
                     
                     throw error;
                 }
             };
             
-            // Statistiken berechnen und anzeigen
+            // Statistiken berechnen und anzeigen - UNVERÄNDERT
             const updateStats = function (tasks) {
                 if (!Array.isArray(tasks)) {
                     return;
@@ -829,15 +896,15 @@
                     '📝 Offen: ' + open + userInfo;
             };
             
-            // Aufgaben laden und anzeigen
+            // Aufgaben laden und anzeigen - RENDER-OPTIMIERT
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet");
+                console.log("📚 loadTasks() gestartet - RENDER OPTIMIERT");
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
                 try {
                     const tasks = await apiCall('/tasks');
-                    console.log("✅ Tasks geladen, Anzahl:", tasks.length);
+                    console.log("✅ Tasks von Render geladen, Anzahl:", tasks.length);
                     cachedTasks = tasks;
                     renderTasks(tasks);
                     updateStats(tasks);
@@ -845,19 +912,22 @@
                     ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
                 } catch (error) {
-                    console.error("🚨 Fehler beim Laden der Tasks:", error);
+                    console.error("🚨 Fehler beim Laden der Tasks von Render:", error);
                     handleError(error, 'Fehler beim Laden der Aufgaben', 'loadTasks');
                     
                     if (cachedTasks.length > 0) {
                         console.warn("⚠️ Verwende gecachte Tasks, Anzahl:", cachedTasks.length);
                         renderTasks(cachedTasks);
                         updateStats(cachedTasks);
-                        showErrorBanner('⚠️ Offline-Modus: Zeige letzte gespeicherte Aufgaben');
+                        showErrorBanner('⚠️ Offline-Modus: Zeige letzte gespeicherte Aufgaben', 'warning');
                     }
                 }
             };
             
-            // Aufgaben rendern (unverändert)
+            // Alle weiteren Funktionen bleiben UNVERÄNDERT...
+            // (renderTasks, renderEditMode, renderViewMode, addTask, toggleTask, deleteTask, etc.)
+            
+            // Aufgaben rendern - UNVERÄNDERT
             const renderTasks = function (tasks) {
                 if (!Array.isArray(tasks)) {
                     handleError(new Error('Tasks ist kein Array'), 'Ungültige Daten erhalten', 'renderTasks');
@@ -897,7 +967,7 @@
                 });
             };
             
-            // Edit-Modus rendern (unverändert)
+            // Edit-Modus rendern - UNVERÄNDERT
             const renderEditMode = function (container, task) {
                 const textSpan = createElement('span', 'task-text');
                 const input = createElement('input');
@@ -934,7 +1004,7 @@
                 }, 50);
             };
             
-            // View-Modus rendern (unverändert)
+            // View-Modus rendern - UNVERÄNDERT
             const renderViewMode = function (container, task) {
                 const textSpan = createElement('span', 'task-text', task.text);
                 const statusSpan = createElement('span', 'task-status', task.status.toUpperCase());
@@ -963,7 +1033,7 @@
                 container.appendChild(deleteBtn);
             };
             
-            // Neue Aufgabe hinzufügen (mit verbesserter Fehlerbehandlung)
+            // Neue Aufgabe hinzufügen - UNVERÄNDERT
             const addTask = async function () {
                 console.log("🚀 addTask() gestartet");
                 
@@ -972,18 +1042,18 @@
                 
                 if (!isValidTaskText(text)) {
                     console.log("❌ Validation fehlgeschlagen für Text:", text);
-                    showErrorBanner('⚠️ Bitte geben Sie einen gültigen Aufgabentext ein (1-500 Zeichen)');
+                    showErrorBanner('⚠️ Bitte geben Sie einen gültigen Aufgabentext ein (1-500 Zeichen)', 'warning');
                     elements.taskText.focus();
                     return;
                 }
                 
-                console.log("✅ Validation erfolgreich, sende Request an Backend");
+                console.log("✅ Validation erfolgreich, sende Request an Render Backend");
                 
                 elements.addButton.disabled = true;
                 elements.addButton.textContent = '⏳ Wird hinzugefügt...';
                 
                 try {
-                    console.log("📡 Sende POST Request an:", API_BASE + '/tasks');
+                    console.log("📡 Sende POST Request an Render:", API_BASE + '/tasks');
                     console.log("📋 Request Body:", {text: text.trim()});
                     
                     const response = await apiCall('/tasks', {
@@ -992,7 +1062,7 @@
                         body: JSON.stringify({text: text.trim()})
                     });
                     
-                    console.log("✅ Response erhalten:", response);
+                    console.log("✅ Response von Render erhalten:", response);
                     
                     elements.taskText.value = '';
                     console.log("🧹 Eingabefeld geleert");
@@ -1010,7 +1080,7 @@
                 }
             };
             
-            // Alle weiteren Task-Funktionen bleiben unverändert
+            // Alle weiteren Task-Funktionen bleiben UNVERÄNDERT
             const toggleTask = async function (taskId) {
                 if (!isValidTaskId(taskId)) {
                     handleError(new Error('Ungültige Task-ID'), 'Fehler beim Bearbeiten der Aufgabe', 'toggleTask');
@@ -1049,7 +1119,7 @@
                 }).length;
                 
                 if (completedCount === 0) {
-                    showErrorBanner('ℹ️ Keine erledigten Aufgaben zum Löschen vorhanden.');
+                    showErrorBanner('ℹ️ Keine erledigten Aufgaben zum Löschen vorhanden.', 'info');
                     return;
                 }
                 
@@ -1062,7 +1132,7 @@
                         method: 'DELETE'
                     });
                     loadTasks();
-                    showErrorBanner('✅ ' + (result.message || 'Erledigte Aufgaben gelöscht'));
+                    showErrorBanner('✅ ' + (result.message || 'Erledigte Aufgaben gelöscht'), 'info');
                 } catch (error) {
                     handleError(error, 'Fehler beim Löschen der erledigten Aufgaben', 'deleteAllCompleted');
                 }
@@ -1070,7 +1140,7 @@
             
             const startEdit = function (taskId) {
                 if (editingTaskId !== null) {
-                    showErrorBanner('ℹ️ Bitte beenden Sie zuerst die aktuelle Bearbeitung.');
+                    showErrorBanner('ℹ️ Bitte beenden Sie zuerst die aktuelle Bearbeitung.', 'info');
                     return;
                 }
                 editingTaskId = taskId;
@@ -1086,7 +1156,7 @@
                 
                 const newText = input.value;
                 if (!isValidTaskText(newText)) {
-                    showErrorBanner('⚠️ Aufgabentext darf nicht leer sein und maximal 500 Zeichen haben!');
+                    showErrorBanner('⚠️ Aufgabentext darf nicht leer sein und maximal 500 Zeichen haben!', 'warning');
                     input.focus();
                     return;
                 }
@@ -1110,7 +1180,7 @@
                 renderTasks(cachedTasks);
             };
             
-            // Auth-Funktionen
+            // Auth-Funktionen - UNVERÄNDERT
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1192,21 +1262,21 @@
                     currentUser = null;
                     updateAuthUI();
                     loadTasks();
-                    showErrorBanner('✅ Erfolgreich abgemeldet!');
+                    showErrorBanner('✅ Erfolgreich abgemeldet!', 'info');
                 }
             };
             
-            // Event-Handler für Enter-Taste
+            // Event-Handler für Enter-Taste - UNVERÄNDERT
             const handleKeyPress = function (event) {
                 if (event.key === 'Enter') {
                     addTask();
                 }
             };
             
-            // Initialisierung
+            // 🎯 HAUPTINITIALISIERUNG - RENDER-OPTIMIERT
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP...');
+                    console.log('🚀 Initialisiere TODO_APP - RENDER COLD START OPTIMIERT...');
                     initializeElements();
                     
                     // Event-Handler zuweisen
@@ -1221,28 +1291,23 @@
                     // Auth-Status prüfen
                     updateAuthUI();
                     
-                    // Backend-Verbindung testen
-                    console.log('🔍 Teste Backend-Verbindung...');
+                    // 🔥 RENDER BACKEND CONNECTION TEST MIT COLD START HANDLING (UNSICHTBAR)
+                    console.log('🔍 Teste Render Backend-Verbindung mit Cold Start Handling...');
+                    ConnectionManager.updateStatus('connecting', 'Verbinde...');
+                    
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        // Initiale Daten laden
-                        console.log('✅ Backend erreichbar, lade Daten...');
+                        // Backend ist wach - lade Daten
+                        console.log('✅ Render Backend online, lade Daten...');
                         await loadTasks();
                     } else {
-                        showErrorBanner('Backend startet noch oder ist nicht erreichbar. Render Free-Tier benötigt bis zu 2 Minuten zum Starten.');
-                        
-                        // Retry nach 30 Sekunden
-                        setTimeout(async function() {
-                            console.log('🔄 Retry Backend-Verbindung...');
-                            const retryOk = await ConnectionManager.testConnection();
-                            if (retryOk) {
-                                await loadTasks();
-                            }
-                        }, 30000);
+                        // Cold Start detected - läuft diskret im Hintergrund
+                        console.log('🔥 Render Cold Start erkannt - Background-Retries aktiv...');
+                        // Background-Retries laufen automatisch über ConnectionManager
                     }
                     
-                    console.log('✅ TODO_APP erfolgreich initialisiert');
+                    console.log('✅ TODO_APP erfolgreich initialisiert - RENDER READY');
                 } catch (error) {
                     handleError(error, 'Fehler beim Initialisieren der App', 'initialize');
                 }
@@ -1289,8 +1354,13 @@
                             apiBase: API_BASE,
                             currentUser: currentUser,
                             isLoggedIn: TokenManager.isValid(),
-                            connectionStatus: connectionStatus
+                            connectionStatus: connectionStatus,
+                            retryCount: retryCount,
+                            maxRetries: maxRetries
                         };
+                    },
+                    testConnection: function () {
+                        return ConnectionManager.testConnection();
                     }
                 }
             };
@@ -1330,6 +1400,11 @@
         
         // Debug-Zugriff in der Console
         window.TODO_DEBUG = TODO_APP.debug;
+        
+        // 🔧 RENDER OPTIMIERT - UNSICHTBARE VERBESSERUNGEN
+        console.log('✅ TODO APP LOADED - Render-optimiert im Hintergrund');
+        console.log('🎯 Verwende: TODO_DEBUG.testConnection() um Verbindung zu testen');
+        console.log('📊 Verwende: TODO_DEBUG.getStats() für Debug-Infos');
     </script>
 </body>
 </html>
