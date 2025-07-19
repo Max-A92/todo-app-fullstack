@@ -478,9 +478,10 @@
         const TODO_APP = (function () {
             'use strict';
             
-            // 🔧 RENDER-OPTIMIERTE KONFIGURATION
+            // 🔧 KORREKTE PORT-KONFIGURATION basierend auf .env
             const API_BASE_OPTIONS = [
-                'https://todo-app-fullstack-f4vh.onrender.com'  // Nur noch Render - kein localhost
+                'http://localhost:3000',                                    // ✅ Korrekt: Lokal verwendet PORT=3000
+                'https://todo-app-fullstack-f4vh.onrender.com'             // ✅ Render Cloud (sobald fixed)
             ];
             
             let API_BASE = API_BASE_OPTIONS[0];
