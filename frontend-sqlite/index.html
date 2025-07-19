@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📋 Optimierte To-Do App (Crockford Best Practices)</title>
+    <title>📋 Optimierte To-Do App (Production)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -221,7 +221,7 @@
             border: 1px solid #c3e6cb;
         }
         
-        /* Bestehende Styles bleiben unverändert */
+        /* Task Styles */
         .task-item {
             margin: 10px 0;
             padding: 15px;
@@ -383,7 +383,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 To-Do App <span class="version-badge">Working v2.1</span></h1>
+        <h1>📋 To-Do App <span class="version-badge">Production v3.0</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -391,7 +391,7 @@
             <span id="connectionText">Connecting...</span>
         </div>
         
-        <!-- Auth Controls - diskret im Header -->
+        <!-- Auth Controls -->
         <div class="auth-controls">
             <div id="guestControls">
                 <button class="auth-button" onclick="showAuthModal('login')">🔑 Anmelden</button>
@@ -445,7 +445,7 @@
         </div>
     </div>
     
-    <!-- Hauptinhalt - bleibt unverändert -->
+    <!-- Hauptinhalt -->
     <div id="appContent">
         <!-- Guest-Modus Hinweis -->
         <div id="guestModeNotice" class="welcome-message">
@@ -474,52 +474,28 @@
     </div>
 
     <script>
-        // Module Pattern nach Crockford - RENDER COLD START OPTIMIERT
+        // Module Pattern nach Crockford - PRODUCTION VERSION
         const TODO_APP = (function () {
             'use strict';
             
-            // 🔧 KORREKTE PORT-KONFIGURATION basierend auf .env
+            // 🌐 PRODUCTION: NUR RENDER BACKEND
             const API_BASE_OPTIONS = [
-                'http://localhost:3000',                                    // ✅ Korrekt: Lokal verwendet PORT=3000
-                'https://todo-app-fullstack-f4vh.onrender.com'             // ✅ Render Cloud (sobald fixed)
+                'https://todo-app-fullstack-f4vh.onrender.com'  // ✅ NUR Render Cloud Backend
             ];
             
             let API_BASE = API_BASE_OPTIONS[0];
             let editingTaskId = null;
             let cachedTasks = [];
             let currentUser = null;
-            let connectionStatus = 'connecting'; // Startet mit connecting statt cold-start
+            let connectionStatus = 'connecting';
             let retryCount = 0;
-            let maxRetries = 8; // 8 Versuche = ca. 4 Minuten
-            let retryInterval = 30000; // 30 Sekunden zwischen Versuchen
-            let countdownTimer = null;
+            let maxRetries = 8;
+            let retryInterval = 30000;
             
             // DOM-Referenzen cachen
             let elements = {};
             
-            // 🔥 RENDER COLD START MANAGER - UNSICHTBAR
-            const ColdStartManager = {
-                // Funktionen bleiben für Kompatibilität, tun aber nichts Visuelles
-                showNotice: function () {
-                    // Keine visuelle Anzeige mehr
-                    console.log('🔥 Cold Start erkannt - läuft im Hintergrund');
-                },
-                
-                hideNotice: function () {
-                    // Keine visuelle Anzeige mehr
-                    console.log('✅ Cold Start beendet');
-                },
-                
-                startCountdown: function () {
-                    // Kein Countdown mehr
-                },
-                
-                stopCountdown: function () {
-                    // Kein Countdown mehr
-                }
-            };
-            
-            // Connection Status Management - ERWEITERT
+            // Connection Status Management
             const ConnectionManager = {
                 updateStatus: function (status, message) {
                     connectionStatus = status;
@@ -532,7 +508,6 @@
                         switch (status) {
                             case 'connected':
                                 text.textContent = 'Online ✅';
-                                ColdStartManager.hideNotice();
                                 hideErrorBanner();
                                 break;
                             case 'disconnected':
@@ -541,21 +516,16 @@
                             case 'connecting':
                                 text.textContent = 'Verbinde...';
                                 break;
-                            case 'cold-start':
-                                text.textContent = 'Verbinde...'; // Zeige nur "Verbinde..." statt Cold Start
-                                break;
                         }
                     }
                 },
                 
-                // 🎯 INTELLIGENTE RENDER-VERBINDUNG MIT COLD START ERKENNUNG
                 testConnection: async function () {
-                    console.log('🔄 Teste Render-Backend Verbindung... Versuch:', retryCount + 1);
+                    console.log('🔄 Teste Render Backend... Versuch:', retryCount + 1);
                     
                     try {
-                        // LÄNGERER TIMEOUT FÜR RENDER COLD START
                         const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 Sekunden!
+                        const timeoutId = setTimeout(() => controller.abort(), 45000);
                         
                         const response = await fetch(API_BASE + '/health', {
                             method: 'GET',
@@ -568,7 +538,7 @@
                         if (response.ok) {
                             const data = await response.json();
                             console.log('✅ Render Backend online:', data);
-                            retryCount = 0; // Reset retry count
+                            retryCount = 0;
                             this.updateStatus('connected', 'Online ✅');
                             return true;
                         } else {
@@ -580,18 +550,17 @@
                         retryCount++;
                         
                         if (error.name === 'AbortError') {
-                            console.log('⏰ Timeout - wahrscheinlich Cold Start');
-                            this.updateStatus('connecting', 'Verbinde...'); // Verwende connecting statt cold-start
+                            console.log('⏰ Timeout - Cold Start vermutet');
+                            this.updateStatus('connecting', 'Verbinde...');
                         } else {
                             this.updateStatus('disconnected', 'Offline ❌');
                         }
                         
-                        // AUTOMATISCHER RETRY FÜR COLD START
+                        // Automatischer Retry
                         if (retryCount < maxRetries) {
                             console.log(`🔄 Retry in ${retryInterval/1000} Sekunden... (${retryCount}/${maxRetries})`);
                             
                             setTimeout(async () => {
-                                console.log('🎯 Automatischer Retry gestartet...');
                                 const success = await this.testConnection();
                                 if (success) {
                                     console.log('🎉 Backend nach Retry erreichbar!');
@@ -600,8 +569,7 @@
                         } else {
                             console.log('🚨 Maximale Retry-Anzahl erreicht');
                             this.updateStatus('disconnected', 'Backend nicht erreichbar');
-                            showErrorBanner('Backend nicht erreichbar nach ' + maxRetries + ' Versuchen. Bitte prüfen Sie Render-Status.', 'error');
-                            ColdStartManager.hideNotice();
+                            showErrorBanner('Backend nicht erreichbar nach ' + maxRetries + ' Versuchen.', 'error');
                         }
                         
                         return false;
@@ -609,13 +577,12 @@
                 }
             };
             
-            // Error Management - ERWEITERT
+            // Error Management
             const showErrorBanner = function (message, type = 'error') {
                 if (elements.errorBanner && elements.errorMessage) {
                     elements.errorBanner.className = 'error-banner show ' + type;
                     elements.errorMessage.textContent = message;
                     
-                    // Auto-Hide nach 15 Sekunden (länger für wichtige Nachrichten)
                     setTimeout(function () {
                         hideErrorBanner();
                     }, 15000);
@@ -629,7 +596,7 @@
                 }
             };
             
-            // Token Management - UNVERÄNDERT
+            // Token Management
             const TokenManager = {
                 save: function (token) {
                     localStorage.setItem('authToken', token);
@@ -669,7 +636,7 @@
                 }
             };
             
-            // Auth API - UNVERÄNDERT
+            // Auth API
             const AuthAPI = {
                 register: async function (username, email, password) {
                     const response = await fetch(API_BASE + '/auth/register', {
@@ -690,7 +657,7 @@
                 }
             };
             
-            // Private Hilfsfunktionen - ERWEITERT
+            // Private Hilfsfunktionen
             const initializeElements = function () {
                 elements = {
                     taskText: document.getElementById('taskText'),
@@ -722,7 +689,7 @@
                 }
             };
             
-            // Auth UI Management - UNVERÄNDERT
+            // Auth UI Management
             const updateAuthUI = function () {
                 const isLoggedIn = TokenManager.isValid();
                 currentUser = TokenManager.getUser();
@@ -752,7 +719,7 @@
                 }, 5000);
             };
             
-            // Sichere DOM-Manipulation - UNVERÄNDERT
+            // Sichere DOM-Manipulation
             const createElement = function (tag, className, content) {
                 const element = document.createElement(tag);
                 if (className) {
@@ -764,7 +731,7 @@
                 return element;
             };
             
-            // Validierung - UNVERÄNDERT
+            // Validierung
             const isValidTaskText = function (text) {
                 return typeof text === 'string' && text.trim() !== '' && text.trim().length <= 500;
             };
@@ -773,7 +740,7 @@
                 return typeof id === 'number' && id > 0;
             };
             
-            // Fehlerbehandlung - ERWEITERT FÜR RENDER
+            // Fehlerbehandlung
             const handleError = function (error, userMessage, context) {
                 console.error('🚨 Fehler in TODO_APP:', {
                     error: error,
@@ -784,11 +751,8 @@
                 const message = userMessage || 'Ein unerwarteter Fehler ist aufgetreten';
                 
                 if (error.message && (error.message.includes('NetworkError') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-                    // Render Cold Start erkannt - diskrete Behandlung
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
-                    // Keine aufdringliche Nachricht mehr
                     
-                    // Automatischer Retry
                     setTimeout(async () => {
                         await ConnectionManager.testConnection();
                     }, retryInterval);
@@ -797,19 +761,16 @@
                 }
             };
             
-            // API-Aufrufe mit RENDER-OPTIMIERUNG
+            // API-Aufrufe
             const apiCall = async function (url, options) {
-                console.log("🌐 API Call gestartet - RENDER OPTIMIERT");
-                console.log("📍 URL:", API_BASE + url);
+                console.log("🌐 API Call zu Render:", API_BASE + url);
                 
                 const controller = new AbortController();
-                // LÄNGERER TIMEOUT FÜR RENDER COLD START
                 const timeoutId = setTimeout(function () {
-                    console.log("⏰ Request Timeout nach 60 Sekunden (Render Cold Start)");
+                    console.log("⏰ Request Timeout nach 60 Sekunden");
                     controller.abort();
-                }, 60000); // 60 Sekunden für Cold Start!
+                }, 60000);
                 
-                // Automatisch Auth-Header hinzufügen
                 const token = TokenManager.get();
                 const defaultOptions = {
                     signal: controller.signal,
@@ -832,29 +793,22 @@
                 };
                 
                 try {
-                    console.log("📤 Sende fetch Request zu Render...");
                     const startTime = Date.now();
-                    
                     const response = await fetch(API_BASE + url, finalOptions);
-                    
                     const duration = Date.now() - startTime;
-                    console.log("📥 Response erhalten nach", duration, "ms");
-                    console.log("📊 Response Status:", response.status, response.statusText);
+                    
+                    console.log("📥 Response nach", duration, "ms - Status:", response.status);
                     
                     clearTimeout(timeoutId);
                     
                     if (!response.ok) {
-                        console.error("❌ HTTP Error:", response.status, response.statusText);
                         throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                     }
                     
                     const data = await response.json();
-                    console.log("✅ JSON geparst:", data);
-                    
-                    // Connection erfolgreich - Backend ist wach!
                     ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
-                    retryCount = 0; // Reset retry count
+                    retryCount = 0;
                     
                     return data;
                 } catch (error) {
@@ -862,20 +816,18 @@
                     console.error("🚨 apiCall Fehler:", error);
                     
                     if (error.name === 'AbortError') {
-                        console.error("⏰ Request abgebrochen wegen Timeout - Render Cold Start vermutet");
                         ConnectionManager.updateStatus('connecting', 'Verbinde...');
                         throw new Error('Render Backend startet noch. Bitte warten...');
                     } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-                        console.error("🌐 Netzwerk-Fehler - Render möglicherweise offline");
                         ConnectionManager.updateStatus('connecting', 'Verbinde...');
-                        throw new Error('Render Backend nicht erreichbar - startet möglicherweise');
+                        throw new Error('Render Backend nicht erreichbar');
                     }
                     
                     throw error;
                 }
             };
             
-            // Statistiken berechnen und anzeigen - UNVERÄNDERT
+            // Statistiken berechnen und anzeigen
             const updateStats = function (tasks) {
                 if (!Array.isArray(tasks)) {
                     return;
@@ -888,7 +840,6 @@
                 const open = total - completed;
                 
                 const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-                
                 const userInfo = currentUser ? ' von ' + currentUser.username : ' (Demo)';
                 
                 elements.stats.textContent = 
@@ -897,9 +848,9 @@
                     '📝 Offen: ' + open + userInfo;
             };
             
-            // Aufgaben laden und anzeigen - RENDER-OPTIMIERT
+            // Aufgaben laden und anzeigen
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet - RENDER OPTIMIERT");
+                console.log("📚 loadTasks() gestartet - Production Mode");
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
@@ -913,11 +864,10 @@
                     ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
                 } catch (error) {
-                    console.error("🚨 Fehler beim Laden der Tasks von Render:", error);
+                    console.error("🚨 Fehler beim Laden der Tasks:", error);
                     handleError(error, 'Fehler beim Laden der Aufgaben', 'loadTasks');
                     
                     if (cachedTasks.length > 0) {
-                        console.warn("⚠️ Verwende gecachte Tasks, Anzahl:", cachedTasks.length);
                         renderTasks(cachedTasks);
                         updateStats(cachedTasks);
                         showErrorBanner('⚠️ Offline-Modus: Zeige letzte gespeicherte Aufgaben', 'warning');
@@ -925,10 +875,7 @@
                 }
             };
             
-            // Alle weiteren Funktionen bleiben UNVERÄNDERT...
-            // (renderTasks, renderEditMode, renderViewMode, addTask, toggleTask, deleteTask, etc.)
-            
-            // Aufgaben rendern - UNVERÄNDERT
+            // Aufgaben rendern
             const renderTasks = function (tasks) {
                 if (!Array.isArray(tasks)) {
                     handleError(new Error('Tasks ist kein Array'), 'Ungültige Daten erhalten', 'renderTasks');
@@ -968,7 +915,7 @@
                 });
             };
             
-            // Edit-Modus rendern - UNVERÄNDERT
+            // Edit-Modus rendern
             const renderEditMode = function (container, task) {
                 const textSpan = createElement('span', 'task-text');
                 const input = createElement('input');
@@ -1005,7 +952,7 @@
                 }, 50);
             };
             
-            // View-Modus rendern - UNVERÄNDERT
+            // View-Modus rendern
             const renderViewMode = function (container, task) {
                 const textSpan = createElement('span', 'task-text', task.text);
                 const statusSpan = createElement('span', 'task-status', task.status.toUpperCase());
@@ -1034,42 +981,30 @@
                 container.appendChild(deleteBtn);
             };
             
-            // Neue Aufgabe hinzufügen - UNVERÄNDERT
+            // Neue Aufgabe hinzufügen
             const addTask = async function () {
                 console.log("🚀 addTask() gestartet");
                 
                 const text = elements.taskText.value;
-                console.log("✏️ Eingabetext:", text);
                 
                 if (!isValidTaskText(text)) {
-                    console.log("❌ Validation fehlgeschlagen für Text:", text);
                     showErrorBanner('⚠️ Bitte geben Sie einen gültigen Aufgabentext ein (1-500 Zeichen)', 'warning');
                     elements.taskText.focus();
                     return;
                 }
                 
-                console.log("✅ Validation erfolgreich, sende Request an Render Backend");
-                
                 elements.addButton.disabled = true;
                 elements.addButton.textContent = '⏳ Wird hinzugefügt...';
                 
                 try {
-                    console.log("📡 Sende POST Request an Render:", API_BASE + '/tasks');
-                    console.log("📋 Request Body:", {text: text.trim()});
-                    
                     const response = await apiCall('/tasks', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({text: text.trim()})
                     });
                     
-                    console.log("✅ Response von Render erhalten:", response);
-                    
                     elements.taskText.value = '';
-                    console.log("🧹 Eingabefeld geleert");
-                    
                     loadTasks();
-                    console.log("🔄 Tasks neu geladen");
                     
                 } catch (error) {
                     console.error("🚨 FEHLER in addTask:", error);
@@ -1077,11 +1012,10 @@
                 } finally {
                     elements.addButton.disabled = false;
                     elements.addButton.textContent = '➕ Hinzufügen';
-                    console.log("🔘 Button wieder aktiviert");
                 }
             };
             
-            // Alle weiteren Task-Funktionen bleiben UNVERÄNDERT
+            // Task-Funktionen
             const toggleTask = async function (taskId) {
                 if (!isValidTaskId(taskId)) {
                     handleError(new Error('Ungültige Task-ID'), 'Fehler beim Bearbeiten der Aufgabe', 'toggleTask');
@@ -1181,7 +1115,7 @@
                 renderTasks(cachedTasks);
             };
             
-            // Auth-Funktionen - UNVERÄNDERT
+            // Auth-Funktionen
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1267,17 +1201,17 @@
                 }
             };
             
-            // Event-Handler für Enter-Taste - UNVERÄNDERT
+            // Event-Handler für Enter-Taste
             const handleKeyPress = function (event) {
                 if (event.key === 'Enter') {
                     addTask();
                 }
             };
             
-            // 🎯 HAUPTINITIALISIERUNG - RENDER-OPTIMIERT
+            // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - RENDER COLD START OPTIMIERT...');
+                    console.log('🚀 Initialisiere TODO_APP - PRODUCTION MODE');
                     initializeElements();
                     
                     // Event-Handler zuweisen
@@ -1292,23 +1226,20 @@
                     // Auth-Status prüfen
                     updateAuthUI();
                     
-                    // 🔥 RENDER BACKEND CONNECTION TEST MIT COLD START HANDLING (UNSICHTBAR)
-                    console.log('🔍 Teste Render Backend-Verbindung mit Cold Start Handling...');
+                    // Render Backend Connection Test
+                    console.log('🔍 Teste Render Backend-Verbindung...');
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
                     
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        // Backend ist wach - lade Daten
                         console.log('✅ Render Backend online, lade Daten...');
                         await loadTasks();
                     } else {
-                        // Cold Start detected - läuft diskret im Hintergrund
                         console.log('🔥 Render Cold Start erkannt - Background-Retries aktiv...');
-                        // Background-Retries laufen automatisch über ConnectionManager
                     }
                     
-                    console.log('✅ TODO_APP erfolgreich initialisiert - RENDER READY');
+                    console.log('✅ TODO_APP erfolgreich initialisiert - PRODUCTION READY');
                 } catch (error) {
                     handleError(error, 'Fehler beim Initialisieren der App', 'initialize');
                 }
@@ -1402,10 +1333,10 @@
         // Debug-Zugriff in der Console
         window.TODO_DEBUG = TODO_APP.debug;
         
-        // 🔧 RENDER OPTIMIERT - UNSICHTBARE VERBESSERUNGEN
-        console.log('✅ TODO APP LOADED - Render-optimiert im Hintergrund');
-        console.log('🎯 Verwende: TODO_DEBUG.testConnection() um Verbindung zu testen');
-        console.log('📊 Verwende: TODO_DEBUG.getStats() für Debug-Infos');
+        // Production Ready
+        console.log('✅ TODO APP LOADED - Production Mode');
+        console.log('🌐 API Base:', TODO_APP.debug.getStats().apiBase);
+        console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
 </body>
 </html>
