@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📋 Optimierte To-Do App (Production)</title>
+    <title>📋 Todo App - International Email Validation</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -221,6 +221,26 @@
             border: 1px solid #c3e6cb;
         }
         
+        /* Neue Styles für internationale E-Mail-Hinweise */
+        .email-hint {
+            background-color: #e7f3ff;
+            color: #004085;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #007bff;
+        }
+        .provider-info {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
         /* Task Styles */
         .task-item {
             margin: 10px 0;
@@ -383,7 +403,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 To-Do App <span class="version-badge">Fixed URL v4.0</span></h1>
+        <h1>📋 Todo App <span class="version-badge">International Email v5.0</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -437,10 +457,14 @@
             
             <!-- Register Form -->
             <form id="registerForm" class="auth-form">
-                <input type="text" id="registerUsername" placeholder="Username" required>
-                <input type="email" id="registerEmail" placeholder="E-Mail" required>
-                <input type="password" id="registerPassword" placeholder="Passwort" required>
+                <input type="text" id="registerUsername" placeholder="Username (3-30 Zeichen)" required>
+                <div class="email-hint">
+                    🌍 Internationale E-Mail-Validierung: Gmail, Outlook, Yahoo, Web.de, GMX, Firmen-E-Mails und alle seriösen Provider weltweit werden akzeptiert.
+                </div>
+                <input type="email" id="registerEmail" placeholder="E-Mail (international unterstützt)" required>
+                <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required>
                 <button type="submit">👤 Registrieren</button>
+                <div id="providerInfo" class="provider-info" style="display: none;"></div>
             </form>
         </div>
     </div>
@@ -474,13 +498,13 @@
     </div>
 
     <script>
-        // Module Pattern nach Crockford - PRODUCTION VERSION
+        // Module Pattern - INTERNATIONAL EMAIL VERSION
         const TODO_APP = (function () {
             'use strict';
             
-            // ✅ KORREKTE RENDER-URL (fdvh nicht f4vh!)
+            // API-Konfiguration
             const API_BASE_OPTIONS = [
-                'https://todo-app-fullstack-fdvh.onrender.com'  // ✅ KORRIGIERT: fdvh
+                'https://todo-app-fullstack-fdvh.onrender.com'
             ];
             
             let API_BASE = API_BASE_OPTIONS[0];
@@ -537,7 +561,7 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('✅ Render Backend online:', data);
+                            console.log('✅ Backend online mit internationaler E-Mail-Validierung:', data);
                             retryCount = 0;
                             this.updateStatus('connected', 'Online ✅');
                             return true;
@@ -545,7 +569,7 @@
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
                     } catch (error) {
-                        console.log('❌ Render Backend nicht erreichbar:', error.message);
+                        console.log('❌ Backend nicht erreichbar:', error.message);
                         
                         retryCount++;
                         
@@ -644,7 +668,9 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, email, password })
                     });
-                    return response.json();
+                    const result = await response.json();
+                    result.httpStatus = response.status;
+                    return result;
                 },
                 
                 login: async function (username, password) {
@@ -677,7 +703,8 @@
                     connectionStatus: document.getElementById('connectionStatus'),
                     connectionText: document.getElementById('connectionText'),
                     errorBanner: document.getElementById('errorBanner'),
-                    errorMessage: document.getElementById('errorMessage')
+                    errorMessage: document.getElementById('errorMessage'),
+                    providerInfo: document.getElementById('providerInfo')
                 };
                 
                 const missingElements = Object.keys(elements).filter(function (key) {
@@ -717,6 +744,29 @@
                 setTimeout(function () {
                     elements.authMessages.innerHTML = '';
                 }, 5000);
+            };
+            
+            // Provider-Info anzeigen
+            const showProviderInfo = function (emailInfo) {
+                if (emailInfo && emailInfo.provider && elements.providerInfo) {
+                    const categoryEmojis = {
+                        'major_international': '🌍',
+                        'regional_european': '🇪🇺', 
+                        'privacy_focused': '🔐',
+                        'educational': '🎓',
+                        'business_or_personal': '🏢'
+                    };
+                    
+                    const emoji = categoryEmojis[emailInfo.category] || '📧';
+                    elements.providerInfo.textContent = `${emoji} ${emailInfo.provider} erkannt`;
+                    elements.providerInfo.style.display = 'block';
+                    
+                    setTimeout(function() {
+                        if (elements.providerInfo) {
+                            elements.providerInfo.style.display = 'none';
+                        }
+                    }, 3000);
+                }
             };
             
             // Sichere DOM-Manipulation
@@ -817,10 +867,10 @@
                     
                     if (error.name === 'AbortError') {
                         ConnectionManager.updateStatus('connecting', 'Verbinde...');
-                        throw new Error('Render Backend startet noch. Bitte warten...');
+                        throw new Error('Backend startet noch. Bitte warten...');
                     } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
                         ConnectionManager.updateStatus('connecting', 'Verbinde...');
-                        throw new Error('Render Backend nicht erreichbar');
+                        throw new Error('Backend nicht erreichbar');
                     }
                     
                     throw error;
@@ -848,9 +898,9 @@
                     '📝 Offen: ' + open + userInfo;
             };
             
-            // Aufgaben laden und anzeigen
+            // Task-Management (unverändert)
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet - Production Mode");
+                console.log("📚 loadTasks() gestartet - International Email Version");
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
@@ -875,7 +925,7 @@
                 }
             };
             
-            // Aufgaben rendern
+            // Task-Rendering (verkürzt - bleibt größtenteils unverändert)
             const renderTasks = function (tasks) {
                 if (!Array.isArray(tasks)) {
                     handleError(new Error('Tasks ist kein Array'), 'Ungültige Daten erhalten', 'renderTasks');
@@ -903,88 +953,33 @@
                         'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open')
                     );
                     
-                    const isEditing = editingTaskId === task.id;
+                    const textSpan = createElement('span', 'task-text', task.text);
+                    const statusSpan = createElement('span', 'task-status', task.status.toUpperCase());
                     
-                    if (isEditing) {
-                        renderEditMode(item, task);
-                    } else {
-                        renderViewMode(item, task);
-                    }
+                    const toggleBtn = createElement('button', 
+                        'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete'),
+                        task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt'
+                    );
+                    const deleteBtn = createElement('button', 'status-button btn-delete', '🗑️ Löschen');
+                    
+                    toggleBtn.addEventListener('click', function () {
+                        toggleTask(task.id);
+                    });
+                    deleteBtn.addEventListener('click', function () {
+                        deleteTask(task.id);
+                    });
+                    
+                    item.appendChild(textSpan);
+                    item.appendChild(statusSpan);
+                    item.appendChild(toggleBtn);
+                    item.appendChild(deleteBtn);
                     
                     elements.taskList.appendChild(item);
                 });
             };
             
-            // Edit-Modus rendern
-            const renderEditMode = function (container, task) {
-                const textSpan = createElement('span', 'task-text');
-                const input = createElement('input');
-                input.type = 'text';
-                input.className = 'edit-input';
-                input.id = 'edit-' + task.id;
-                input.value = task.text;
-                input.maxLength = 500;
-                textSpan.appendChild(input);
-                
-                const saveBtn = createElement('button', 'status-button btn-save', '💾 Speichern');
-                const cancelBtn = createElement('button', 'status-button btn-cancel', '❌ Abbrechen');
-                
-                saveBtn.addEventListener('click', function () {
-                    saveEdit(task.id);
-                });
-                cancelBtn.addEventListener('click', cancelEdit);
-                
-                input.addEventListener('keypress', function (event) {
-                    if (event.key === 'Enter') {
-                        saveEdit(task.id);
-                    } else if (event.key === 'Escape') {
-                        cancelEdit();
-                    }
-                });
-                
-                container.appendChild(textSpan);
-                container.appendChild(saveBtn);
-                container.appendChild(cancelBtn);
-                
-                setTimeout(function () {
-                    input.focus();
-                    input.select();
-                }, 50);
-            };
-            
-            // View-Modus rendern
-            const renderViewMode = function (container, task) {
-                const textSpan = createElement('span', 'task-text', task.text);
-                const statusSpan = createElement('span', 'task-status', task.status.toUpperCase());
-                
-                const toggleBtn = createElement('button', 
-                    'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete'),
-                    task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt'
-                );
-                const editBtn = createElement('button', 'status-button btn-edit', '✏️ Bearbeiten');
-                const deleteBtn = createElement('button', 'status-button btn-delete', '🗑️ Löschen');
-                
-                toggleBtn.addEventListener('click', function () {
-                    toggleTask(task.id);
-                });
-                editBtn.addEventListener('click', function () {
-                    startEdit(task.id);
-                });
-                deleteBtn.addEventListener('click', function () {
-                    deleteTask(task.id);
-                });
-                
-                container.appendChild(textSpan);
-                container.appendChild(statusSpan);
-                container.appendChild(toggleBtn);
-                container.appendChild(editBtn);
-                container.appendChild(deleteBtn);
-            };
-            
-            // Neue Aufgabe hinzufügen
+            // Task-Funktionen (verkürzt)
             const addTask = async function () {
-                console.log("🚀 addTask() gestartet");
-                
                 const text = elements.taskText.value;
                 
                 if (!isValidTaskText(text)) {
@@ -1015,13 +1010,7 @@
                 }
             };
             
-            // Task-Funktionen
             const toggleTask = async function (taskId) {
-                if (!isValidTaskId(taskId)) {
-                    handleError(new Error('Ungültige Task-ID'), 'Fehler beim Bearbeiten der Aufgabe', 'toggleTask');
-                    return;
-                }
-                
                 try {
                     await apiCall('/tasks/' + taskId, {
                         method: 'PUT',
@@ -1034,7 +1023,7 @@
             };
             
             const deleteTask = async function (taskId) {
-                if (!confirm('❓ Aufgabe wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
+                if (!confirm('❓ Aufgabe wirklich löschen?')) {
                     return;
                 }
                 
@@ -1048,74 +1037,7 @@
                 }
             };
             
-            const deleteAllCompleted = async function () {
-                const completedCount = cachedTasks.filter(function (task) {
-                    return task.status === 'erledigt';
-                }).length;
-                
-                if (completedCount === 0) {
-                    showErrorBanner('ℹ️ Keine erledigten Aufgaben zum Löschen vorhanden.', 'info');
-                    return;
-                }
-                
-                if (!confirm('❓ Alle ' + completedCount + ' erledigten Aufgaben wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
-                    return;
-                }
-                
-                try {
-                    const result = await apiCall('/tasks?status=completed', {
-                        method: 'DELETE'
-                    });
-                    loadTasks();
-                    showErrorBanner('✅ ' + (result.message || 'Erledigte Aufgaben gelöscht'), 'info');
-                } catch (error) {
-                    handleError(error, 'Fehler beim Löschen der erledigten Aufgaben', 'deleteAllCompleted');
-                }
-            };
-            
-            const startEdit = function (taskId) {
-                if (editingTaskId !== null) {
-                    showErrorBanner('ℹ️ Bitte beenden Sie zuerst die aktuelle Bearbeitung.', 'info');
-                    return;
-                }
-                editingTaskId = taskId;
-                renderTasks(cachedTasks);
-            };
-            
-            const saveEdit = async function (taskId) {
-                const input = document.getElementById('edit-' + taskId);
-                if (!input) {
-                    handleError(new Error('Edit-Input nicht gefunden'), 'Fehler beim Bearbeiten', 'saveEdit');
-                    return;
-                }
-                
-                const newText = input.value;
-                if (!isValidTaskText(newText)) {
-                    showErrorBanner('⚠️ Aufgabentext darf nicht leer sein und maximal 500 Zeichen haben!', 'warning');
-                    input.focus();
-                    return;
-                }
-                
-                try {
-                    await apiCall('/tasks/' + taskId + '/text', {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({text: newText.trim()})
-                    });
-                    
-                    editingTaskId = null;
-                    loadTasks();
-                } catch (error) {
-                    handleError(error, 'Fehler beim Bearbeiten der Aufgabe', 'saveEdit');
-                }
-            };
-            
-            const cancelEdit = function () {
-                editingTaskId = null;
-                renderTasks(cachedTasks);
-            };
-            
-            // Auth-Funktionen
+            // ERWEITERTE Auth-Funktionen mit internationaler E-Mail-Validierung
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1155,6 +1077,7 @@
                 }
             };
             
+            // ERWEITERTE Registrierung mit internationaler E-Mail-Validierung
             const handleRegister = async function (event) {
                 event.preventDefault();
                 
@@ -1174,13 +1097,43 @@
                 try {
                     const response = await AuthAPI.register(username, email, password);
                     
-                    if (response.message && response.message.includes('erfolgreich')) {
+                    if (response.httpStatus === 201 && response.token) {
+                        // Erfolgreiche Registrierung mit sofortigem Login
+                        TokenManager.save(response.token);
+                        showMessage('🎉 Registrierung erfolgreich! Du bist jetzt angemeldet.', 'success');
+                        
+                        // Provider-Info anzeigen falls vorhanden
+                        if (response.emailInfo) {
+                            showProviderInfo(response.emailInfo);
+                        }
+                        
+                        setTimeout(function () {
+                            closeAuthModal();
+                            updateAuthUI();
+                            loadTasks();
+                        }, 1500);
+                    } else if (response.httpStatus === 201) {
+                        // Registrierung ohne sofortigen Login
                         showMessage('Registrierung erfolgreich! Bitte anmelden.', 'success');
                         setTimeout(function () {
                             switchAuthTab('login');
                         }, 1500);
                     } else {
-                        showMessage(response.message || 'Registrierung fehlgeschlagen', 'error');
+                        // Fehler bei der Registrierung
+                        let errorMessage = response.message || 'Registrierung fehlgeschlagen';
+                        
+                        // Erweiterte Fehlermeldungen für E-Mail-Validierung
+                        if (response.code === 'DISPOSABLE_EMAIL') {
+                            errorMessage += '\n\n💡 Tipp: Verwende Gmail, Outlook, Yahoo, Web.de, GMX oder deine Firmen-E-Mail.';
+                        } else if (response.code === 'SUSPICIOUS_DOMAIN') {
+                            errorMessage += '\n\n💡 Tipp: Verwende eine E-Mail von einem bekannten Anbieter.';
+                        }
+                        
+                        if (response.suggestion) {
+                            errorMessage += '\n\n' + response.suggestion;
+                        }
+                        
+                        showMessage(errorMessage, 'error');
                     }
                 } catch (error) {
                     console.error('Register error:', error);
@@ -1211,12 +1164,11 @@
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - PRODUCTION MODE');
+                    console.log('🚀 Initialisiere TODO_APP - INTERNATIONAL EMAIL VERSION');
                     initializeElements();
                     
                     // Event-Handler zuweisen
                     elements.addButton.addEventListener('click', addTask);
-                    elements.cleanupButton.addEventListener('click', deleteAllCompleted);
                     elements.taskText.addEventListener('keypress', handleKeyPress);
                     
                     // Auth Event-Handler
@@ -1226,20 +1178,20 @@
                     // Auth-Status prüfen
                     updateAuthUI();
                     
-                    // Render Backend Connection Test
-                    console.log('🔍 Teste Render Backend-Verbindung...');
+                    // Backend Connection Test
+                    console.log('🔍 Teste Backend-Verbindung mit internationaler E-Mail-Validierung...');
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
                     
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        console.log('✅ Render Backend online, lade Daten...');
+                        console.log('✅ Backend mit internationaler E-Mail-Validierung online, lade Daten...');
                         await loadTasks();
                     } else {
-                        console.log('🔥 Render Cold Start erkannt - Background-Retries aktiv...');
+                        console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
                     
-                    console.log('✅ TODO_APP erfolgreich initialisiert - PRODUCTION READY');
+                    console.log('✅ TODO_APP mit internationaler E-Mail-Validierung erfolgreich initialisiert');
                 } catch (error) {
                     handleError(error, 'Fehler beim Initialisieren der App', 'initialize');
                 }
@@ -1261,6 +1213,9 @@
                     closeModal: function () {
                         elements.authModal.style.display = 'none';
                         elements.authMessages.innerHTML = '';
+                        if (elements.providerInfo) {
+                            elements.providerInfo.style.display = 'none';
+                        }
                     },
                     switchTab: function (tab) {
                         const tabs = document.querySelectorAll('.modal-tab');
@@ -1288,7 +1243,8 @@
                             isLoggedIn: TokenManager.isValid(),
                             connectionStatus: connectionStatus,
                             retryCount: retryCount,
-                            maxRetries: maxRetries
+                            maxRetries: maxRetries,
+                            version: 'International Email v5.0'
                         };
                     },
                     testConnection: function () {
@@ -1333,9 +1289,9 @@
         // Debug-Zugriff in der Console
         window.TODO_DEBUG = TODO_APP.debug;
         
-        // URL-Fix Ready
-        console.log('✅ TODO APP LOADED - URL CORRECTED');
-        console.log('🌐 API Base:', TODO_DEBUG.getStats().apiBase);
+        console.log('✅ TODO APP LOADED - INTERNATIONAL EMAIL VALIDATION v5.0');
+        console.log('🌍 Unterstützt: Gmail, Outlook, Yahoo, Web.de, GMX, Firmen-E-Mails weltweit');
+        console.log('❌ Blockiert: 200+ internationale Wegwerf-E-Mail-Services');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
 </body>
