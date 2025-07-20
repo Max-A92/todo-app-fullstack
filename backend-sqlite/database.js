@@ -1,8 +1,9 @@
-// database.js - SQLite Datenbank mit Authentication für Todo-App
+// database.js - SQLite Datenbank mit Authentication + E-Mail-Verifikation für Todo-App
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 require('dotenv').config(); // Environment Variables laden
 
 // Database Module Pattern
@@ -16,7 +17,7 @@ const Database = (function () {
     
     // Datenbank initialisieren
     const initialize = async function () {
-        console.log('📂 Initialisiere SQLite Datenbank mit Authentication:', DB_PATH);
+        console.log('📂 Initialisiere SQLite Datenbank mit E-Mail-Verifikation:', DB_PATH);
         
         try {
             // Datenbank öffnen/erstellen
@@ -37,7 +38,7 @@ const Database = (function () {
             // Migration von alter Struktur
             await migrateDatabase();
             
-            console.log('🎯 Datenbank mit Authentication bereit!');
+            console.log('🎯 Datenbank mit E-Mail-Verifikation bereit!');
             
         } catch (error) {
             console.error('🚨 Datenbank Fehler:', error);
@@ -47,15 +48,18 @@ const Database = (function () {
     
     // Tabellen erstellen
     const createTables = async function () {
-        console.log('📋 Erstelle/überprüfe Tabellen...');
+        console.log('📋 Erstelle/überprüfe Tabellen mit E-Mail-Verifikation...');
         
-        // Users Tabelle erstellen
+        // ERWEITERTE Users Tabelle mit E-Mail-Verifikation
         const createUsersTable = `
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                emailVerified INTEGER DEFAULT 0,
+                verificationToken TEXT,
+                verificationTokenExpires INTEGER,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -75,15 +79,21 @@ const Database = (function () {
         `;
         
         await db.exec(createUsersTable);
-        console.log('👥 Users-Tabelle erstellt/überprüft');
+        console.log('👥 Users-Tabelle mit E-Mail-Verifikation erstellt/überprüft');
         
         await db.exec(createTasksTable);
         console.log('📋 Tasks-Tabelle (mit user_id) erstellt/überprüft');
+        
+        // NEUE: Indizes für bessere Performance
+        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verificationToken)');
+        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
+        console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation erstellt');
     };
     
     // Migration von alter zu neuer Datenbankstruktur
     const migrateDatabase = async function () {
-        console.log('🔄 Prüfe Datenbank-Migration...');
+        console.log('🔄 Prüfe Datenbank-Migration für E-Mail-Verifikation...');
         
         try {
             // Prüfen ob alte tasks Tabelle existiert (ohne user_id)
@@ -121,8 +131,43 @@ const Database = (function () {
             } else {
                 console.log('✅ Datenbank bereits auf neuestem Stand');
             }
+            
+            // NEUE: Migration für E-Mail-Verifikation Felder
+            await migrateEmailVerificationFields();
+            
         } catch (error) {
             console.error('🚨 Migration Fehler:', error);
+        }
+    };
+    
+    // NEUE: Migration für E-Mail-Verifikation Felder
+    const migrateEmailVerificationFields = async function () {
+        console.log('📧 Prüfe E-Mail-Verifikation Migration...');
+        
+        try {
+            const userTableInfo = await db.all("PRAGMA table_info(users)");
+            const hasEmailVerified = userTableInfo.some(column => column.name === 'emailVerified');
+            const hasVerificationToken = userTableInfo.some(column => column.name === 'verificationToken');
+            const hasVerificationTokenExpires = userTableInfo.some(column => column.name === 'verificationTokenExpires');
+            
+            if (!hasEmailVerified) {
+                await db.exec('ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 0');
+                console.log('✅ emailVerified Feld hinzugefügt');
+            }
+            
+            if (!hasVerificationToken) {
+                await db.exec('ALTER TABLE users ADD COLUMN verificationToken TEXT');
+                console.log('✅ verificationToken Feld hinzugefügt');
+            }
+            
+            if (!hasVerificationTokenExpires) {
+                await db.exec('ALTER TABLE users ADD COLUMN verificationTokenExpires INTEGER');
+                console.log('✅ verificationTokenExpires Feld hinzugefügt');
+            }
+            
+            console.log('📧 E-Mail-Verifikation Migration abgeschlossen');
+        } catch (error) {
+            console.error('🚨 E-Mail-Verifikation Migration Fehler:', error);
         }
     };
     
@@ -135,11 +180,16 @@ const Database = (function () {
         };
         
         try {
-            return await createUser(demoUser.username, demoUser.email, demoUser.password);
+            return await createUser(demoUser.username, demoUser.email, demoUser.password, true); // Auto-verify demo user
         } catch (error) {
             console.log('Demo-User existiert bereits oder Fehler:', error.message);
             // Demo-User laden falls bereits vorhanden
-            return await getUserByUsername('demo');
+            const existingUser = await getUserByUsername('demo');
+            if (existingUser && !existingUser.emailVerified) {
+                // Demo-User als verifiziert markieren
+                await db.run('UPDATE users SET emailVerified = 1 WHERE id = ?', [existingUser.id]);
+            }
+            return existingUser;
         }
     };
     
@@ -184,29 +234,44 @@ const Database = (function () {
         }
     };
     
-    // ===== USER MANAGEMENT FUNCTIONS =====
+    // ===== E-MAIL-VERIFIKATION HILFSFUNKTIONEN =====
     
-    // Neuen User erstellen (Registration)
-    const createUser = async function (username, email, password) {
-        console.log('🆕 Erstelle neuen User:', username);
+    // Verifikations-Token erstellen
+    const createVerificationToken = function() {
+        return crypto.randomBytes(32).toString('hex');
+    };
+    
+    // ===== USER MANAGEMENT FUNCTIONS (erweitert) =====
+    
+    // Neuen User erstellen (Registration) mit E-Mail-Verifikation
+    const createUser = async function (username, email, password, autoVerify = false) {
+        console.log('🆕 Erstelle neuen User mit E-Mail-Verifikation:', username);
         
         try {
             // Passwort hashen
             const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
             
+            // Verifikations-Token erstellen (24h gültig)
+            const verificationToken = createVerificationToken();
+            const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 Stunden
+            const emailVerified = autoVerify ? 1 : 0;
+            
             // User in Datenbank einfügen
             const result = await db.run(
-                'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-                [username, email, passwordHash]
+                `INSERT INTO users (username, email, password_hash, emailVerified, verificationToken, verificationTokenExpires) 
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [username, email, passwordHash, emailVerified, 
+                 autoVerify ? null : verificationToken, 
+                 autoVerify ? null : verificationTokenExpires]
             );
             
             // Neu erstellten User abrufen (ohne password_hash)
             const newUser = await db.get(
-                'SELECT id, username, email, createdAt FROM users WHERE id = ?',
+                'SELECT id, username, email, emailVerified, verificationToken, createdAt FROM users WHERE id = ?',
                 [result.lastID]
             );
             
-            console.log('✅ User erstellt mit ID:', result.lastID);
+            console.log('✅ User erstellt mit ID:', result.lastID, autoVerify ? '(Auto-verifiziert)' : '(E-Mail-Verifikation erforderlich)');
             return newUser;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen des Users:', error);
@@ -217,14 +282,14 @@ const Database = (function () {
         }
     };
     
-    // User anmelden (Login)
+    // User anmelden (Login) mit E-Mail-Verifikation
     const authenticateUser = async function (username, password) {
-        console.log('🔐 Authentifiziere User:', username);
+        console.log('🔐 Authentifiziere User mit E-Mail-Verifikation:', username);
         
         try {
             // User mit Passwort-Hash laden
             const user = await db.get(
-                'SELECT id, username, email, password_hash, createdAt FROM users WHERE username = ?',
+                'SELECT id, username, email, password_hash, emailVerified, createdAt FROM users WHERE username = ?',
                 [username]
             );
             
@@ -239,6 +304,11 @@ const Database = (function () {
                 throw new Error('Falsches Passwort');
             }
             
+            // E-Mail-Verifikation prüfen
+            if (!user.emailVerified) {
+                throw new Error('E-Mail nicht verifiziert. Bitte prüfe deine E-Mails und bestätige deine E-Mail-Adresse.');
+            }
+            
             // User-Daten ohne password_hash zurückgeben
             const { password_hash, ...userWithoutPassword } = user;
             
@@ -250,11 +320,85 @@ const Database = (function () {
         }
     };
     
+    // E-Mail als verifiziert markieren
+    const verifyUserEmail = async function (token) {
+        console.log('✅ Verifiziere E-Mail mit Token:', token);
+        
+        try {
+            // User mit Token finden
+            const user = await db.get(
+                'SELECT * FROM users WHERE verificationToken = ? AND verificationTokenExpires > ?',
+                [token, Date.now()]
+            );
+            
+            if (!user) {
+                throw new Error('Ungültiger oder abgelaufener Verifikations-Token');
+            }
+            
+            // E-Mail als verifiziert markieren
+            await db.run(
+                'UPDATE users SET emailVerified = 1, verificationToken = NULL, verificationTokenExpires = NULL, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
+                [user.id]
+            );
+            
+            // Aktualisierten User abrufen
+            const verifiedUser = await db.get(
+                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?',
+                [user.id]
+            );
+            
+            console.log('🎉 E-Mail erfolgreich verifiziert für User:', user.username);
+            return verifiedUser;
+        } catch (error) {
+            console.error('🚨 Fehler bei E-Mail-Verifikation:', error);
+            throw error;
+        }
+    };
+    
+    // Neuen Verifikations-Token senden
+    const resendVerificationToken = async function (email) {
+        console.log('📧 Sende neuen Verifikations-Token für:', email);
+        
+        try {
+            // User finden
+            const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+            
+            if (!user) {
+                throw new Error('E-Mail-Adresse nicht gefunden');
+            }
+            
+            if (user.emailVerified) {
+                throw new Error('E-Mail bereits verifiziert');
+            }
+            
+            // Neuen Token erstellen
+            const verificationToken = createVerificationToken();
+            const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000);
+            
+            // Token aktualisieren
+            await db.run(
+                'UPDATE users SET verificationToken = ?, verificationTokenExpires = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
+                [verificationToken, verificationTokenExpires, user.id]
+            );
+            
+            const updatedUser = await db.get(
+                'SELECT id, username, email, verificationToken FROM users WHERE id = ?',
+                [user.id]
+            );
+            
+            console.log('✅ Neuer Verifikations-Token erstellt');
+            return updatedUser;
+        } catch (error) {
+            console.error('🚨 Fehler beim Erstellen des neuen Tokens:', error);
+            throw error;
+        }
+    };
+    
     // User nach ID laden
     const getUserById = async function (userId) {
         try {
             const user = await db.get(
-                'SELECT id, username, email, createdAt FROM users WHERE id = ?',
+                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?',
                 [userId]
             );
             
@@ -269,8 +413,23 @@ const Database = (function () {
     const getUserByUsername = async function (username) {
         try {
             const user = await db.get(
-                'SELECT id, username, email, createdAt FROM users WHERE username = ?',
+                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE username = ?',
                 [username]
+            );
+            
+            return user || null;
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden des Users:', error);
+            throw error;
+        }
+    };
+    
+    // User nach E-Mail laden
+    const getUserByEmail = async function (email) {
+        try {
+            const user = await db.get(
+                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE email = ?',
+                [email]
             );
             
             return user || null;
@@ -542,11 +701,16 @@ const Database = (function () {
         initialize,
         close,
         
-        // User Management
+        // User Management (mit E-Mail-Verifikation)
         createUser,
         authenticateUser,
         getUserById,
         getUserByUsername,
+        getUserByEmail,
+        
+        // E-Mail-Verifikation
+        verifyUserEmail,
+        resendVerificationToken,
         
         // Task Management (User-spezifisch)
         getAllTasksForUser,

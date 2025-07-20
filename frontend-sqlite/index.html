@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📋 Todo App - International Email Validation</title>
+    <title>📋 Todo App - Email Verification</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -105,6 +105,79 @@
             background-color: #d1ecf1;
             color: #0c5460;
             border-color: #bee5eb;
+        }
+        
+        /* E-Mail-Verifikation Banner */
+        .verification-banner {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+            text-align: center;
+            display: none;
+        }
+        .verification-banner.show {
+            display: block;
+        }
+        .verification-banner.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .verification-banner.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .verification-banner.pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+
+        .resend-verification {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+        }
+        .resend-verification:hover {
+            background-color: #138496;
+        }
+
+        .email-verification-section {
+            background-color: #e7f3ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+            display: none;
+        }
+        .email-verification-section.show {
+            display: block;
+        }
+
+        .verification-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .verification-status.verified {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .verification-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
         }
         
         /* Modal für Login/Register */
@@ -403,7 +476,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 Todo App <span class="version-badge">International Email v5.0</span></h1>
+        <h1>📋 Todo App <span class="version-badge">Email Verification v6.0</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -420,6 +493,7 @@
             <div id="userControls" style="display: none;">
                 <div class="user-info">
                     <span>👋 <span id="currentUsername"></span></span>
+                    <span class="verification-status" id="verificationStatus"></span>
                     <button class="auth-button" onclick="logout()">🚪 Abmelden</button>
                 </div>
             </div>
@@ -430,6 +504,25 @@
     <div id="errorBanner" class="error-banner">
         <span id="errorMessage"></span>
         <button onclick="hideErrorBanner()" style="float: right; background: none; border: none; color: #721c24; cursor: pointer;">&times;</button>
+    </div>
+    
+    <!-- E-Mail-Verifikation Banner -->
+    <div id="verificationBanner" class="verification-banner">
+        <span id="verificationMessage"></span>
+        <button id="resendVerificationBtn" class="resend-verification" style="display: none;">
+            📧 E-Mail erneut senden
+        </button>
+    </div>
+
+    <!-- E-Mail-Verifikation Sektion -->
+    <div id="emailVerificationSection" class="email-verification-section">
+        <h3>📧 E-Mail-Bestätigung erforderlich</h3>
+        <p>Bitte prüfe deine E-Mails und klicke auf den Bestätigungslink.</p>
+        <p>Noch keine E-Mail erhalten? 
+            <button id="resendVerificationBtn2" class="resend-verification">
+                📧 Erneut senden
+            </button>
+        </p>
     </div>
     
     <!-- Auth Modal -->
@@ -498,7 +591,7 @@
     </div>
 
     <script>
-        // Module Pattern - INTERNATIONAL EMAIL VERSION
+        // Module Pattern - EMAIL VERIFICATION VERSION
         const TODO_APP = (function () {
             'use strict';
             
@@ -515,6 +608,7 @@
             let retryCount = 0;
             let maxRetries = 8;
             let retryInterval = 30000;
+            let pendingVerificationEmail = null;
             
             // DOM-Referenzen cachen
             let elements = {};
@@ -545,7 +639,7 @@
                 },
                 
                 testConnection: async function () {
-                    console.log('🔄 Teste Render Backend... Versuch:', retryCount + 1);
+                    console.log('🔄 Teste Backend mit E-Mail-Verifikation... Versuch:', retryCount + 1);
                     
                     try {
                         const controller = new AbortController();
@@ -561,7 +655,7 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('✅ Backend online mit internationaler E-Mail-Validierung:', data);
+                            console.log('✅ Backend online mit E-Mail-Verifikation:', data);
                             retryCount = 0;
                             this.updateStatus('connected', 'Online ✅');
                             return true;
@@ -617,6 +711,50 @@
                 if (elements.errorBanner && elements.errorMessage) {
                     elements.errorBanner.classList.remove('show');
                     elements.errorMessage.textContent = '';
+                }
+            };
+
+            // E-Mail-Verifikation Banner Management
+            const showVerificationBanner = function(message, type = 'info', showResend = false) {
+                const banner = elements.verificationBanner;
+                const messageSpan = elements.verificationMessage;
+                const resendBtn = elements.resendVerificationBtn;
+                
+                if (banner && messageSpan) {
+                    banner.className = 'verification-banner show ' + type;
+                    messageSpan.textContent = message;
+                    
+                    if (showResend && resendBtn) {
+                        resendBtn.style.display = 'inline-block';
+                    } else if (resendBtn) {
+                        resendBtn.style.display = 'none';
+                    }
+                    
+                    // Auto-hide nach 10 Sekunden (außer bei pending)
+                    if (type !== 'pending') {
+                        setTimeout(function() {
+                            hideVerificationBanner();
+                        }, 10000);
+                    }
+                }
+            };
+
+            const hideVerificationBanner = function() {
+                const banner = elements.verificationBanner;
+                if (banner) {
+                    banner.classList.remove('show');
+                }
+            };
+
+            // E-Mail-Verifikation Sektion anzeigen/verstecken
+            const showEmailVerificationSection = function(show) {
+                const section = elements.emailVerificationSection;
+                if (section) {
+                    if (show) {
+                        section.classList.add('show');
+                    } else {
+                        section.classList.remove('show');
+                    }
                 }
             };
             
@@ -704,7 +842,13 @@
                     connectionText: document.getElementById('connectionText'),
                     errorBanner: document.getElementById('errorBanner'),
                     errorMessage: document.getElementById('errorMessage'),
-                    providerInfo: document.getElementById('providerInfo')
+                    providerInfo: document.getElementById('providerInfo'),
+                    verificationBanner: document.getElementById('verificationBanner'),
+                    verificationMessage: document.getElementById('verificationMessage'),
+                    resendVerificationBtn: document.getElementById('resendVerificationBtn'),
+                    resendVerificationBtn2: document.getElementById('resendVerificationBtn2'),
+                    emailVerificationSection: document.getElementById('emailVerificationSection'),
+                    verificationStatus: document.getElementById('verificationStatus')
                 };
                 
                 const missingElements = Object.keys(elements).filter(function (key) {
@@ -727,6 +871,10 @@
                     elements.currentUsername.textContent = currentUser.username;
                     elements.guestModeNotice.style.display = 'none';
                     elements.userWelcome.style.display = 'block';
+                    
+                    // Verifikations-Status anzeigen (vereinfacht)
+                    elements.verificationStatus.className = 'verification-status verified';
+                    elements.verificationStatus.textContent = '✅ Verifiziert';
                 } else {
                     elements.guestControls.style.display = 'block';
                     elements.userControls.style.display = 'none';
@@ -766,6 +914,57 @@
                             elements.providerInfo.style.display = 'none';
                         }
                     }, 3000);
+                }
+            };
+
+            // URL-Parameter für E-Mail-Verifikation prüfen
+            const checkEmailVerificationFromUrl = function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                const action = urlParams.get('action');
+                
+                if (token && action === 'verify') {
+                    verifyEmailWithToken(token);
+                }
+            };
+
+            // E-Mail mit Token verifizieren
+            const verifyEmailWithToken = async function(token) {
+                console.log('✅ Verifiziere E-Mail mit Token...');
+                
+                try {
+                    const response = await apiCall(`/auth/verify-email/${token}`, {
+                        method: 'GET'
+                    });
+                    
+                    showVerificationBanner('🎉 E-Mail erfolgreich bestätigt! Du kannst dich jetzt anmelden.', 'success');
+                    
+                    // URL bereinigen
+                    if (window.history.replaceState) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                    
+                } catch (error) {
+                    console.error('🚨 E-Mail-Verifikation Fehler:', error);
+                    showVerificationBanner('❌ Verifikations-Link ungültig oder abgelaufen.', 'error', true);
+                }
+            };
+
+            // Verifikations-E-Mail erneut senden
+            const resendVerificationEmail = async function(email) {
+                console.log('📧 Sende Verifikations-E-Mail erneut...');
+                
+                try {
+                    const response = await apiCall('/auth/resend-verification', {
+                        method: 'POST',
+                        body: JSON.stringify({ email: email })
+                    });
+                    
+                    showVerificationBanner('📧 Neue Verifikations-E-Mail wurde gesendet!', 'success');
+                    
+                } catch (error) {
+                    console.error('🚨 Resend Fehler:', error);
+                    showVerificationBanner('❌ Fehler beim E-Mail-Versand.', 'error');
                 }
             };
             
@@ -813,7 +1012,7 @@
             
             // API-Aufrufe
             const apiCall = async function (url, options) {
-                console.log("🌐 API Call zu Render:", API_BASE + url);
+                console.log("🌐 API Call zu Backend:", API_BASE + url);
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(function () {
@@ -852,7 +1051,11 @@
                     clearTimeout(timeoutId);
                     
                     if (!response.ok) {
-                        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                        const errorData = await response.json().catch(() => ({}));
+                        const error = new Error(errorData.message || 'HTTP ' + response.status + ': ' + response.statusText);
+                        error.code = errorData.code;
+                        error.httpStatus = response.status;
+                        throw error;
                     }
                     
                     const data = await response.json();
@@ -900,13 +1103,13 @@
             
             // Task-Management (unverändert)
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet - International Email Version");
+                console.log("📚 loadTasks() gestartet - Email Verification Version");
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
                 try {
                     const tasks = await apiCall('/tasks');
-                    console.log("✅ Tasks von Render geladen, Anzahl:", tasks.length);
+                    console.log("✅ Tasks geladen, Anzahl:", tasks.length);
                     cachedTasks = tasks;
                     renderTasks(tasks);
                     updateStats(tasks);
@@ -1037,7 +1240,7 @@
                 }
             };
             
-            // ERWEITERTE Auth-Funktionen mit internationaler E-Mail-Validierung
+            // ERWEITERTE Auth-Funktionen mit E-Mail-Verifikation
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1064,20 +1267,33 @@
                             closeAuthModal();
                             updateAuthUI();
                             loadTasks();
+                            hideVerificationBanner();
+                            showEmailVerificationSection(false);
                         }, 1000);
                     } else {
                         showMessage(response.message || 'Login fehlgeschlagen', 'error');
                     }
                 } catch (error) {
                     console.error('Login error:', error);
-                    showMessage('Verbindungsfehler beim Anmelden', 'error');
+                    
+                    if (error.code === 'EMAIL_NOT_VERIFIED') {
+                        showMessage('❌ E-Mail-Adresse noch nicht bestätigt.', 'error');
+                        showVerificationBanner(
+                            '📧 Bitte bestätige zuerst deine E-Mail-Adresse.',
+                            'pending',
+                            true
+                        );
+                        showEmailVerificationSection(true);
+                    } else {
+                        showMessage('Anmeldung fehlgeschlagen: ' + (error.message || 'Ungültige Daten'), 'error');
+                    }
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = '🔑 Anmelden';
                 }
             };
             
-            // ERWEITERTE Registrierung mit internationaler E-Mail-Validierung
+            // ERWEITERTE Registrierung mit E-Mail-Verifikation
             const handleRegister = async function (event) {
                 event.preventDefault();
                 
@@ -1097,27 +1313,44 @@
                 try {
                     const response = await AuthAPI.register(username, email, password);
                     
-                    if (response.httpStatus === 201 && response.token) {
-                        // Erfolgreiche Registrierung mit sofortigem Login
-                        TokenManager.save(response.token);
-                        showMessage('🎉 Registrierung erfolgreich! Du bist jetzt angemeldet.', 'success');
+                    if (response.httpStatus === 201) {
+                        // Registrierung erfolgreich
+                        showMessage('🎉 Registrierung erfolgreich!', 'success');
+                        
+                        if (response.verificationRequired) {
+                            // E-Mail-Verifikation erforderlich
+                            showVerificationBanner(
+                                response.emailSent ? 
+                                '📧 Prüfe deine E-Mails und bestätige deine E-Mail-Adresse.' :
+                                '📧 E-Mail-Bestätigung erforderlich. Prüfe deine E-Mails.',
+                                'pending',
+                                true
+                            );
+                            showEmailVerificationSection(true);
+                            
+                            // E-Mail für Resend speichern
+                            pendingVerificationEmail = email;
+                            
+                            // Nach 2 Sekunden zur Login-Seite wechseln
+                            setTimeout(function () {
+                                switchAuthTab('login');
+                            }, 2000);
+                        } else if (response.token) {
+                            // Sofortiger Login (falls E-Mail-Verifikation deaktiviert)
+                            TokenManager.save(response.token);
+                            showMessage('🎉 Registrierung und Anmeldung erfolgreich!', 'success');
+                            
+                            setTimeout(function () {
+                                closeAuthModal();
+                                updateAuthUI();
+                                loadTasks();
+                            }, 1500);
+                        }
                         
                         // Provider-Info anzeigen falls vorhanden
                         if (response.emailInfo) {
                             showProviderInfo(response.emailInfo);
                         }
-                        
-                        setTimeout(function () {
-                            closeAuthModal();
-                            updateAuthUI();
-                            loadTasks();
-                        }, 1500);
-                    } else if (response.httpStatus === 201) {
-                        // Registrierung ohne sofortigen Login
-                        showMessage('Registrierung erfolgreich! Bitte anmelden.', 'success');
-                        setTimeout(function () {
-                            switchAuthTab('login');
-                        }, 1500);
                     } else {
                         // Fehler bei der Registrierung
                         let errorMessage = response.message || 'Registrierung fehlgeschlagen';
@@ -1137,7 +1370,7 @@
                     }
                 } catch (error) {
                     console.error('Register error:', error);
-                    showMessage('Verbindungsfehler bei der Registrierung', 'error');
+                    showMessage('Registrierung fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'), 'error');
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = '👤 Registrieren';
@@ -1148,8 +1381,11 @@
                 if (confirm('🚪 Wirklich abmelden?')) {
                     TokenManager.remove();
                     currentUser = null;
+                    pendingVerificationEmail = null;
                     updateAuthUI();
                     loadTasks();
+                    hideVerificationBanner();
+                    showEmailVerificationSection(false);
                     showErrorBanner('✅ Erfolgreich abgemeldet!', 'info');
                 }
             };
@@ -1160,11 +1396,40 @@
                     addTask();
                 }
             };
+
+            // E-Mail-Verifikation Event-Handler
+            const initializeEmailVerification = function() {
+                // Resend-Button Event-Listener
+                const resendBtn1 = elements.resendVerificationBtn;
+                const resendBtn2 = elements.resendVerificationBtn2;
+                
+                if (resendBtn1) {
+                    resendBtn1.addEventListener('click', function() {
+                        if (pendingVerificationEmail) {
+                            resendVerificationEmail(pendingVerificationEmail);
+                        } else {
+                            showVerificationBanner('❌ E-Mail-Adresse nicht verfügbar.', 'error');
+                        }
+                    });
+                }
+                
+                if (resendBtn2) {
+                    resendBtn2.addEventListener('click', function() {
+                        const email = prompt('Bitte gib deine E-Mail-Adresse ein:');
+                        if (email) {
+                            resendVerificationEmail(email);
+                        }
+                    });
+                }
+                
+                // URL-Parameter für E-Mail-Verifikation prüfen
+                checkEmailVerificationFromUrl();
+            };
             
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - INTERNATIONAL EMAIL VERSION');
+                    console.log('🚀 Initialisiere TODO_APP - EMAIL VERIFICATION VERSION');
                     initializeElements();
                     
                     // Event-Handler zuweisen
@@ -1175,23 +1440,26 @@
                     elements.loginForm.addEventListener('submit', handleLogin);
                     elements.registerForm.addEventListener('submit', handleRegister);
                     
+                    // E-Mail-Verifikation initialisieren
+                    initializeEmailVerification();
+                    
                     // Auth-Status prüfen
                     updateAuthUI();
                     
                     // Backend Connection Test
-                    console.log('🔍 Teste Backend-Verbindung mit internationaler E-Mail-Validierung...');
+                    console.log('🔍 Teste Backend-Verbindung mit E-Mail-Verifikation...');
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
                     
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        console.log('✅ Backend mit internationaler E-Mail-Validierung online, lade Daten...');
+                        console.log('✅ Backend mit E-Mail-Verifikation online, lade Daten...');
                         await loadTasks();
                     } else {
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
                     
-                    console.log('✅ TODO_APP mit internationaler E-Mail-Validierung erfolgreich initialisiert');
+                    console.log('✅ TODO_APP mit E-Mail-Verifikation erfolgreich initialisiert');
                 } catch (error) {
                     handleError(error, 'Fehler beim Initialisieren der App', 'initialize');
                 }
@@ -1244,7 +1512,8 @@
                             connectionStatus: connectionStatus,
                             retryCount: retryCount,
                             maxRetries: maxRetries,
-                            version: 'International Email v5.0'
+                            pendingVerificationEmail: pendingVerificationEmail,
+                            version: 'Email Verification v6.0'
                         };
                     },
                     testConnection: function () {
@@ -1289,7 +1558,8 @@
         // Debug-Zugriff in der Console
         window.TODO_DEBUG = TODO_APP.debug;
         
-        console.log('✅ TODO APP LOADED - INTERNATIONAL EMAIL VALIDATION v5.0');
+        console.log('✅ TODO APP LOADED - EMAIL VERIFICATION v6.0');
+        console.log('📧 Features: Registrierung → E-Mail-Verifikation → Login → Persönliche Todos');
         console.log('🌍 Unterstützt: Gmail, Outlook, Yahoo, Web.de, GMX, Firmen-E-Mails weltweit');
         console.log('❌ Blockiert: 200+ internationale Wegwerf-E-Mail-Services');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
