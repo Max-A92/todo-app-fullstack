@@ -1,13 +1,12 @@
-// database.js - SQLite Datenbank mit Authentication + E-Mail-Verifikation für Todo-App
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
+// database.js - better-sqlite3 Datenbank mit Authentication + E-Mail-Verifikation für Todo-App
+const Database = require('better-sqlite3');
 const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // ✅ FIXED: bcryptjs statt bcrypt
 const crypto = require('crypto');
 require('dotenv').config(); // Environment Variables laden
 
 // Database Module Pattern
-const Database = (function () {
+const DatabaseModule = (function () {
     'use strict';
     
     // Private Variablen
@@ -17,19 +16,16 @@ const Database = (function () {
     
     // Datenbank initialisieren
     const initialize = async function () {
-        console.log('📂 Initialisiere SQLite Datenbank mit E-Mail-Verifikation:', DB_PATH);
+        console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation:', DB_PATH);
         
         try {
             // Datenbank öffnen/erstellen
-            db = await open({
-                filename: DB_PATH,
-                driver: sqlite3.Database
-            });
+            db = new Database(DB_PATH);
             
             console.log('✅ Datenbank verbunden');
             
             // Foreign Keys aktivieren (wichtig für Beziehungen!)
-            await db.exec('PRAGMA foreign_keys = ON');
+            db.exec('PRAGMA foreign_keys = ON');
             console.log('🔗 Foreign Keys aktiviert');
             
             // Tabellen erstellen falls nicht existiert
@@ -78,16 +74,16 @@ const Database = (function () {
             )
         `;
         
-        await db.exec(createUsersTable);
+        db.exec(createUsersTable);
         console.log('👥 Users-Tabelle mit E-Mail-Verifikation erstellt/überprüft');
         
-        await db.exec(createTasksTable);
+        db.exec(createTasksTable);
         console.log('📋 Tasks-Tabelle (mit user_id) erstellt/überprüft');
         
         // NEUE: Indizes für bessere Performance
-        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
-        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verificationToken)');
-        await db.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verificationToken)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
         console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation erstellt');
     };
     
@@ -97,7 +93,7 @@ const Database = (function () {
         
         try {
             // Prüfen ob alte tasks Tabelle existiert (ohne user_id)
-            const oldTableInfo = await db.all("PRAGMA table_info(tasks)");
+            const oldTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
             const hasUserId = oldTableInfo.some(column => column.name === 'user_id');
             
             if (oldTableInfo.length > 0 && !hasUserId) {
@@ -107,14 +103,14 @@ const Database = (function () {
                 const demoUser = await createDemoUser();
                 
                 // Alte Tasks in neue Tabelle kopieren
-                await db.exec(`
+                db.exec(`
                     INSERT INTO tasks_new (user_id, text, status, createdAt, updatedAt)
                     SELECT ${demoUser.id}, text, status, createdAt, updatedAt FROM tasks
                 `);
                 
                 // Alte Tabelle löschen und neue umbenennen
-                await db.exec('DROP TABLE tasks');
-                await db.exec('ALTER TABLE tasks_new RENAME TO tasks');
+                db.exec('DROP TABLE tasks');
+                db.exec('ALTER TABLE tasks_new RENAME TO tasks');
                 
                 console.log('✅ Migration abgeschlossen! Alte Tasks dem Demo-User zugeordnet.');
                 console.log('👤 Demo-User erstellt - Username: demo, Password: demo123');
@@ -123,7 +119,7 @@ const Database = (function () {
                 await migrateFromJson(demoUser.id);
             } else if (oldTableInfo.length === 0) {
                 // Keine alte Tabelle, neue Struktur von Anfang an
-                await db.exec('ALTER TABLE tasks_new RENAME TO tasks');
+                db.exec('ALTER TABLE tasks_new RENAME TO tasks');
                 console.log('📊 Neue Tabellen-Struktur eingerichtet');
                 
                 // JSON-Migration für neuen Setup
@@ -145,23 +141,23 @@ const Database = (function () {
         console.log('📧 Prüfe E-Mail-Verifikation Migration...');
         
         try {
-            const userTableInfo = await db.all("PRAGMA table_info(users)");
+            const userTableInfo = db.prepare("PRAGMA table_info(users)").all();
             const hasEmailVerified = userTableInfo.some(column => column.name === 'emailVerified');
             const hasVerificationToken = userTableInfo.some(column => column.name === 'verificationToken');
             const hasVerificationTokenExpires = userTableInfo.some(column => column.name === 'verificationTokenExpires');
             
             if (!hasEmailVerified) {
-                await db.exec('ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 0');
+                db.exec('ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 0');
                 console.log('✅ emailVerified Feld hinzugefügt');
             }
             
             if (!hasVerificationToken) {
-                await db.exec('ALTER TABLE users ADD COLUMN verificationToken TEXT');
+                db.exec('ALTER TABLE users ADD COLUMN verificationToken TEXT');
                 console.log('✅ verificationToken Feld hinzugefügt');
             }
             
             if (!hasVerificationTokenExpires) {
-                await db.exec('ALTER TABLE users ADD COLUMN verificationTokenExpires INTEGER');
+                db.exec('ALTER TABLE users ADD COLUMN verificationTokenExpires INTEGER');
                 console.log('✅ verificationTokenExpires Feld hinzugefügt');
             }
             
@@ -187,7 +183,7 @@ const Database = (function () {
             const existingUser = await getUserByUsername('demo');
             if (existingUser && !existingUser.emailVerified) {
                 // Demo-User als verifiziert markieren
-                await db.run('UPDATE users SET emailVerified = 1 WHERE id = ?', [existingUser.id]);
+                db.prepare('UPDATE users SET emailVerified = 1 WHERE id = ?').run(existingUser.id);
             }
             return existingUser;
         }
@@ -218,11 +214,9 @@ const Database = (function () {
                 }
                 
                 // Tasks in neue Struktur migrieren
+                const insertStmt = db.prepare('INSERT INTO tasks (user_id, text, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)');
                 for (const task of tasks) {
-                    await db.run(
-                        'INSERT INTO tasks (user_id, text, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)',
-                        [userId, task.text, task.status, task.createdAt, task.updatedAt]
-                    );
+                    insertStmt.run(userId, task.text, task.status, task.createdAt, task.updatedAt);
                 }
                 
                 console.log('✅ JSON-Migration erfolgreich!');
@@ -257,21 +251,16 @@ const Database = (function () {
             const emailVerified = autoVerify ? 1 : 0;
             
             // User in Datenbank einfügen
-            const result = await db.run(
-                `INSERT INTO users (username, email, password_hash, emailVerified, verificationToken, verificationTokenExpires) 
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [username, email, passwordHash, emailVerified, 
+            const insertStmt = db.prepare(`INSERT INTO users (username, email, password_hash, emailVerified, verificationToken, verificationTokenExpires) 
+                 VALUES (?, ?, ?, ?, ?, ?)`);
+            const result = insertStmt.run(username, email, passwordHash, emailVerified, 
                  autoVerify ? null : verificationToken, 
-                 autoVerify ? null : verificationTokenExpires]
-            );
+                 autoVerify ? null : verificationTokenExpires);
             
             // Neu erstellten User abrufen (ohne password_hash)
-            const newUser = await db.get(
-                'SELECT id, username, email, emailVerified, verificationToken, createdAt FROM users WHERE id = ?',
-                [result.lastID]
-            );
+            const newUser = db.prepare('SELECT id, username, email, emailVerified, verificationToken, createdAt FROM users WHERE id = ?').get(result.lastInsertRowid);
             
-            console.log('✅ User erstellt mit ID:', result.lastID, autoVerify ? '(Auto-verifiziert)' : '(E-Mail-Verifikation erforderlich)');
+            console.log('✅ User erstellt mit ID:', result.lastInsertRowid, autoVerify ? '(Auto-verifiziert)' : '(E-Mail-Verifikation erforderlich)');
             return newUser;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen des Users:', error);
@@ -288,10 +277,7 @@ const Database = (function () {
         
         try {
             // User mit Passwort-Hash laden
-            const user = await db.get(
-                'SELECT id, username, email, password_hash, emailVerified, createdAt FROM users WHERE username = ?',
-                [username]
-            );
+            const user = db.prepare('SELECT id, username, email, password_hash, emailVerified, createdAt FROM users WHERE username = ?').get(username);
             
             if (!user) {
                 throw new Error('User nicht gefunden');
@@ -326,26 +312,17 @@ const Database = (function () {
         
         try {
             // User mit Token finden
-            const user = await db.get(
-                'SELECT * FROM users WHERE verificationToken = ? AND verificationTokenExpires > ?',
-                [token, Date.now()]
-            );
+            const user = db.prepare('SELECT * FROM users WHERE verificationToken = ? AND verificationTokenExpires > ?').get(token, Date.now());
             
             if (!user) {
                 throw new Error('Ungültiger oder abgelaufener Verifikations-Token');
             }
             
             // E-Mail als verifiziert markieren
-            await db.run(
-                'UPDATE users SET emailVerified = 1, verificationToken = NULL, verificationTokenExpires = NULL, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
-                [user.id]
-            );
+            db.prepare('UPDATE users SET emailVerified = 1, verificationToken = NULL, verificationTokenExpires = NULL, updatedAt = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
             
             // Aktualisierten User abrufen
-            const verifiedUser = await db.get(
-                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?',
-                [user.id]
-            );
+            const verifiedUser = db.prepare('SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?').get(user.id);
             
             console.log('🎉 E-Mail erfolgreich verifiziert für User:', user.username);
             return verifiedUser;
@@ -361,7 +338,7 @@ const Database = (function () {
         
         try {
             // User finden
-            const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+            const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
             
             if (!user) {
                 throw new Error('E-Mail-Adresse nicht gefunden');
@@ -376,15 +353,9 @@ const Database = (function () {
             const verificationTokenExpires = Date.now() + (24 * 60 * 60 * 1000);
             
             // Token aktualisieren
-            await db.run(
-                'UPDATE users SET verificationToken = ?, verificationTokenExpires = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
-                [verificationToken, verificationTokenExpires, user.id]
-            );
+            db.prepare('UPDATE users SET verificationToken = ?, verificationTokenExpires = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?').run(verificationToken, verificationTokenExpires, user.id);
             
-            const updatedUser = await db.get(
-                'SELECT id, username, email, verificationToken FROM users WHERE id = ?',
-                [user.id]
-            );
+            const updatedUser = db.prepare('SELECT id, username, email, verificationToken FROM users WHERE id = ?').get(user.id);
             
             console.log('✅ Neuer Verifikations-Token erstellt');
             return updatedUser;
@@ -397,11 +368,7 @@ const Database = (function () {
     // User nach ID laden
     const getUserById = async function (userId) {
         try {
-            const user = await db.get(
-                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?',
-                [userId]
-            );
-            
+            const user = db.prepare('SELECT id, username, email, emailVerified, createdAt FROM users WHERE id = ?').get(userId);
             return user || null;
         } catch (error) {
             console.error('🚨 Fehler beim Laden des Users:', error);
@@ -412,11 +379,7 @@ const Database = (function () {
     // User nach Username laden
     const getUserByUsername = async function (username) {
         try {
-            const user = await db.get(
-                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE username = ?',
-                [username]
-            );
-            
+            const user = db.prepare('SELECT id, username, email, emailVerified, createdAt FROM users WHERE username = ?').get(username);
             return user || null;
         } catch (error) {
             console.error('🚨 Fehler beim Laden des Users:', error);
@@ -427,11 +390,7 @@ const Database = (function () {
     // User nach E-Mail laden
     const getUserByEmail = async function (email) {
         try {
-            const user = await db.get(
-                'SELECT id, username, email, emailVerified, createdAt FROM users WHERE email = ?',
-                [email]
-            );
-            
+            const user = db.prepare('SELECT id, username, email, emailVerified, createdAt FROM users WHERE email = ?').get(email);
             return user || null;
         } catch (error) {
             console.error('🚨 Fehler beim Laden des Users:', error);
@@ -446,10 +405,7 @@ const Database = (function () {
         console.log('📚 Lade Tasks für User:', userId);
         
         try {
-            const tasks = await db.all(
-                'SELECT * FROM tasks WHERE user_id = ? ORDER BY createdAt DESC',
-                [userId]
-            );
+            const tasks = db.prepare('SELECT * FROM tasks WHERE user_id = ? ORDER BY createdAt DESC').all(userId);
             console.log('✅ Tasks geladen:', tasks.length);
             return tasks;
         } catch (error) {
@@ -463,18 +419,12 @@ const Database = (function () {
         console.log('🆕 Erstelle Task für User:', userId, 'Text:', text);
         
         try {
-            const result = await db.run(
-                'INSERT INTO tasks (user_id, text) VALUES (?, ?)',
-                [userId, text]
-            );
+            const result = db.prepare('INSERT INTO tasks (user_id, text) VALUES (?, ?)').run(userId, text);
             
             // Neu erstellte Task abrufen
-            const newTask = await db.get(
-                'SELECT * FROM tasks WHERE id = ?',
-                [result.lastID]
-            );
+            const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
             
-            console.log('✅ Task erstellt mit ID:', result.lastID);
+            console.log('✅ Task erstellt mit ID:', result.lastInsertRowid);
             return newTask;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen der Task:', error);
@@ -488,10 +438,7 @@ const Database = (function () {
         
         try {
             // Prüfen ob Task dem User gehört
-            const currentTask = await db.get(
-                'SELECT * FROM tasks WHERE id = ? AND user_id = ?',
-                [taskId, userId]
-            );
+            const currentTask = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
             
             if (!currentTask) {
                 throw new Error('Task nicht gefunden oder gehört nicht dem User');
@@ -501,16 +448,10 @@ const Database = (function () {
             const newStatus = currentTask.status === 'offen' ? 'erledigt' : 'offen';
             
             // Task aktualisieren
-            await db.run(
-                'UPDATE tasks SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
-                [newStatus, taskId, userId]
-            );
+            db.prepare('UPDATE tasks SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(newStatus, taskId, userId);
             
             // Aktualisierte Task abrufen
-            const updatedTask = await db.get(
-                'SELECT * FROM tasks WHERE id = ?',
-                [taskId]
-            );
+            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
             
             console.log('✅ Task Status geändert:', currentTask.status, '→', newStatus);
             return updatedTask;
@@ -526,26 +467,17 @@ const Database = (function () {
         
         try {
             // Prüfen ob Task dem User gehört
-            const currentTask = await db.get(
-                'SELECT * FROM tasks WHERE id = ? AND user_id = ?',
-                [taskId, userId]
-            );
+            const currentTask = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
             
             if (!currentTask) {
                 throw new Error('Task nicht gefunden oder gehört nicht dem User');
             }
             
             // Text aktualisieren
-            await db.run(
-                'UPDATE tasks SET text = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
-                [newText, taskId, userId]
-            );
+            db.prepare('UPDATE tasks SET text = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(newText, taskId, userId);
             
             // Aktualisierte Task abrufen
-            const updatedTask = await db.get(
-                'SELECT * FROM tasks WHERE id = ?',
-                [taskId]
-            );
+            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
             
             console.log('✅ Task Text aktualisiert');
             return updatedTask;
@@ -561,20 +493,14 @@ const Database = (function () {
         
         try {
             // Task vor dem Löschen abrufen und prüfen
-            const taskToDelete = await db.get(
-                'SELECT * FROM tasks WHERE id = ? AND user_id = ?',
-                [taskId, userId]
-            );
+            const taskToDelete = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
             
             if (!taskToDelete) {
                 throw new Error('Task nicht gefunden oder gehört nicht dem User');
             }
             
             // Task löschen
-            const result = await db.run(
-                'DELETE FROM tasks WHERE id = ? AND user_id = ?',
-                [taskId, userId]
-            );
+            const result = db.prepare('DELETE FROM tasks WHERE id = ? AND user_id = ?').run(taskId, userId);
             
             if (result.changes === 0) {
                 throw new Error('Task konnte nicht gelöscht werden');
@@ -593,10 +519,7 @@ const Database = (function () {
         console.log('🧹 Lösche alle erledigten Tasks für User:', userId);
         
         try {
-            const result = await db.run(
-                'DELETE FROM tasks WHERE status = ? AND user_id = ?',
-                ['erledigt', userId]
-            );
+            const result = db.prepare('DELETE FROM tasks WHERE status = ? AND user_id = ?').run('erledigt', userId);
             
             console.log('✅ Erledigte Tasks gelöscht:', result.changes);
             return {
@@ -690,7 +613,7 @@ const Database = (function () {
     // Datenbank schließen
     const close = async function () {
         if (db) {
-            await db.close();
+            db.close();
             console.log('📪 Datenbank geschlossen');
         }
     };
@@ -730,4 +653,4 @@ const Database = (function () {
     };
 })();
 
-module.exports = Database;
+module.exports = DatabaseModule;
