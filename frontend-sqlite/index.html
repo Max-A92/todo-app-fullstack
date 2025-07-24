@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📋 Todo App - Email Verification</title>
+    <title>📋 Todo App - Production Security</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -294,7 +294,16 @@
             border: 1px solid #c3e6cb;
         }
         
-        /* Neue Styles für internationale E-Mail-Hinweise */
+        /* Production Security Features */
+        .security-info {
+            background-color: #e7f3ff;
+            color: #004085;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            border-left: 3px solid #007bff;
+        }
         .email-hint {
             background-color: #e7f3ff;
             color: #004085;
@@ -311,6 +320,15 @@
             border-radius: 3px;
             font-size: 11px;
             margin-top: 8px;
+            text-align: center;
+        }
+        .timing-info {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-top: 5px;
             text-align: center;
         }
         
@@ -363,21 +381,6 @@
             color: white;
             margin-left: 5px;
         }
-        .btn-edit {
-            background-color: #007bff;
-            color: white;
-            margin-left: 5px;
-        }
-        .btn-save {
-            background-color: #28a745;
-            color: white;
-            margin-left: 5px;
-        }
-        .btn-cancel {
-            background-color: #6c757d;
-            color: white;
-            margin-left: 5px;
-        }
         .btn-cleanup {
             background-color: #6c757d;
             color: white;
@@ -392,14 +395,6 @@
         .btn-cleanup:hover {
             background-color: #545b62;
             transform: translateY(-1px);
-        }
-        .edit-input {
-            padding: 8px;
-            border: 2px solid #007bff;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 300px;
-            font-family: inherit;
         }
         .add-section {
             margin-bottom: 30px;
@@ -458,12 +453,6 @@
             list-style: none;
             padding: 0;
         }
-        
-        /* Auth-States */
-        .auth-required {
-            opacity: 0.5;
-            pointer-events: none;
-        }
         .welcome-message {
             background-color: rgba(255,255,255,0.2);
             padding: 10px;
@@ -476,7 +465,7 @@
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 Todo App <span class="version-badge">Email Verification v6.0</span></h1>
+        <h1>📋 Todo App <span class="version-badge">Production Security v2.0</span></h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -531,7 +520,10 @@
             <button class="close-modal" onclick="closeAuthModal()">&times;</button>
             
             <div class="modal-header">
-                <h2>🔐 Authentication</h2>
+                <h2>🛡️ Secure Authentication</h2>
+                <div class="security-info">
+                    Production Security: Rate limiting • Bot protection • Advanced email validation
+                </div>
             </div>
             
             <div class="modal-tabs">
@@ -541,23 +533,47 @@
             
             <div id="authMessages"></div>
             
-            <!-- Login Form -->
+            <!-- Login Form with Bot Protection -->
             <form id="loginForm" class="auth-form active">
-                <input type="text" id="loginUsername" placeholder="Username" required>
-                <input type="password" id="loginPassword" placeholder="Passwort" required>
+                <input type="text" id="loginUsername" placeholder="Username" required autocomplete="username">
+                <input type="password" id="loginPassword" placeholder="Passwort" required autocomplete="current-password">
+                
+                <!-- HONEYPOT FIELDS (unsichtbar für Menschen, sichtbar für Bots) -->
+                <input type="text" name="website" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="email" name="email_confirm" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="phone" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                
+                <!-- TIMING FIELD (für Eingabe-Geschwindigkeit) -->
+                <input type="hidden" name="formTimestamp" id="loginTimestamp">
+                
                 <button type="submit">🔑 Anmelden</button>
+                
+                <div class="timing-info" id="loginTimingInfo" style="display: none;"></div>
             </form>
             
-            <!-- Register Form -->
+            <!-- Register Form with Enhanced Bot Protection -->
             <form id="registerForm" class="auth-form">
-                <input type="text" id="registerUsername" placeholder="Username (3-30 Zeichen)" required>
+                <input type="text" id="registerUsername" placeholder="Username (3-30 Zeichen)" required autocomplete="username">
                 <div class="email-hint">
-                    🌍 Internationale E-Mail-Validierung: Gmail, Outlook, Yahoo, Web.de, GMX, Firmen-E-Mails und alle seriösen Provider weltweit werden akzeptiert.
+                    🌍 Production Email Validation: Advanced international spam protection • Trusted providers verified • Abuse detection active
                 </div>
-                <input type="email" id="registerEmail" placeholder="E-Mail (international unterstützt)" required>
-                <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required>
+                <input type="email" id="registerEmail" placeholder="E-Mail (production-grade validation)" required autocomplete="email">
+                <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required autocomplete="new-password">
+                
+                <!-- ERWEITERTE HONEYPOT FIELDS (mehr Felder für Registration) -->
+                <input type="text" name="website" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="email" name="email_confirm" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="phone" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="fax" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="url" name="url" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="homepage" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                
+                <!-- TIMING FIELD -->
+                <input type="hidden" name="formTimestamp" id="registerTimestamp">
+                
                 <button type="submit">👤 Registrieren</button>
                 <div id="providerInfo" class="provider-info" style="display: none;"></div>
+                <div id="registerTimingInfo" class="timing-info" style="display: none;"></div>
             </form>
         </div>
     </div>
@@ -591,7 +607,7 @@
     </div>
 
     <script>
-        // Module Pattern - EMAIL VERIFICATION VERSION
+        // Module Pattern - PRODUCTION SECURITY VERSION
         const TODO_APP = (function () {
             'use strict';
             
@@ -612,6 +628,148 @@
             
             // DOM-Referenzen cachen
             let elements = {};
+            
+            // ===== PRODUCTION BOT PROTECTION SYSTEM =====
+            
+            // Frontend Bot Protection
+            const FrontendBotProtection = {
+                // Form-Timestamps setzen (für Timing-Analysis)
+                setFormTimestamps: function() {
+                    const now = Date.now();
+                    const loginTimestamp = document.getElementById('loginTimestamp');
+                    const registerTimestamp = document.getElementById('registerTimestamp');
+                    
+                    if (loginTimestamp) {
+                        loginTimestamp.value = now;
+                        console.log('🕐 Login form timestamp set:', now);
+                    }
+                    
+                    if (registerTimestamp) {
+                        registerTimestamp.value = now;
+                        console.log('🕐 Register form timestamp set:', now);
+                    }
+                },
+                
+                // Honeypot-Felder leeren und sichern
+                clearHoneypots: function() {
+                    const honeypotSelectors = [
+                        'input[name="website"]',
+                        'input[name="email_confirm"]', 
+                        'input[name="phone"]',
+                        'input[name="fax"]',
+                        'input[name="url"]',
+                        'input[name="homepage"]'
+                    ];
+                    
+                    let securedCount = 0;
+                    honeypotSelectors.forEach(selector => {
+                        const fields = document.querySelectorAll(selector);
+                        fields.forEach(field => {
+                            field.value = '';
+                            field.setAttribute('tabindex', '-1');
+                            field.setAttribute('autocomplete', 'off');
+                            field.setAttribute('aria-hidden', 'true');
+                            
+                            // Mehrfach-Versteckung für maximale Sicherheit
+                            field.style.display = 'none';
+                            field.style.visibility = 'hidden';
+                            field.style.opacity = '0';
+                            field.style.position = 'absolute';
+                            field.style.left = '-9999px';
+                            field.style.height = '0';
+                            field.style.width = '0';
+                            field.style.overflow = 'hidden';
+                            securedCount++;
+                        });
+                    });
+                    
+                    console.log(`🍯 ${securedCount} honeypot fields secured`);
+                },
+                
+                // Timing-Info für Debug anzeigen
+                getTimingInfo: function(formType) {
+                    const timestampField = document.getElementById(formType + 'Timestamp');
+                    if (timestampField && timestampField.value) {
+                        const formTime = Date.now() - parseInt(timestampField.value);
+                        const seconds = Math.round(formTime / 1000);
+                        console.log(`⏱️ ${formType} form timing: ${formTime}ms (${seconds}s)`);
+                        
+                        // Timing-Info im UI anzeigen (für Debug)
+                        const timingInfo = document.getElementById(formType + 'TimingInfo');
+                        if (timingInfo && seconds >= 3) {
+                            timingInfo.textContent = `⏱️ Form timing: ${seconds}s ✅`;
+                            timingInfo.style.display = 'block';
+                            setTimeout(() => {
+                                if (timingInfo) timingInfo.style.display = 'none';
+                            }, 3000);
+                        }
+                        
+                        return { timing: formTime, seconds: seconds, valid: seconds >= 3 && seconds <= 3600 };
+                    }
+                    return { timing: 0, seconds: 0, valid: false };
+                },
+                
+                // Form-Data für Submission vorbereiten (inkl. Bot Protection)
+                prepareFormData: function(formType, baseData) {
+                    // Timing-Info hinzufügen
+                    const timestampField = document.getElementById(formType + 'Timestamp');
+                    if (timestampField && timestampField.value) {
+                        baseData.formTimestamp = timestampField.value;
+                    }
+                    
+                    // Honeypot-Felder hinzufügen (sollten alle leer sein)
+                    baseData.website = document.querySelector(`#${formType}Form input[name="website"]`)?.value || '';
+                    baseData.email_confirm = document.querySelector(`#${formType}Form input[name="email_confirm"]`)?.value || '';
+                    baseData.phone = document.querySelector(`#${formType}Form input[name="phone"]`)?.value || '';
+                    baseData.fax = document.querySelector(`#${formType}Form input[name="fax"]`)?.value || '';
+                    baseData.url = document.querySelector(`#${formType}Form input[name="url"]`)?.value || '';
+                    baseData.homepage = document.querySelector(`#${formType}Form input[name="homepage"]`)?.value || '';
+                    
+                    // Debug-Info
+                    const timingInfo = this.getTimingInfo(formType);
+                    console.log(`🛡️ ${formType} form prepared with bot protection:`);
+                    console.log(`   Timing: ${timingInfo.seconds}s (${timingInfo.valid ? 'valid' : 'invalid'})`);
+                    console.log(`   Honeypots: ${Object.keys(baseData).filter(k => k !== 'username' && k !== 'email' && k !== 'password' && k !== 'formTimestamp').length} fields`);
+                    
+                    return baseData;
+                },
+                
+                // Initialize Bot Protection
+                initialize: function() {
+                    console.log('🛡️ Initializing Production Bot Protection...');
+                    
+                    // Honeypots sichern
+                    this.clearHoneypots();
+                    
+                    // Initial timestamps setzen
+                    this.setFormTimestamps();
+                    
+                    // Timestamps neu setzen wenn Modal geöffnet wird
+                    const authModal = document.getElementById('authModal');
+                    if (authModal) {
+                        const observer = new MutationObserver((mutations) => {
+                            mutations.forEach((mutation) => {
+                                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                                    if (authModal.style.display === 'block') {
+                                        // Modal geöffnet - neue Timestamps setzen
+                                        setTimeout(() => this.setFormTimestamps(), 100);
+                                    }
+                                }
+                            });
+                        });
+                        observer.observe(authModal, { attributes: true });
+                    }
+                    
+                    // Zusätzlich: Timestamps bei Tab-Switch neu setzen
+                    document.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('modal-tab')) {
+                            setTimeout(() => this.setFormTimestamps(), 100);
+                        }
+                    });
+                    
+                    console.log('✅ Production Bot Protection initialized');
+                }
+            };
             
             // Connection Status Management
             const ConnectionManager = {
@@ -639,7 +797,7 @@
                 },
                 
                 testConnection: async function () {
-                    console.log('🔄 Teste Backend mit E-Mail-Verifikation... Versuch:', retryCount + 1);
+                    console.log('🔄 Teste Backend mit Production Security... Versuch:', retryCount + 1);
                     
                     try {
                         const controller = new AbortController();
@@ -655,7 +813,7 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('✅ Backend online mit E-Mail-Verifikation:', data);
+                            console.log('✅ Backend online mit Production Security:', data);
                             retryCount = 0;
                             this.updateStatus('connected', 'Online ✅');
                             return true;
@@ -674,10 +832,8 @@
                             this.updateStatus('disconnected', 'Offline ❌');
                         }
                         
-                        // Automatischer Retry
                         if (retryCount < maxRetries) {
                             console.log(`🔄 Retry in ${retryInterval/1000} Sekunden... (${retryCount}/${maxRetries})`);
-                            
                             setTimeout(async () => {
                                 const success = await this.testConnection();
                                 if (success) {
@@ -730,7 +886,6 @@
                         resendBtn.style.display = 'none';
                     }
                     
-                    // Auto-hide nach 10 Sekunden (außer bei pending)
                     if (type !== 'pending') {
                         setTimeout(function() {
                             hideVerificationBanner();
@@ -746,7 +901,6 @@
                 }
             };
 
-            // E-Mail-Verifikation Sektion anzeigen/verstecken
             const showEmailVerificationSection = function(show) {
                 const section = elements.emailVerificationSection;
                 if (section) {
@@ -798,30 +952,38 @@
                 }
             };
             
-            // Auth API
+            // Enhanced Auth API with Bot Protection
             const AuthAPI = {
-                register: async function (username, email, password) {
+                register: async function (username, email, password, extraData = {}) {
                     const response = await fetch(API_BASE + '/auth/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, email, password })
+                        body: JSON.stringify({ 
+                            username, email, password, 
+                            ...extraData  // Honeypot + Timing Daten
+                        })
                     });
                     const result = await response.json();
                     result.httpStatus = response.status;
                     return result;
                 },
                 
-                login: async function (username, password) {
+                login: async function (username, password, extraData = {}) {
                     const response = await fetch(API_BASE + '/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
+                        body: JSON.stringify({ 
+                            username, password,
+                            ...extraData  // Honeypot + Timing Daten
+                        })
                     });
-                    return response.json();
+                    const result = await response.json();
+                    result.httpStatus = response.status;
+                    return result;
                 }
             };
             
-            // Private Hilfsfunktionen
+            // DOM-Referenzen initialisieren
             const initializeElements = function () {
                 elements = {
                     taskText: document.getElementById('taskText'),
@@ -850,14 +1012,6 @@
                     emailVerificationSection: document.getElementById('emailVerificationSection'),
                     verificationStatus: document.getElementById('verificationStatus')
                 };
-                
-                const missingElements = Object.keys(elements).filter(function (key) {
-                    return !elements[key];
-                });
-                
-                if (missingElements.length > 0) {
-                    throw new Error('DOM-Elemente nicht gefunden: ' + missingElements.join(', '));
-                }
             };
             
             // Auth UI Management
@@ -872,9 +1026,8 @@
                     elements.guestModeNotice.style.display = 'none';
                     elements.userWelcome.style.display = 'block';
                     
-                    // Verifikations-Status anzeigen (vereinfacht)
                     elements.verificationStatus.className = 'verification-status verified';
-                    elements.verificationStatus.textContent = '✅ Verifiziert';
+                    elements.verificationStatus.textContent = '✅ Secure';
                 } else {
                     elements.guestControls.style.display = 'block';
                     elements.userControls.style.display = 'none';
@@ -894,7 +1047,6 @@
                 }, 5000);
             };
             
-            // Provider-Info anzeigen
             const showProviderInfo = function (emailInfo) {
                 if (emailInfo && emailInfo.provider && elements.providerInfo) {
                     const categoryEmojis = {
@@ -906,18 +1058,18 @@
                     };
                     
                     const emoji = categoryEmojis[emailInfo.category] || '📧';
-                    elements.providerInfo.textContent = `${emoji} ${emailInfo.provider} erkannt`;
+                    const securityLevel = emailInfo.securityLevel || 'standard';
+                    elements.providerInfo.textContent = `${emoji} ${emailInfo.provider} (${securityLevel})`;
                     elements.providerInfo.style.display = 'block';
                     
                     setTimeout(function() {
                         if (elements.providerInfo) {
                             elements.providerInfo.style.display = 'none';
                         }
-                    }, 3000);
+                    }, 5000);
                 }
             };
 
-            // URL-Parameter für E-Mail-Verifikation prüfen
             const checkEmailVerificationFromUrl = function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const token = urlParams.get('token');
@@ -928,7 +1080,6 @@
                 }
             };
 
-            // E-Mail mit Token verifizieren
             const verifyEmailWithToken = async function(token) {
                 console.log('✅ Verifiziere E-Mail mit Token...');
                 
@@ -939,7 +1090,6 @@
                     
                     showVerificationBanner('🎉 E-Mail erfolgreich bestätigt! Du kannst dich jetzt anmelden.', 'success');
                     
-                    // URL bereinigen
                     if (window.history.replaceState) {
                         window.history.replaceState({}, document.title, window.location.pathname);
                     }
@@ -950,7 +1100,6 @@
                 }
             };
 
-            // Verifikations-E-Mail erneut senden
             const resendVerificationEmail = async function(email) {
                 console.log('📧 Sende Verifikations-E-Mail erneut...');
                 
@@ -968,55 +1117,12 @@
                 }
             };
             
-            // Sichere DOM-Manipulation
-            const createElement = function (tag, className, content) {
-                const element = document.createElement(tag);
-                if (className) {
-                    element.className = className;
-                }
-                if (content) {
-                    element.textContent = content;
-                }
-                return element;
-            };
-            
-            // Validierung
-            const isValidTaskText = function (text) {
-                return typeof text === 'string' && text.trim() !== '' && text.trim().length <= 500;
-            };
-            
-            const isValidTaskId = function (id) {
-                return typeof id === 'number' && id > 0;
-            };
-            
-            // Fehlerbehandlung
-            const handleError = function (error, userMessage, context) {
-                console.error('🚨 Fehler in TODO_APP:', {
-                    error: error,
-                    context: context,
-                    timestamp: new Date().toISOString()
-                });
-                
-                const message = userMessage || 'Ein unerwarteter Fehler ist aufgetreten';
-                
-                if (error.message && (error.message.includes('NetworkError') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-                    ConnectionManager.updateStatus('connecting', 'Verbinde...');
-                    
-                    setTimeout(async () => {
-                        await ConnectionManager.testConnection();
-                    }, retryInterval);
-                } else {
-                    showErrorBanner('❌ ' + message, 'error');
-                }
-            };
-            
             // API-Aufrufe
             const apiCall = async function (url, options) {
                 console.log("🌐 API Call zu Backend:", API_BASE + url);
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(function () {
-                    console.log("⏰ Request Timeout nach 60 Sekunden");
                     controller.abort();
                 }, 60000);
                 
@@ -1080,30 +1186,9 @@
                 }
             };
             
-            // Statistiken berechnen und anzeigen
-            const updateStats = function (tasks) {
-                if (!Array.isArray(tasks)) {
-                    return;
-                }
-                
-                const total = tasks.length;
-                const completed = tasks.filter(function (task) {
-                    return task.status === 'erledigt';
-                }).length;
-                const open = total - completed;
-                
-                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-                const userInfo = currentUser ? ' von ' + currentUser.username : ' (Demo)';
-                
-                elements.stats.textContent = 
-                    '📊 Gesamt: ' + total + ' | ' +
-                    '✅ Erledigt: ' + completed + ' (' + percentage + '%) | ' +
-                    '📝 Offen: ' + open + userInfo;
-            };
-            
-            // Task-Management (unverändert)
+            // Task-Management
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet - Email Verification Version");
+                console.log("📚 loadTasks() gestartet - Production Security Version");
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
@@ -1118,7 +1203,6 @@
                     hideErrorBanner();
                 } catch (error) {
                     console.error("🚨 Fehler beim Laden der Tasks:", error);
-                    handleError(error, 'Fehler beim Laden der Aufgaben', 'loadTasks');
                     
                     if (cachedTasks.length > 0) {
                         renderTasks(cachedTasks);
@@ -1128,52 +1212,39 @@
                 }
             };
             
-            // Task-Rendering (verkürzt - bleibt größtenteils unverändert)
             const renderTasks = function (tasks) {
-                if (!Array.isArray(tasks)) {
-                    handleError(new Error('Tasks ist kein Array'), 'Ungültige Daten erhalten', 'renderTasks');
-                    return;
-                }
+                if (!Array.isArray(tasks)) return;
                 
                 elements.taskList.innerHTML = '';
                 
                 if (tasks.length === 0) {
-                    const emptyMessage = createElement('li', 'task-item', '🎉 Keine Aufgaben vorhanden! Zeit für eine Pause.');
+                    const emptyMessage = document.createElement('li');
+                    emptyMessage.className = 'task-item';
+                    emptyMessage.textContent = '🎉 Keine Aufgaben vorhanden!';
                     emptyMessage.style.textAlign = 'center';
-                    emptyMessage.style.fontStyle = 'italic';
-                    emptyMessage.style.color = '#999';
                     elements.taskList.appendChild(emptyMessage);
                     return;
                 }
                 
                 tasks.forEach(function (task) {
-                    if (!task || !isValidTaskId(task.id)) {
-                        console.warn('Ungültige Aufgabe übersprungen:', task);
-                        return;
-                    }
+                    const item = document.createElement('li');
+                    item.className = 'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open');
                     
-                    const item = createElement('li', 
-                        'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open')
-                    );
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'task-text';
+                    textSpan.textContent = task.text;
                     
-                    const textSpan = createElement('span', 'task-text', task.text);
-                    const statusSpan = createElement('span', 'task-status', task.status.toUpperCase());
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete');
+                    toggleBtn.textContent = task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt';
+                    toggleBtn.addEventListener('click', () => toggleTask(task.id));
                     
-                    const toggleBtn = createElement('button', 
-                        'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete'),
-                        task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt'
-                    );
-                    const deleteBtn = createElement('button', 'status-button btn-delete', '🗑️ Löschen');
-                    
-                    toggleBtn.addEventListener('click', function () {
-                        toggleTask(task.id);
-                    });
-                    deleteBtn.addEventListener('click', function () {
-                        deleteTask(task.id);
-                    });
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'status-button btn-delete';
+                    deleteBtn.textContent = '🗑️ Löschen';
+                    deleteBtn.addEventListener('click', () => deleteTask(task.id));
                     
                     item.appendChild(textSpan);
-                    item.appendChild(statusSpan);
                     item.appendChild(toggleBtn);
                     item.appendChild(deleteBtn);
                     
@@ -1181,13 +1252,26 @@
                 });
             };
             
-            // Task-Funktionen (verkürzt)
+            const updateStats = function (tasks) {
+                if (!Array.isArray(tasks)) return;
+                
+                const total = tasks.length;
+                const completed = tasks.filter(task => task.status === 'erledigt').length;
+                const open = total - completed;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                const userInfo = currentUser ? ' von ' + currentUser.username : ' (Demo)';
+                
+                elements.stats.textContent = 
+                    '📊 Gesamt: ' + total + ' | ' +
+                    '✅ Erledigt: ' + completed + ' (' + percentage + '%) | ' +
+                    '📝 Offen: ' + open + userInfo;
+            };
+            
             const addTask = async function () {
                 const text = elements.taskText.value;
                 
-                if (!isValidTaskText(text)) {
-                    showErrorBanner('⚠️ Bitte geben Sie einen gültigen Aufgabentext ein (1-500 Zeichen)', 'warning');
-                    elements.taskText.focus();
+                if (!text || text.trim() === '') {
+                    showErrorBanner('⚠️ Bitte geben Sie einen Aufgabentext ein', 'warning');
                     return;
                 }
                 
@@ -1195,18 +1279,16 @@
                 elements.addButton.textContent = '⏳ Wird hinzugefügt...';
                 
                 try {
-                    const response = await apiCall('/tasks', {
+                    await apiCall('/tasks', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({text: text.trim()})
+                        body: JSON.stringify({ text: text.trim() })
                     });
                     
                     elements.taskText.value = '';
                     loadTasks();
-                    
                 } catch (error) {
                     console.error("🚨 FEHLER in addTask:", error);
-                    handleError(error, 'Fehler beim Hinzufügen der Aufgabe', 'addTask');
+                    showErrorBanner('Fehler beim Hinzufügen der Aufgabe: ' + error.message, 'error');
                 } finally {
                     elements.addButton.disabled = false;
                     elements.addButton.textContent = '➕ Hinzufügen';
@@ -1215,32 +1297,25 @@
             
             const toggleTask = async function (taskId) {
                 try {
-                    await apiCall('/tasks/' + taskId, {
-                        method: 'PUT',
-                        headers: {'Content-Type': 'application/json'}
-                    });
+                    await apiCall('/tasks/' + taskId, { method: 'PUT' });
                     loadTasks();
                 } catch (error) {
-                    handleError(error, 'Fehler beim Ändern des Status', 'toggleTask');
+                    showErrorBanner('Fehler beim Ändern des Status: ' + error.message, 'error');
                 }
             };
             
             const deleteTask = async function (taskId) {
-                if (!confirm('❓ Aufgabe wirklich löschen?')) {
-                    return;
-                }
+                if (!confirm('❓ Aufgabe wirklich löschen?')) return;
                 
                 try {
-                    await apiCall('/tasks/' + taskId, {
-                        method: 'DELETE'
-                    });
+                    await apiCall('/tasks/' + taskId, { method: 'DELETE' });
                     loadTasks();
                 } catch (error) {
-                    handleError(error, 'Fehler beim Löschen der Aufgabe', 'deleteTask');
+                    showErrorBanner('Fehler beim Löschen der Aufgabe: ' + error.message, 'error');
                 }
             };
             
-            // ERWEITERTE Auth-Funktionen mit E-Mail-Verifikation
+            // Enhanced Auth Functions with Bot Protection
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1257,7 +1332,11 @@
                 submitBtn.textContent = '⏳ Anmelden...';
                 
                 try {
-                    const response = await AuthAPI.login(username, password);
+                    // Form-Data mit Bot Protection vorbereiten
+                    let formData = { username, password };
+                    formData = FrontendBotProtection.prepareFormData('login', formData);
+                    
+                    const response = await AuthAPI.login(formData.username, formData.password, formData);
                     
                     if (response.token) {
                         TokenManager.save(response.token);
@@ -1276,14 +1355,23 @@
                 } catch (error) {
                     console.error('Login error:', error);
                     
-                    if (error.code === 'EMAIL_NOT_VERIFIED') {
+                    // Enhanced Error Handling for Bot Protection
+                    if (error.code === 'HONEYPOT_TRIGGERED') {
+                        showMessage('🤖 Security check failed. Please try again.', 'error');
+                    } else if (error.code === 'TOO_FAST') {
+                        showMessage('⚡ Please take more time filling out the form.', 'error');
+                    } else if (error.code === 'TOO_SLOW') {
+                        showMessage('🕐 Form session expired. Please refresh and try again.', 'error');
+                    } else if (error.code === 'SUSPICIOUS_USER_AGENT') {
+                        showMessage('🌐 Please use a standard web browser.', 'error');
+                    } else if (error.code === 'EMAIL_NOT_VERIFIED') {
                         showMessage('❌ E-Mail-Adresse noch nicht bestätigt.', 'error');
-                        showVerificationBanner(
-                            '📧 Bitte bestätige zuerst deine E-Mail-Adresse.',
-                            'pending',
-                            true
-                        );
+                        showVerificationBanner('📧 Bitte bestätige zuerst deine E-Mail-Adresse.', 'pending', true);
                         showEmailVerificationSection(true);
+                    } else if (error.httpStatus === 429) {
+                        showMessage('⏳ Zu viele Versuche. Bitte warten Sie einen Moment.', 'error');
+                    } else if (error.httpStatus === 423) {
+                        showMessage('🔒 Account temporarily locked due to failed attempts.', 'error');
                     } else {
                         showMessage('Anmeldung fehlgeschlagen: ' + (error.message || 'Ungültige Daten'), 'error');
                     }
@@ -1293,7 +1381,6 @@
                 }
             };
             
-            // ERWEITERTE Registrierung mit E-Mail-Verifikation
             const handleRegister = async function (event) {
                 event.preventDefault();
                 
@@ -1311,35 +1398,28 @@
                 submitBtn.textContent = '⏳ Registrieren...';
                 
                 try {
-                    const response = await AuthAPI.register(username, email, password);
+                    // Form-Data mit Bot Protection vorbereiten
+                    let formData = { username, email, password };
+                    formData = FrontendBotProtection.prepareFormData('register', formData);
+                    
+                    const response = await AuthAPI.register(formData.username, formData.email, formData.password, formData);
                     
                     if (response.httpStatus === 201) {
-                        // Registrierung erfolgreich
                         showMessage('🎉 Registrierung erfolgreich!', 'success');
                         
                         if (response.verificationRequired) {
-                            // E-Mail-Verifikation erforderlich
                             showVerificationBanner(
                                 response.emailSent ? 
                                 '📧 Prüfe deine E-Mails und bestätige deine E-Mail-Adresse.' :
                                 '📧 E-Mail-Bestätigung erforderlich. Prüfe deine E-Mails.',
-                                'pending',
-                                true
+                                'pending', true
                             );
                             showEmailVerificationSection(true);
-                            
-                            // E-Mail für Resend speichern
                             pendingVerificationEmail = email;
-                            
-                            // Nach 2 Sekunden zur Login-Seite wechseln
-                            setTimeout(function () {
-                                switchAuthTab('login');
-                            }, 2000);
+                            setTimeout(function () { switchAuthTab('login'); }, 2000);
                         } else if (response.token) {
-                            // Sofortiger Login (falls E-Mail-Verifikation deaktiviert)
                             TokenManager.save(response.token);
                             showMessage('🎉 Registrierung und Anmeldung erfolgreich!', 'success');
-                            
                             setTimeout(function () {
                                 closeAuthModal();
                                 updateAuthUI();
@@ -1347,30 +1427,33 @@
                             }, 1500);
                         }
                         
-                        // Provider-Info anzeigen falls vorhanden
                         if (response.emailInfo) {
                             showProviderInfo(response.emailInfo);
                         }
                     } else {
-                        // Fehler bei der Registrierung
                         let errorMessage = response.message || 'Registrierung fehlgeschlagen';
-                        
-                        // Erweiterte Fehlermeldungen für E-Mail-Validierung
-                        if (response.code === 'DISPOSABLE_EMAIL') {
-                            errorMessage += '\n\n💡 Tipp: Verwende Gmail, Outlook, Yahoo, Web.de, GMX oder deine Firmen-E-Mail.';
-                        } else if (response.code === 'SUSPICIOUS_DOMAIN') {
-                            errorMessage += '\n\n💡 Tipp: Verwende eine E-Mail von einem bekannten Anbieter.';
-                        }
-                        
                         if (response.suggestion) {
                             errorMessage += '\n\n' + response.suggestion;
                         }
-                        
                         showMessage(errorMessage, 'error');
                     }
                 } catch (error) {
                     console.error('Register error:', error);
-                    showMessage('Registrierung fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'), 'error');
+                    
+                    // Enhanced Error Handling for Bot Protection
+                    if (error.code === 'HONEYPOT_TRIGGERED') {
+                        showMessage('🤖 Security check failed. Please refresh and try again.', 'error');
+                    } else if (error.code === 'TOO_FAST') {
+                        showMessage('⚡ Please take more time filling out the form.', 'error');
+                    } else if (error.code === 'TOO_SLOW') {
+                        showMessage('🕐 Form session expired. Please refresh and try again.', 'error');
+                    } else if (error.code === 'SUSPICIOUS_USER_AGENT') {
+                        showMessage('🌐 Please use a standard web browser.', 'error');
+                    } else if (error.httpStatus === 429) {
+                        showMessage('⏳ Zu viele Versuche. Bitte warten Sie einen Moment.', 'error');
+                    } else {
+                        showMessage('Registrierung fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'), 'error');
+                    }
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = '👤 Registrieren';
@@ -1390,16 +1473,13 @@
                 }
             };
             
-            // Event-Handler für Enter-Taste
             const handleKeyPress = function (event) {
                 if (event.key === 'Enter') {
                     addTask();
                 }
             };
 
-            // E-Mail-Verifikation Event-Handler
             const initializeEmailVerification = function() {
-                // Resend-Button Event-Listener
                 const resendBtn1 = elements.resendVerificationBtn;
                 const resendBtn2 = elements.resendVerificationBtn2;
                 
@@ -1422,15 +1502,17 @@
                     });
                 }
                 
-                // URL-Parameter für E-Mail-Verifikation prüfen
                 checkEmailVerificationFromUrl();
             };
             
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - EMAIL VERIFICATION VERSION');
+                    console.log('🚀 Initialisiere TODO_APP - PRODUCTION SECURITY VERSION');
                     initializeElements();
+                    
+                    // Bot Protection initialisieren
+                    FrontendBotProtection.initialize();
                     
                     // Event-Handler zuweisen
                     elements.addButton.addEventListener('click', addTask);
@@ -1447,36 +1529,35 @@
                     updateAuthUI();
                     
                     // Backend Connection Test
-                    console.log('🔍 Teste Backend-Verbindung mit E-Mail-Verifikation...');
+                    console.log('🔍 Teste Backend-Verbindung mit Production Security...');
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
                     
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        console.log('✅ Backend mit E-Mail-Verifikation online, lade Daten...');
+                        console.log('✅ Backend mit Production Security online, lade Daten...');
                         await loadTasks();
                     } else {
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
                     
-                    console.log('✅ TODO_APP mit E-Mail-Verifikation erfolgreich initialisiert');
+                    console.log('✅ TODO_APP mit Production Security erfolgreich initialisiert');
                 } catch (error) {
-                    handleError(error, 'Fehler beim Initialisieren der App', 'initialize');
+                    console.error('🚨 Fehler beim Initialisieren:', error);
+                    showErrorBanner('Fehler beim Initialisieren der App: ' + error.message, 'error');
                 }
             };
             
-            // Globale Funktionen für Error Banner
+            // Globale Funktionen
             window.hideErrorBanner = hideErrorBanner;
             
-            // Öffentliche API des Moduls
+            // Öffentliche API
             return {
                 init: initialize,
                 auth: {
                     showModal: function (tab) {
                         elements.authModal.style.display = 'block';
-                        if (tab) {
-                            switchAuthTab(tab);
-                        }
+                        if (tab) switchAuthTab(tab);
                     },
                     closeModal: function () {
                         elements.authModal.style.display = 'none';
@@ -1489,12 +1570,8 @@
                         const tabs = document.querySelectorAll('.modal-tab');
                         const forms = document.querySelectorAll('.auth-form');
                         
-                        tabs.forEach(function (t) {
-                            t.classList.remove('active');
-                        });
-                        forms.forEach(function (f) {
-                            f.classList.remove('active');
-                        });
+                        tabs.forEach(t => t.classList.remove('active'));
+                        forms.forEach(f => f.classList.remove('active'));
                         
                         document.querySelector('.modal-tab:' + (tab === 'login' ? 'first-child' : 'last-child')).classList.add('active');
                         document.getElementById(tab + 'Form').classList.add('active');
@@ -1504,8 +1581,8 @@
                 debug: {
                     getStats: function () {
                         return {
+                            version: 'Production Security v2.0',
                             cachedTasks: cachedTasks.length,
-                            editingTaskId: editingTaskId,
                             apiBase: API_BASE,
                             currentUser: currentUser,
                             isLoggedIn: TokenManager.isValid(),
@@ -1513,12 +1590,10 @@
                             retryCount: retryCount,
                             maxRetries: maxRetries,
                             pendingVerificationEmail: pendingVerificationEmail,
-                            version: 'Email Verification v6.0'
+                            botProtection: 'active'
                         };
                     },
-                    testConnection: function () {
-                        return ConnectionManager.testConnection();
-                    }
+                    testConnection: () => ConnectionManager.testConnection()
                 }
             };
         })();
@@ -1548,20 +1623,20 @@
             }
         };
         
-        // App starten wenn DOM geladen ist
+        // App starten
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', TODO_APP.init);
         } else {
             TODO_APP.init();
         }
         
-        // Debug-Zugriff in der Console
+        // Debug-Zugriff
         window.TODO_DEBUG = TODO_APP.debug;
         
-        console.log('✅ TODO APP LOADED - EMAIL VERIFICATION v6.0');
-        console.log('📧 Features: Registrierung → E-Mail-Verifikation → Login → Persönliche Todos');
-        console.log('🌍 Unterstützt: Gmail, Outlook, Yahoo, Web.de, GMX, Firmen-E-Mails weltweit');
-        console.log('❌ Blockiert: 200+ internationale Wegwerf-E-Mail-Services');
+        console.log('✅ TODO APP LOADED - PRODUCTION SECURITY v2.0');
+        console.log('🛡️ Features: Rate limiting • Bot protection • Advanced email validation • Email verification');
+        console.log('🤖 Bot Protection: Honeypot detection • Timing analysis • User-agent filtering');
+        console.log('📧 Email Security: 268+ blocked domains • Email normalization • Pattern analysis');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
 </body>

@@ -14,11 +14,47 @@ const DatabaseModule = (function () {
     const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'todos.db');
     const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
     
+    // ✅ NEUE FUNKTION: Database Path Validation
+    const validateDatabasePath = function(dbPath) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        const dir = path.dirname(dbPath);
+        
+        if (!fs.existsSync(dir)) {
+            console.log('📁 Creating database directory:', dir);
+            try {
+                fs.mkdirSync(dir, { recursive: true });
+                console.log('✅ Database directory created successfully');
+            } catch (error) {
+                console.error('🚨 Failed to create database directory:', error.message);
+                throw new Error(`Cannot create database directory: ${dir}`);
+            }
+        } else {
+            console.log('📁 Database directory exists:', dir);
+        }
+        
+        // Prüfe Schreibrechte im Verzeichnis
+        try {
+            const testFile = path.join(dir, '.write_test');
+            fs.writeFileSync(testFile, 'test');
+            fs.unlinkSync(testFile);
+            console.log('✅ Database directory is writable');
+        } catch (error) {
+            console.error('🚨 Database directory is not writable:', error.message);
+            throw new Error(`Database directory not writable: ${dir}`);
+        }
+    };
+    
     // Datenbank initialisieren
     const initialize = async function () {
         console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation:', DB_PATH);
         
         try {
+            // ✅ NEUE VALIDIERUNG: Database Path validieren
+            console.log('🔍 Validating database path...');
+            validateDatabasePath(DB_PATH);
+            
             // Datenbank öffnen/erstellen
             db = new Database(DB_PATH);
             

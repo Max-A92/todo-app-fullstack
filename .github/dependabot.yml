@@ -1,0 +1,151 @@
+# ===== DEPENDABOT CONFIGURATION =====
+# Automated dependency updates for security and maintenance
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # ===== FRONTEND DEPENDENCIES =====
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    reviewers:
+      - "Max-A92"  
+    assignees:
+      - "Max-A92"  
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    ignore:
+      # Ignore major version updates for stable dependencies
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ===== BACKEND DEPENDENCIES =====
+  - package-ecosystem: "npm"
+    directory: "/backend-sqlite"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Europe/Berlin"
+    reviewers:
+      - "Max-A92"  
+    assignees:
+      - "Max-A92"  
+    commit-message:
+      prefix: "backend-deps"
+      prefix-development: "backend-deps-dev"
+      include: "scope"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+      - "security"
+    ignore:
+      # Ignore updates for custom or problematic packages
+      - dependency-name: "better-sqlite3"
+        update-types: ["version-update:semver-major"]
+    groups:
+      security-packages:
+        patterns:
+          - "bcrypt*"
+          - "jsonwebtoken"
+          - "express-rate-limit"
+          - "helmet"
+        update-types:
+          - "minor"
+          - "patch"
+      database-packages:
+        patterns:
+          - "*sqlite*"
+          - "better-sqlite3"
+        update-types:
+          - "patch"
+
+  # ===== GITHUB ACTIONS DEPENDENCIES =====
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+    reviewers:
+      - "Max-A92"  
+    assignees:
+      - "Max-A92"  
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+# ===== DEPENDABOT CONFIGURATION EXPLANATION =====
+#
+# 🔄 UPDATE SCHEDULE:
+# - Frontend: Monday 06:00 (Europe/Berlin)
+# - Backend: Monday 06:30 (Europe/Berlin)  
+# - GitHub Actions: Sunday 04:00 (Europe/Berlin)
+#
+# 🏷️ AUTOMATIC LABELING:
+# - All updates get "dependencies" label
+# - Package-specific labels (frontend, backend, security)
+# - GitHub Actions updates get "ci/cd" label
+#
+# 👤 REVIEW PROCESS:
+# - All PRs assigned to repository owner
+# - Reviewer automatically assigned
+# - Max 5 open PRs per ecosystem to avoid spam
+#
+# 📦 GROUPING STRATEGY:
+# - Related packages updated together (React ecosystem, security packages)
+# - Reduces PR noise while maintaining control
+# - Database packages grouped for safer updates
+#
+# 🛡️ SECURITY FOCUS:
+# - Security packages grouped for priority updates
+# - Major version updates ignored for stable dependencies
+# - Backend dependencies treated with extra caution
+#
+# 📝 COMMIT MESSAGES:
+# - Clear prefixes for different types of updates
+# - Scoped commits for better git history
+# - Development vs production dependency distinction
+#
+# 🚫 IGNORE RULES:
+# - Major React updates (require manual testing)
+# - Major database updates (potential breaking changes)
+# - Custom packages that need manual review
+#
+# ⏰ TIMEZONE AWARENESS:
+# - Updates scheduled for European business hours
+# - Avoids weekend disruptions
+# - Staggered timing prevents overwhelming notifications

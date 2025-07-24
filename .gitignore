@@ -1,28 +1,68 @@
-# Environment Variables (NIEMALS öffentlich!)
-# =============================================
+# ===== ENVIRONMENT VARIABLES (NIEMALS öffentlich!) =====
 .env
 .env.local
 .env.production
 .env.development
+.env.staging
+.env.test
 .env.*
 .env.production.local
-.env.staging
-.env.example
+.env.example.local
 
-# Node.js Dependencies
-# ====================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# ===== SECURITY CONFIGURATION FILES =====
+# Rate Limiting Configuration
+rate-limits.json
+security-config.json
+rate-limit-overrides.json
 
-# LOGS
-# ====
-*.log
-logs/
+# Bot Protection Configuration  
+bot-protection.json
+honeypot-config.json
+timing-config.json
 
-# Datenbank-Dateien (lokal)
-# =========================
+# IP Blocking & Security
+blocked-ips.json
+security-events.json
+threat-detection.json
+ip-whitelist.json
+ip-blacklist.json
+
+# Authentication & JWT
+jwt-secrets.json
+auth-config.json
+token-blacklist.json
+session-store.json
+
+# Email & SMTP Configuration
+email-config.json
+smtp-credentials.json
+email-templates-config.json
+
+# Security Headers Configuration
+csp-config.json
+security-headers.json
+cors-config.json
+
+# ===== MONITORING & ANALYTICS DATA =====
+# Monitoring Data Files
+monitoring-data.json
+analytics-cache.json
+performance-data.json
+security-analytics.json
+
+# Log Files with Sensitive Data
+security.log
+auth.log
+rate-limit.log
+bot-protection.log
+monitoring.log
+
+# Real-time Data Stores
+realtime-metrics.json
+connection-tracking.json
+request-fingerprints.json
+
+# ===== DATABASE FILES =====
 *.db
 *.sqlite
 *.sqlite3
@@ -32,176 +72,194 @@ logs/
 *.db-shm
 todos.db*
 database.db*
+users.db*
+sessions.db*
 
-# Email & Authentication (zusätzliche Sicherheit)
-# ===============================================
+# Database Backups
+db-backups/
+database-exports/
+*.sql.backup
+
+# ===== CERTIFICATES & KEYS =====
+# SSL/TLS Certificates
 *.key
 *.pem
 *.crt
 *.p12
 *.pfx
+*.cer
+*.der
+ssl-certs/
+certificates/
+
+# SSH Keys
+*.ssh
+id_rsa
+id_rsa.pub
+known_hosts
+
+# API Keys & Tokens
+api-keys.json
+access-tokens.json
+refresh-tokens.json
+service-account.json
+
+# ===== NODE.JS & NPM =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.backup
+yarn.lock.backup
+
+# ===== LOGS & DEBUGGING =====
+*.log
+logs/
+debug/
+crash-reports/
+error-dumps/
+
+# Specific Security Logs
+auth-failures.log
+brute-force-attempts.log
+sql-injection-attempts.log
+xss-attempts.log
+
+# ===== EMAIL SYSTEM =====
 emails/
 email-templates/
+email-queue/
 mail.log
 email.log
 smtp.log
+email-attachments/
 
-# Production Configuration
-# ========================
+# ===== PRODUCTION SECRETS =====
 config/production.json
 config/local.json
 config/secrets.json
+config/security.json
+secrets/
+private/
 
-# Betriebssystem-Dateien
-# ======================
+# ===== BACKUP FILES =====
+*.backup
+*.bak
+*.old
+*.tmp
+backups/
+archive/
+
+# ===== CACHE & TEMPORARY FILES =====
+cache/
+.cache/
+tmp/
+temp/
+.tmp/
+
+# Security-specific caches
+security-cache/
+rate-limit-cache/
+bot-detection-cache/
+
+# ===== SYSTEM FILES =====
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Editor-Dateien
-# ==============
-.vscode/
+# ===== DEVELOPMENT TOOLS =====
+.vscode/settings.json
+.vscode/launch.json
 .idea/
 *.swp
 *.swo
 
-# Temporary folders
-# =================
-tmp/
-temp/
+# ===== TEST DATA & COVERAGE =====
+coverage/
+test-results/
+test-data/
+mock-data/
+fixtures/
 
-# Build outputs
-# =============
+# Security Test Data
+penetration-test-results/
+vulnerability-scans/
+security-test-data/
+
+# ===== BUILD & DEPLOYMENT =====
 dist/
 build/
+.next/
+.nuxt/
 
-# Runtime data
-# ============
-pids
-*.pid
-*.seed
-*.pid.lock
+# Deployment configurations with secrets
+docker-compose.override.yml
+kubernetes-secrets.yml
+helm-values.yaml
 
-# Coverage directory used by tools like istanbul
-# ==============================================
-coverage/
-*.lcov
-
-# nyc test coverage
-# =================
-.nyc_output
-
-# Grunt intermediate storage
-# ==========================
-.grunt
-
-# Bower dependency directory
-# ==========================
-bower_components
-
-# node-waf configuration
-# ======================
-.lock-wscript
-
-# Compiled binary addons
-# ======================
-build/Release
-
-# Dependency directories
-# ======================
-node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-# ============================
-.npm
-
-# Optional eslint cache
-# =====================
-.eslintcache
-
-# Microbundle cache
-# =================
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-# =====================
-.node_repl_history
-
-# Output of 'npm pack'
-# ====================
-*.tgz
-
-# Yarn Integrity file
-# ===================
-.yarn-integrity
-
-# parcel-bundler cache
-# ====================
-.cache
-.parcel-cache
-
-# next.js build output
-# ====================
-.next
-
-# nuxt.js build output
-# ====================
-.nuxt
-
-# vuepress build output
-# =====================
-.vuepress/dist
-
-# Serverless directories
-# ======================
-.serverless
-
-# FuseBox cache
-# =============
-.fusebox/
-
-# DynamoDB Local files
-# ====================
-.dynamodb/
-
-# TernJS port file
-# ================
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-# =========================================================
-.vscode-test
-
-# Additional Security Files
-# =========================
-secrets.txt
+# ===== ADDITIONAL SECURITY FILES =====
+# Password Lists & Dictionaries
 passwords.txt
-tokens.txt
-*.secret
-auth-config.json
-email-credentials.json
+wordlists/
+dictionaries/
 
-# Backup Files
-# ============
-*.backup
-*.bak
-*.old
+# Security Tools Output
+nmap-results/
+security-scan-results/
+vulnerability-reports/
 
-# Cache Directories
-# =================
-.cache/
-cache/
+# Forensics & Incident Response
+incident-reports/
+forensic-data/
+security-incidents/
 
-# Test Coverage Reports
-# =====================
-test-results/
-coverage-reports/
+# Compliance & Audit
+audit-logs/
+compliance-reports/
+penetration-test-reports/
 
-# Local Development Files
-# =======================
-local-config.json
-dev-settings.json
-test-data.json
+# ===== CLOUD & INFRASTRUCTURE SECRETS =====
+# AWS
+.aws/
+aws-credentials.json
+
+# Google Cloud
+google-credentials.json
+service-account-key.json
+
+# Azure
+azure-credentials.json
+
+# Docker secrets
+docker-secrets/
+
+# ===== CUSTOM APPLICATION SECRETS =====
+# Add your application-specific sensitive files here
+user-data-exports/
+admin-tools/
+maintenance-scripts/
+migration-data/
+
+# ===== SECURITY CONFIGURATION FILES =====
+# Rate Limiting & Bot Protection Configuration
+rate-limits.json
+security-config.json  
+bot-protection.json
+honeypot-config.json
+
+# Security Analytics & Monitoring Data
+security-events.json
+threat-detection.json
+monitoring-data.json
+analytics-cache.json
+
+# IP Management
+blocked-ips.json
+ip-whitelist.json
+ip-blacklist.json
+
+# Additional Security Logs
+auth.log
+security.log
+rate-limit.log
+bot-protection.log
