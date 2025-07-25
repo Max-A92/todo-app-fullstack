@@ -1,7 +1,7 @@
 {
   "name": "todo-app-backend-email-verification",
-  "version": "2.0.0",
-  "description": "Todo App Backend with Email Verification and International Email Validation",
+  "version": "2.0.1",
+  "description": "Todo App Backend with Email Verification and Enhanced Security",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -18,7 +18,9 @@
     "nodemailer",
     "international-email",
     "backend",
-    "api"
+    "api",
+    "security",
+    "rate-limiting"
   ],
   "author": "Your Name",
   "license": "MIT",
@@ -26,8 +28,11 @@
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
+    "dompurify": "^3.2.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1",
+    "jsdom": "^23.2.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.8"
   },
@@ -37,13 +42,5 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "your-repository-url"
-  },
-  "bugs": {
-    "url": "your-repository-url/issues"
-  },
-  "homepage": "your-repository-url#readme"
+  }
 }

@@ -1,8 +1,12 @@
-// ===== ENHANCED SECURITY HEADERS SUITE =====
-// Advanced security middleware with CSP, XSS protection, and threat analysis
+// ===== SICHERE SECURITY-HEADERS.JS =====
+// Ersetzt gefährliche Regex mit DOMPurify
 
-// Environment Variables laden
-require('dotenv').config();
+const { JSDOM } = require('jsdom');
+const DOMPurify = require('dompurify');
+
+// DOMPurify für Node.js setup
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
 
 // Security Stats Global Store
 const SecurityStats = {
@@ -27,23 +31,20 @@ const SecurityStats = {
     }
 };
 
-console.log('🛡️ Security Headers Suite loaded');
+console.log('🛡️ Enhanced Security Headers Suite loaded');
 console.log('🛡️ Security Features:');
 console.log('  • Content Security Policy (CSP)');
 console.log('  • XSS Protection Headers');
 console.log('  • CSRF Protection');
 console.log('  • Clickjacking Protection');
-console.log('  • Suspicious Pattern Detection');
+console.log('  • DOMPurify HTML Sanitization');
 console.log('  • Security Score Analysis');
 console.log('  • Real-Time Threat Monitoring');
 
-// ===== CORE SECURITY MIDDLEWARE =====
-
 // Content Security Policy Generator
 const generateCSP = function(req) {
-    const NODE_ENV = process.env.NODE_ENV || 'development'; // ← FIX: Sichere NODE_ENV Abfrage
+    const NODE_ENV = process.env.NODE_ENV || 'development';
     
-    // Basis CSP für verschiedene Umgebungen
     const baseCSP = {
         'default-src': ["'self'"],
         'script-src': NODE_ENV === 'development' 
@@ -61,7 +62,6 @@ const generateCSP = function(req) {
         'upgrade-insecure-requests': []
     };
     
-    // CSP String generieren
     let cspString = '';
     for (const [directive, sources] of Object.entries(baseCSP)) {
         if (sources.length > 0) {
@@ -74,78 +74,70 @@ const generateCSP = function(req) {
     return cspString.trim();
 };
 
-// Suspicious Pattern Detection
+// ===== SICHERE PATTERN DETECTION (OHNE GEFÄHRLICHE REGEX) =====
 const detectSuspiciousPatterns = function(req) {
-    const suspiciousPatterns = [
-        // XSS Patterns
-        /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-        /javascript:/gi,
-        /on\w+\s*=/gi,
-        /<iframe[\s\S]*?>/gi,
-        /<object[\s\S]*?>/gi,
-        /<embed[\s\S]*?>/gi,
-        
-        // SQL Injection Patterns
-        /union[\s\S]*?select/gi,
-        /select[\s\S]*?from/gi,
-        /insert[\s\S]*?into/gi,
-        /delete[\s\S]*?from/gi,
-        /update[\s\S]*?set/gi,
-        /drop[\s\S]*?table/gi,
-        
-        // Path Traversal
-        /\.\.\/|\.\.\\/gi,
-        /\/etc\/passwd/gi,
-        /\/windows\/system32/gi,
-        
-        // Command Injection
-        /;\s*(rm|del|format|shutdown)/gi,
-        /\|\s*(cat|type|dir|ls)/gi,
-        /`.*`/gi,
-        /\$\(.*\)/gi
-    ];
-    
     const threats = [];
     const userAgent = req.headers['user-agent'] || '';
     const queryString = JSON.stringify(req.query);
     const bodyString = JSON.stringify(req.body || {});
     const urlPath = req.path || '';
     
-    // Check all input sources
-    const inputs = [userAgent, queryString, bodyString, urlPath];
+    const inputs = [
+        { name: 'User-Agent', content: userAgent },
+        { name: 'Query', content: queryString },
+        { name: 'Body', content: bodyString },
+        { name: 'Path', content: urlPath }
+    ];
     
-    inputs.forEach((input, index) => {
-        const inputNames = ['User-Agent', 'Query', 'Body', 'Path'];
-        suspiciousPatterns.forEach((pattern, patternIndex) => {
-            if (pattern.test(input)) {
+    // SICHERE Keyword-Detection statt gefährlicher Regex
+    const suspiciousKeywords = {
+        XSS: ['script', 'javascript:', 'onload', 'onerror', 'onclick', 'onmouseover', 'onfocus', 'alert(', 'document.cookie'],
+        SQL_INJECTION: ['union select', 'drop table', 'insert into', 'delete from', 'update set', 'or 1=1', "' or '1'='1"],
+        PATH_TRAVERSAL: ['../', '..\\', '/etc/passwd', '\\windows\\system32', '/proc/self/environ'],
+        COMMAND_INJECTION: ['rm -rf', 'del *', 'format c:', '; rm', '| cat', '&& rm', '`rm', '$(rm)']
+    };
+    
+    inputs.forEach(input => {
+        // HTML Sanitization mit DOMPurify (ERSETZT GEFÄHRLICHE REGEX)
+        try {
+            const cleaned = purify.sanitize(input.content);
+            if (cleaned !== input.content && input.content.length > 10) {
                 threats.push({
-                    type: getPatternType(patternIndex),
-                    source: inputNames[index],
-                    pattern: pattern.toString(),
-                    content: input.substring(0, 100)
+                    type: 'XSS_SANITIZED',
+                    source: input.name,
+                    pattern: 'HTML_CONTENT_SANITIZED',
+                    content: input.content.substring(0, 100)
                 });
             }
+        } catch (error) {
+            console.error('DOMPurify sanitization error:', error);
+        }
+        
+        // Sichere Keyword Detection
+        Object.entries(suspiciousKeywords).forEach(([threatType, keywords]) => {
+            keywords.forEach(keyword => {
+                if (input.content.toLowerCase().includes(keyword.toLowerCase())) {
+                    threats.push({
+                        type: threatType,
+                        source: input.name,
+                        pattern: keyword,
+                        content: input.content.substring(0, 100)
+                    });
+                }
+            });
         });
     });
     
     return threats;
 };
 
-// Pattern Type Classifier
-const getPatternType = function(patternIndex) {
-    if (patternIndex < 6) return 'XSS';
-    if (patternIndex < 12) return 'SQL_INJECTION';
-    if (patternIndex < 15) return 'PATH_TRAVERSAL';
-    return 'COMMAND_INJECTION';
-};
-
 // Security Score Calculator
 const calculateSecurityScore = function(req, threats) {
     let score = 100;
     
-    // Deduct points for threats
     threats.forEach(threat => {
         switch (threat.type) {
+            case 'XSS_SANITIZED':
             case 'XSS': score -= 15; break;
             case 'SQL_INJECTION': score -= 25; break;
             case 'PATH_TRAVERSAL': score -= 20; break;
@@ -158,7 +150,6 @@ const calculateSecurityScore = function(req, threats) {
     if (req.headers.referer && req.headers.referer.includes(req.headers.host)) score += 5;
     if (req.headers['content-type'] === 'application/json') score += 3;
     
-    // User-Agent analysis
     const userAgent = req.headers['user-agent'] || '';
     if (userAgent.includes('Mozilla') && userAgent.includes('Chrome')) score += 10;
     if (userAgent.length < 20) score -= 10;
@@ -167,7 +158,6 @@ const calculateSecurityScore = function(req, threats) {
     return Math.max(0, Math.min(100, score));
 };
 
-// Security Level Determiner
 const getSecurityLevel = function(score) {
     if (score >= 80) return 'HIGH';
     if (score >= 60) return 'MEDIUM';
@@ -175,21 +165,16 @@ const getSecurityLevel = function(score) {
     return 'CRITICAL';
 };
 
-// ===== MAIN SECURITY MIDDLEWARE =====
-
+// Enhanced Security Middleware
 const securityHeadersMiddleware = function(req, res, next) {
     const startTime = Date.now();
-    const NODE_ENV = process.env.NODE_ENV || 'development'; // ← FIX: Sichere NODE_ENV Abfrage
+    const NODE_ENV = process.env.NODE_ENV || 'development';
     
-    // Generate CSP
     const csp = generateCSP(req);
-    
-    // Detect threats
     const threats = detectSuspiciousPatterns(req);
     const securityScore = calculateSecurityScore(req, threats);
     const securityLevel = getSecurityLevel(securityScore);
     
-    // Update stats
     SecurityStats.stats.totalRequests++;
     SecurityStats.stats.securityScores.push(securityScore);
     
@@ -201,7 +186,6 @@ const securityHeadersMiddleware = function(req, res, next) {
         });
     }
     
-    // Block highly suspicious requests
     if (securityScore < 30 && threats.length > 2) {
         SecurityStats.stats.blockedRequests++;
         console.log(`🚫 SECURITY BLOCK: Score ${securityScore}, Threats: ${threats.length}`);
@@ -222,19 +206,16 @@ const securityHeadersMiddleware = function(req, res, next) {
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
     
-    // HSTS for production
     if (NODE_ENV === 'production') {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     }
     
-    // Custom Security Headers
     res.setHeader('X-Security-Score', securityScore);
     res.setHeader('X-Security-Level', securityLevel);
     res.setHeader('X-Threat-Count', threats.length);
     
     const processingTime = Date.now() - startTime;
     
-    // Log security analysis
     if (NODE_ENV === 'development' || threats.length > 0) {
         console.log(`🛡️ Security middleware: ${processingTime}ms, Score: ${securityScore}, Level: ${securityLevel}`);
         if (threats.length > 0) {
@@ -242,7 +223,6 @@ const securityHeadersMiddleware = function(req, res, next) {
         }
     }
     
-    // Add security info to request for further processing
     req.securityInfo = {
         score: securityScore,
         level: securityLevel,
@@ -253,14 +233,9 @@ const securityHeadersMiddleware = function(req, res, next) {
     next();
 };
 
-// ===== ENHANCED SECURITY MIDDLEWARE COMPOSER =====
-
 const enhancedSecurityMiddleware = function(req, res, next) {
-    // Apply security headers and analysis
     securityHeadersMiddleware(req, res, next);
 };
-
-// ===== SECURITY STATS API =====
 
 SecurityStats.getReport = function() {
     const avgScore = this.stats.securityScores.length > 0 
@@ -299,12 +274,12 @@ SecurityStats.getReport = function() {
             frameOptions: true,
             contentTypeOptions: true,
             referrerPolicy: true,
-            permissionsPolicy: true
+            permissionsPolicy: true,
+            domPurifyEnabled: true
         }
     };
 };
 
-// Export für Integration in server.js
 module.exports = {
     enhancedSecurityMiddleware,
     SecurityStats
