@@ -34,7 +34,7 @@
     "express-rate-limit": "^7.5.1",
     "jsdom": "^23.2.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^6.9.8"
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
