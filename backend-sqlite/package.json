@@ -25,7 +25,7 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dompurify": "^3.2.6",
