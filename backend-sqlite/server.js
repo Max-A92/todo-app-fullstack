@@ -120,6 +120,19 @@ const TaskServer = (function () {
     const NODE_ENV = process.env.NODE_ENV || 'production';
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
     
+    // 🐛 DEBUG: Bot Protection entspannen für Development
+    if (NODE_ENV === 'development') {
+        console.log('🐛 DEVELOPMENT MODE: Entspanne Bot Protection für Testing...');
+        SecurityConfig.botProtection.minFormTime = 500;           // Reduziert von 3000ms auf 500ms
+        SecurityConfig.botProtection.enableHoneypot = false;      // Honeypot temporär deaktivieren
+        SecurityConfig.botProtection.enableTiming = false;        // Timing-Checks deaktivieren
+        console.log('🐛 DEBUG: Bot Protection entspannt für Development');
+        console.log('  • minFormTime: 3000ms → 500ms');
+        console.log('  • enableHoneypot: true → false');
+        console.log('  • enableTiming: true → false');
+        console.log('⚠️ Diese Einstellungen NUR für Development - Production bleibt sicher!');
+    }
+    
     // ✅ VERBESSERTE SICHERHEITSPRÜFUNG: JWT_SECRET Validierung (Development-freundlich)
     if (!JWT_SECRET || JWT_SECRET === 'production-fallback-secret-2025') {
         console.error('🚨 CRITICAL: Set strong JWT_SECRET in production!');
