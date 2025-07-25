@@ -611,12 +611,18 @@
         const TODO_APP = (function () {
             'use strict';
             
-            // API-Konfiguration
-            const API_BASE_OPTIONS = [
-                'https://todo-app-fullstack-fdvh.onrender.com'
-            ];
+            // 🐛 DEBUG: Environment Detection & API Configuration
+            console.log('🔍 DEBUG: Current hostname:', window.location.hostname);
+            console.log('🔍 DEBUG: Current port:', window.location.port);
+            console.log('🔍 DEBUG: Current origin:', window.location.origin);
+
+            // Automatische Environment Detection
+            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:3000'  // ← Lokal mit Bot Protection Debug
+                : 'https://todo-app-fullstack-fdvh.onrender.com';  // ← Production mit voller Security
+
+            console.log('🎯 DEBUG: Using API_BASE:', API_BASE);
             
-            let API_BASE = API_BASE_OPTIONS[0];
             let editingTaskId = null;
             let cachedTasks = [];
             let currentUser = null;
@@ -1002,9 +1008,13 @@
                 }
             };
             
-            // Enhanced Auth API with Bot Protection
+            // Enhanced Auth API with Bot Protection & Debug Logs
             const AuthAPI = {
                 register: async function (username, email, password, extraData = {}) {
+                    console.log('🆕 DEBUG: Register attempt to:', API_BASE + '/auth/register');
+                    console.log('🆕 DEBUG: Username:', username, 'Email:', email);
+                    console.log('🆕 DEBUG: ExtraData:', extraData);
+                    
                     const response = await fetch(API_BASE + '/auth/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1015,10 +1025,18 @@
                     });
                     const result = await response.json();
                     result.httpStatus = response.status;
+                    
+                    console.log('🆕 DEBUG: Register response status:', response.status);
+                    console.log('🆕 DEBUG: Register response:', result);
+                    
                     return result;
                 },
                 
                 login: async function (username, password, extraData = {}) {
+                    console.log('🔑 DEBUG: Login attempt to:', API_BASE + '/auth/login');
+                    console.log('🔑 DEBUG: Username:', username);
+                    console.log('🔑 DEBUG: ExtraData:', extraData);
+                    
                     const response = await fetch(API_BASE + '/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1029,6 +1047,10 @@
                     });
                     const result = await response.json();
                     result.httpStatus = response.status;
+                    
+                    console.log('🔑 DEBUG: Login response status:', response.status);
+                    console.log('🔑 DEBUG: Login response:', result);
+                    
                     return result;
                 }
             };
@@ -1238,44 +1260,79 @@
             
             // Task-Management
             const loadTasks = async function () {
-                console.log("📚 loadTasks() gestartet - Production Security Version");
+                console.log("📚 DEBUG: loadTasks() gestartet - Production Security Version");
+                console.log("📚 DEBUG: Current cachedTasks:", cachedTasks.length, cachedTasks);
+                console.log("📚 DEBUG: Current user:", currentUser);
+                console.log("📚 DEBUG: Token valid:", TokenManager.isValid());
+                
+                // 🚫 SECURITY FIX: Keine Tasks laden ohne gültigen Token
+                if (!TokenManager.isValid()) {
+                    console.log('🚫 DEBUG: Kein gültiger Token - keine Tasks laden, zeige leere Liste');
+                    renderTasks([]);
+                    updateStats([]);
+                    ConnectionManager.updateStatus('connected', 'Online ✅');
+                    return;
+                }
                 
                 ConnectionManager.updateStatus('connecting', 'Lade...');
                 
                 try {
                     const tasks = await apiCall('/tasks');
-                    console.log("✅ Tasks geladen, Anzahl:", tasks.length);
+                    console.log("✅ DEBUG: Tasks geladen, Anzahl:", tasks.length);
+                    console.log("✅ DEBUG: Tasks Details:", tasks);
                     cachedTasks = tasks;
+                    console.log("✅ DEBUG: Rufe renderTasks() auf mit:", tasks.length, "Tasks");
                     renderTasks(tasks);
                     updateStats(tasks);
                     
                     ConnectionManager.updateStatus('connected', 'Online ✅');
                     hideErrorBanner();
                 } catch (error) {
-                    console.error("🚨 Fehler beim Laden der Tasks:", error);
+                    console.error("🚨 DEBUG: Fehler beim Laden der Tasks:", error);
+                    console.log("🚨 DEBUG: cachedTasks.length:", cachedTasks.length);
                     
                     if (cachedTasks.length > 0) {
+                        console.log("⚠️ DEBUG: Zeige cached Tasks:", cachedTasks);
                         renderTasks(cachedTasks);
                         updateStats(cachedTasks);
                         showErrorBanner('⚠️ Offline-Modus: Zeige letzte gespeicherte Aufgaben', 'warning');
+                    } else {
+                        console.log("✅ DEBUG: Keine cached Tasks - zeige leere Liste");
+                        renderTasks([]);
+                        updateStats([]);
                     }
                 }
             };
             
             const renderTasks = function (tasks) {
-                if (!Array.isArray(tasks)) return;
+                console.log('🎨 DEBUG: renderTasks() aufgerufen mit:', tasks.length, 'Tasks:', tasks);
                 
+                if (!Array.isArray(tasks)) {
+                    console.log('❌ DEBUG: tasks ist kein Array!', typeof tasks, tasks);
+                    return;
+                }
+                
+                if (!elements.taskList) {
+                    console.log('❌ DEBUG: elements.taskList ist null/undefined!');
+                    return;
+                }
+                
+                console.log('🎨 DEBUG: Leere taskList innerHTML (vorher):', elements.taskList.innerHTML.length);
                 elements.taskList.innerHTML = '';
+                console.log('🎨 DEBUG: Leere taskList innerHTML (nachher):', elements.taskList.innerHTML.length);
                 
                 if (tasks.length === 0) {
+                    console.log('🎨 DEBUG: Keine Tasks - zeige Empty Message');
                     const emptyMessage = document.createElement('li');
                     emptyMessage.className = 'task-item';
                     emptyMessage.textContent = '🎉 Keine Aufgaben vorhanden!';
                     emptyMessage.style.textAlign = 'center';
                     elements.taskList.appendChild(emptyMessage);
+                    console.log('🎨 DEBUG: Empty Message hinzugefügt, innerHTML:', elements.taskList.innerHTML.length);
                     return;
                 }
                 
+                console.log('🎨 DEBUG: Rendere', tasks.length, 'Tasks');
                 tasks.forEach(function (task) {
                     const item = document.createElement('li');
                     item.className = 'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open');
@@ -1300,10 +1357,17 @@
                     
                     elements.taskList.appendChild(item);
                 });
+                
+                console.log('🎨 DEBUG: renderTasks() FERTIG, finale innerHTML Länge:', elements.taskList.innerHTML.length);
             };
             
             const updateStats = function (tasks) {
-                if (!Array.isArray(tasks)) return;
+                console.log('📊 DEBUG: updateStats() aufgerufen mit:', tasks.length, 'Tasks:', tasks);
+                
+                if (!Array.isArray(tasks)) {
+                    console.log('❌ DEBUG: updateStats - tasks ist kein Array!', typeof tasks, tasks);
+                    return;
+                }
                 
                 const total = tasks.length;
                 const completed = tasks.filter(task => task.status === 'erledigt').length;
@@ -1311,10 +1375,18 @@
                 const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
                 const userInfo = currentUser ? ' von ' + currentUser.username : ' (Demo)';
                 
-                elements.stats.textContent = 
-                    '📊 Gesamt: ' + total + ' | ' +
+                const statsText = '📊 Gesamt: ' + total + ' | ' +
                     '✅ Erledigt: ' + completed + ' (' + percentage + '%) | ' +
                     '📝 Offen: ' + open + userInfo;
+                
+                console.log('📊 DEBUG: Setze Stats Text:', statsText);
+                
+                if (elements.stats) {
+                    elements.stats.textContent = statsText;
+                    console.log('📊 DEBUG: Stats Text gesetzt');
+                } else {
+                    console.log('❌ DEBUG: elements.stats ist null/undefined!');
+                }
             };
             
             const addTask = async function () {
@@ -1362,6 +1434,18 @@
                     loadTasks();
                 } catch (error) {
                     showErrorBanner('Fehler beim Löschen der Aufgabe: ' + error.message, 'error');
+                }
+            };
+            
+            const deleteCompletedTasks = async function () {
+                if (!confirm('🧹 Alle erledigten Aufgaben wirklich löschen?')) return;
+                
+                try {
+                    await apiCall('/tasks?status=completed', { method: 'DELETE' });
+                    loadTasks();
+                    showErrorBanner('✅ Alle erledigten Aufgaben gelöscht!', 'info');
+                } catch (error) {
+                    showErrorBanner('Fehler beim Löschen: ' + error.message, 'error');
                 }
             };
             
@@ -1521,14 +1605,31 @@
             
             const handleLogout = function () {
                 if (confirm('🚪 Wirklich abmelden?')) {
+                    console.log('🚪 DEBUG: LOGOUT GESTARTET');
+                    console.log('🚪 DEBUG: Alte cachedTasks vor Logout:', cachedTasks.length, cachedTasks);
+                    
                     TokenManager.remove();
                     currentUser = null;
                     pendingVerificationEmail = null;
+                    cachedTasks = []; // ← CACHE LEEREN - verhindert Anzeige alter User-Tasks
+                    
+                    console.log('🚪 DEBUG: Cache geleert, neue cachedTasks:', cachedTasks.length, cachedTasks);
+                    
+                    // DOM sofort leeren - Tasks verschwinden sofort
+                    console.log('🚪 DEBUG: Rufe renderTasks([]) auf...');
+                    renderTasks([]);
+                    console.log('🚪 DEBUG: Rufe updateStats([]) auf...');
+                    updateStats([]);
+                    
+                    console.log('🚪 DEBUG: DOM geleert - prüfe TaskList innerHTML:', elements.taskList?.innerHTML);
+                    
                     updateAuthUI();
                     loadTasks();
                     hideVerificationBanner();
                     showEmailVerificationSection(false);
                     showErrorBanner('✅ Erfolgreich abgemeldet!', 'info');
+                    
+                    console.log('🚪 DEBUG: LOGOUT ABGESCHLOSSEN');
                 }
             };
             
@@ -1567,7 +1668,7 @@
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - GMAIL FIXED VERSION');
+                    console.log('🚀 Initialisiere TODO_APP - GMAIL FIXED VERSION mit Environment Detection');
                     initializeElements();
                     
                     // Bot Protection initialisieren
@@ -1576,6 +1677,7 @@
                     // Event-Handler zuweisen
                     elements.addButton.addEventListener('click', addTask);
                     elements.taskText.addEventListener('keypress', handleKeyPress);
+                    elements.cleanupButton.addEventListener('click', deleteCompletedTasks); // ← CLEANUP BUTTON HINZUGEFÜGT
                     
                     // Auth Event-Handler
                     elements.loginForm.addEventListener('submit', handleLogin);
@@ -1600,7 +1702,7 @@
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
                     
-                    console.log('✅ TODO_APP mit GMAIL FIX erfolgreich initialisiert');
+                    console.log('✅ TODO_APP mit GMAIL FIX & Environment Detection erfolgreich initialisiert');
                 } catch (error) {
                     console.error('🚨 Fehler beim Initialisieren:', error);
                     showErrorBanner('Fehler beim Initialisieren der App: ' + error.message, 'error');
@@ -1640,9 +1742,10 @@
                 debug: {
                     getStats: function () {
                         return {
-                            version: 'GMAIL FIXED v2.0',
+                            version: 'GMAIL FIXED v2.0 + Environment Detection + CLEANUP BUTTON FIXED',
                             cachedTasks: cachedTasks.length,
                             apiBase: API_BASE,
+                            environmentDetection: 'ACTIVE',
                             currentUser: currentUser,
                             isLoggedIn: TokenManager.isValid(),
                             connectionStatus: connectionStatus,
@@ -1650,7 +1753,8 @@
                             maxRetries: maxRetries,
                             pendingVerificationEmail: pendingVerificationEmail,
                             botProtection: 'active',
-                            emailValidation: 'BACKEND_ONLY (Gmail Fix Applied)'
+                            emailValidation: 'BACKEND_ONLY (Gmail Fix Applied)',
+                            cleanupButton: 'FIXED - Event Listener Added'
                         };
                     },
                     testConnection: () => ConnectionManager.testConnection()
@@ -1693,11 +1797,13 @@
         // Debug-Zugriff
         window.TODO_DEBUG = TODO_APP.debug;
         
-        console.log('✅ TODO APP LOADED - GMAIL FIXED VERSION v2.0');
+        console.log('✅ TODO APP LOADED - GMAIL FIXED VERSION v2.0 + Environment Detection + CLEANUP BUTTON FIXED');
         console.log('🎉 Gmail Bug Fixed: No frontend email domain validation!');
         console.log('✅ Frontend: Only basic format check');
         console.log('✅ Backend: Full security validation with Gmail whitelist');
         console.log('🛡️ Features: Rate limiting • Bot protection • Backend email validation only');
+        console.log('🌍 Environment Detection: Automatic localhost vs production API selection');
+        console.log('🧹 Cleanup Button: Event listener added - button should work now!');
         console.log('📧 Email Test: Try testuser@gmail.com - should work now!');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
