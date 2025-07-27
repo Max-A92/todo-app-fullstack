@@ -46,7 +46,7 @@ This project implements enterprise-grade GitHub security features for continuous
 - **Comprehensive Security Policy** (SECURITY.md) with vulnerability reporting guidelines
 - **Responsible disclosure process** with clear contact methods and response timelines
 - **Security researcher recognition** program encouraging ethical security testing
-- **Multi-layered contact methods** (GitHub Security Advisory + email backup)
+- **GitHub Security Advisory** integration for coordinated vulnerability disclosure
 
 #### Secret Scanning & Push Protection
 - **Automatic secret detection** preventing credential leaks in commits
@@ -1061,7 +1061,6 @@ I welcome contributions from developers worldwide! The complete security suite a
 Please report security vulnerabilities through our comprehensive security policy:
 - **GitHub Security Advisory** (preferred): Use the Security tab → Report a vulnerability
 - **Private vulnerability reporting**: Available for responsible disclosure via GitHub
-- **Email**: appservicetodo@gmail.com with subject "[SECURITY] Vulnerability Report"
 - **Response Time**: 24-48 hours initial response, weekly status updates
 
 All security vulnerabilities will be handled through our coordinated disclosure process, ensuring fixes are implemented before public announcement.
