@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>📋 Todo App - Production Security</title>
+    <title>📋 Todo App</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -19,14 +19,6 @@
             color: white;
             border-radius: 10px;
             position: relative;
-        }
-        .version-badge {
-            display: inline-block;
-            background-color: rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-left: 10px;
         }
         
         /* Connection Status */
@@ -263,19 +255,36 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        
+        /* VERBESSERTE X-BUTTONS für bessere Sichtbarkeit */
         .close-modal {
             position: absolute;
             top: 15px;
             right: 20px;
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 32px;
+            font-weight: bold;
             cursor: pointer;
             color: #999;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
         }
         .close-modal:hover {
             color: #333;
+            background-color: #f0f0f0;
+            transform: scale(1.1);
         }
+        .close-modal:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+        
         .error-message, .success-message {
             padding: 10px;
             border-radius: 4px;
@@ -294,44 +303,6 @@
             border: 1px solid #c3e6cb;
         }
         
-        /* Production Security Features */
-        .security-info {
-            background-color: #e7f3ff;
-            color: #004085;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 12px;
-            border-left: 3px solid #007bff;
-        }
-        .email-hint {
-            background-color: #e7f3ff;
-            color: #004085;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid #007bff;
-        }
-        .provider-info {
-            background-color: #f8f9fa;
-            color: #6c757d;
-            padding: 6px 10px;
-            border-radius: 3px;
-            font-size: 11px;
-            margin-top: 8px;
-            text-align: center;
-        }
-        .timing-info {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 10px;
-            margin-top: 5px;
-            text-align: center;
-        }
-        
         /* Task Styles */
         .task-item {
             margin: 10px 0;
@@ -341,6 +312,9 @@
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         .task-item:hover {
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
@@ -355,14 +329,41 @@
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;
         }
+        
+        /* Kalender-Integration */
+        .task-date {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .task-date input[type="date"] {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .task-date.overdue {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .task-date.due-today {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        .task-date.due-soon {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+        
         .status-button {
-            margin-left: 10px;
             padding: 6px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         .status-button:hover {
             transform: translateY(-1px);
@@ -379,8 +380,13 @@
         .btn-delete {
             background-color: #dc3545;
             color: white;
-            margin-left: 5px;
+            font-weight: bold;
+            font-size: 14px;
         }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        
         .btn-cleanup {
             background-color: #6c757d;
             color: white;
@@ -431,8 +437,7 @@
             transform: translateY(-1px);
         }
         .task-text {
-            display: inline-block;
-            min-width: 250px;
+            flex: 1;
             font-weight: 500;
         }
         .task-status {
@@ -461,11 +466,292 @@
             text-align: center;
             color: white;
         }
+        
+        /* Kalender-Filter */
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+        .filter-btn.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .filter-btn:hover {
+            background-color: #f8f9fa;
+        }
+        .filter-btn.active:hover {
+            background-color: #0056b3;
+        }
+        
+        /* ===== MOBILE OPTIMIERUNG - NUR FÜR HANDYS ===== */
+        @media (max-width: 768px) {
+            body {
+                min-height: 100vh;
+                padding: 10px;
+                font-size: 16px;
+            }
+            
+            .app-header {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .app-header h1 {
+                font-size: 24px;
+                margin: 0;
+            }
+            
+            .connection-status {
+                font-size: 14px;
+                top: 8px;
+                left: 15px;
+            }
+            
+            .auth-controls {
+                top: 8px;
+                right: 15px;
+            }
+            
+            .auth-button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .user-info {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            /* Filter-Buttons größer auf Mobile */
+            .filter-section {
+                padding: 12px;
+            }
+            
+            .filter-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-height: 44px; /* Touch-freundlich */
+            }
+            
+            /* Add-Section Mobile-optimiert */
+            .add-section {
+                padding: 15px;
+                margin-bottom: 15px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .add-section input {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+                border-radius: 8px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+            
+            .add-section button {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+                border-radius: 8px;
+                margin: 0;
+            }
+            
+            /* Task Items Mobile-optimiert */
+            .task-item {
+                padding: 15px;
+                margin: 8px 0;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .task-text {
+                font-size: 16px;
+                font-weight: 500;
+                margin-bottom: 8px;
+            }
+            
+            .task-date {
+                margin: 0;
+                justify-content: space-between;
+            }
+            
+            .task-date input[type="date"] {
+                padding: 8px 12px;
+                font-size: 14px;
+                flex: 1;
+                max-width: 150px;
+            }
+            
+            .status-button {
+                padding: 12px 16px;
+                font-size: 14px;
+                min-height: 44px; /* Touch-freundlich */
+                border-radius: 8px;
+            }
+            
+            .btn-delete {
+                font-size: 16px;
+                font-weight: bold;
+            }
+            
+            /* Button-Container für bessere Mobile-UX */
+            .task-buttons {
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+            }
+            
+            .task-buttons .status-button {
+                flex: 1;
+            }
+            
+            /* Stats größer und besser lesbar */
+            .stats {
+                font-size: 16px;
+                padding: 15px;
+                line-height: 1.5;
+                margin-top: 20px;
+            }
+            
+            /* Welcome Messages Mobile */
+            .welcome-message {
+                padding: 15px;
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            /* Error/Verification Banners */
+            .error-banner, .verification-banner {
+                padding: 15px;
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+            
+            .email-verification-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .email-verification-section h3 {
+                font-size: 18px;
+            }
+            
+            .email-verification-section p {
+                font-size: 16px;
+                line-height: 1.5;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Extra kleine Handys */
+            body {
+                padding: 8px;
+            }
+            
+            .app-header {
+                padding: 12px;
+            }
+            
+            .app-header h1 {
+                font-size: 20px;
+            }
+            
+            .auth-controls {
+                position: static;
+                margin-top: 10px;
+                text-align: center;
+            }
+            
+            .connection-status {
+                position: static;
+                text-align: center;
+                margin-bottom: 8px;
+            }
+            
+            /* Modal Mobile-optimiert */
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 20px;
+            }
+            
+            .modal-header h2 {
+                font-size: 20px;
+            }
+            
+            .auth-form input {
+                padding: 15px;
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+            
+            .auth-form button {
+                padding: 15px;
+                font-size: 16px;
+            }
+            
+            .close-modal {
+                font-size: 28px;
+                width: 35px;
+                height: 35px;
+                top: 10px;
+                right: 15px;
+            }
+            
+            /* Filter-Buttons in Spalten */
+            .filter-buttons {
+                justify-content: center;
+            }
+            
+            .filter-btn {
+                flex: 1;
+                min-width: 80px;
+                text-align: center;
+            }
+            
+            /* Task Items kompakter */
+            .task-item {
+                padding: 12px;
+            }
+            
+            .task-date {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .task-date input[type="date"] {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-header">
-        <h1>📋 Todo App <span class="version-badge">Production Security v2.0 - Gmail FIXED</span></h1>
+        <!-- PROFESSIONELLER HEADER - Version Badge entfernt, Todo App zentriert -->
+        <h1>📋 Todo App</h1>
         
         <!-- Connection Status -->
         <div class="connection-status">
@@ -492,7 +778,8 @@
     <!-- Error Banner -->
     <div id="errorBanner" class="error-banner">
         <span id="errorMessage"></span>
-        <button onclick="hideErrorBanner()" style="float: right; background: none; border: none; color: #721c24; cursor: pointer;">&times;</button>
+        <!-- VERBESSERTER X-BUTTON im Error Banner -->
+        <button onclick="hideErrorBanner()" style="float: right; background: none; border: none; color: #721c24; cursor: pointer; font-size: 20px; font-weight: bold; width: 30px; height: 30px; border-radius: 50%; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(114,28,36,0.1)'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
     </div>
     
     <!-- E-Mail-Verifikation Banner -->
@@ -517,13 +804,12 @@
     <!-- Auth Modal -->
     <div id="authModal" class="modal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+            <!-- VERBESSERTER X-BUTTON - größer, fetter, besser sichtbar -->
+            <button class="close-modal" onclick="closeAuthModal()" aria-label="Modal schließen">&times;</button>
             
             <div class="modal-header">
-                <h2>🛡️ Secure Authentication</h2>
-                <div class="security-info">
-                    🎉 GMAIL BUG FIXED: Gmail, Outlook, Yahoo now work perfectly! Advanced validation only on backend.
-                </div>
+                <!-- PROFESSIONELLER HEADER - Debug-Texte entfernt -->
+                <h2>🔐 Anmeldung</h2>
             </div>
             
             <div class="modal-tabs">
@@ -535,7 +821,7 @@
             
             <!-- Login Form with Bot Protection -->
             <form id="loginForm" class="auth-form active">
-                <input type="text" id="loginUsername" placeholder="Username" required autocomplete="username">
+                <input type="text" id="loginUsername" placeholder="Benutzername" required autocomplete="username">
                 <input type="password" id="loginPassword" placeholder="Passwort" required autocomplete="current-password">
                 
                 <!-- HONEYPOT FIELDS (unsichtbar für Menschen, sichtbar für Bots) -->
@@ -547,17 +833,13 @@
                 <input type="hidden" name="formTimestamp" id="loginTimestamp">
                 
                 <button type="submit">🔑 Anmelden</button>
-                
-                <div class="timing-info" id="loginTimingInfo" style="display: none;"></div>
             </form>
             
             <!-- Register Form with Enhanced Bot Protection -->
             <form id="registerForm" class="auth-form">
-                <input type="text" id="registerUsername" placeholder="Username (3-30 Zeichen)" required autocomplete="username">
-                <div class="email-hint">
-                    ✅ GMAIL BUG FIXED: Gmail, Outlook, Yahoo, Web.de, GMX - all major providers now work! Backend validates security.
-                </div>
-                <input type="email" id="registerEmail" placeholder="E-Mail (jetzt Gmail-freundlich!)" required autocomplete="email">
+                <input type="text" id="registerUsername" placeholder="Benutzername (3-30 Zeichen)" required autocomplete="username">
+                <!-- PROFESSIONELLER E-MAIL PLACEHOLDER -->
+                <input type="email" id="registerEmail" placeholder="E-Mail-Adresse" required autocomplete="email">
                 <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required autocomplete="new-password">
                 
                 <!-- ERWEITERTE HONEYPOT FIELDS (mehr Felder für Registration) -->
@@ -590,9 +872,23 @@
             🎉 Willkommen zurück! Hier sind Ihre persönlichen To-Dos.
         </div>
         
+        <!-- Filter-Sektion für Kalender -->
+        <div class="filter-section" id="filterSection" style="display: none;">
+            <div class="filter-buttons">
+                <span><strong>📅 Filter:</strong></span>
+                <button class="filter-btn active" onclick="filterTasks('all')">Alle</button>
+                <button class="filter-btn" onclick="filterTasks('overdue')">🔴 Überfällig</button>
+                <button class="filter-btn" onclick="filterTasks('today')">🟡 Heute</button>
+                <button class="filter-btn" onclick="filterTasks('tomorrow')">🔵 Morgen</button>
+                <button class="filter-btn" onclick="filterTasks('week')">📅 Diese Woche</button>
+                <button class="filter-btn" onclick="filterTasks('no-date')">📝 Ohne Datum</button>
+            </div>
+        </div>
+        
         <!-- Neue Aufgabe hinzufügen -->
         <div class="add-section">
             <input type="text" id="taskText" placeholder="Neue Aufgabe eingeben..." maxlength="500">
+            <input type="date" id="taskDate" title="Fälligkeitsdatum (optional)">
             <button id="addButton">➕ Hinzufügen</button>
             <button class="btn-cleanup" id="cleanupButton">🧹 Alle Erledigten löschen</button>
         </div>
@@ -607,19 +903,18 @@
     </div>
 
     <script>
-        // Module Pattern - PRODUCTION SECURITY VERSION (GMAIL FIXED)
+        // Module Pattern - PROFESSIONELLE VERSION
         const TODO_APP = (function () {
             'use strict';
             
-            // 🐛 DEBUG: Environment Detection & API Configuration
             console.log('🔍 DEBUG: Current hostname:', window.location.hostname);
             console.log('🔍 DEBUG: Current port:', window.location.port);
             console.log('🔍 DEBUG: Current origin:', window.location.origin);
 
             // Automatische Environment Detection
             const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://localhost:3000'  // ← Lokal mit Bot Protection Debug
-                : 'https://todo-app-fullstack-fdvh.onrender.com';  // ← Production mit voller Security
+                ? 'http://localhost:3000'
+                : 'https://todo-app-fullstack-fdvh.onrender.com';
 
             console.log('🎯 DEBUG: Using API_BASE:', API_BASE);
             
@@ -631,6 +926,7 @@
             let maxRetries = 8;
             let retryInterval = 30000;
             let pendingVerificationEmail = null;
+            let currentFilter = 'all';
             
             // DOM-Referenzen cachen
             let elements = {};
@@ -639,7 +935,6 @@
             
             // Frontend Bot Protection
             const FrontendBotProtection = {
-                // Form-Timestamps setzen (für Timing-Analysis)
                 setFormTimestamps: function() {
                     const now = Date.now();
                     const loginTimestamp = document.getElementById('loginTimestamp');
@@ -656,7 +951,6 @@
                     }
                 },
                 
-                // Honeypot-Felder leeren und sichern
                 clearHoneypots: function() {
                     const honeypotSelectors = [
                         'input[name="website"]',
@@ -676,7 +970,6 @@
                             field.setAttribute('autocomplete', 'off');
                             field.setAttribute('aria-hidden', 'true');
                             
-                            // Mehrfach-Versteckung für maximale Sicherheit
                             field.style.display = 'none';
                             field.style.visibility = 'hidden';
                             field.style.opacity = '0';
@@ -692,7 +985,6 @@
                     console.log(`🍯 ${securedCount} honeypot fields secured`);
                 },
                 
-                // Timing-Info für Debug anzeigen
                 getTimingInfo: function(formType) {
                     const timestampField = document.getElementById(formType + 'Timestamp');
                     if (timestampField && timestampField.value) {
@@ -700,30 +992,17 @@
                         const seconds = Math.round(formTime / 1000);
                         console.log(`⏱️ ${formType} form timing: ${formTime}ms (${seconds}s)`);
                         
-                        // Timing-Info im UI anzeigen (für Debug)
-                        const timingInfo = document.getElementById(formType + 'TimingInfo');
-                        if (timingInfo && seconds >= 3) {
-                            timingInfo.textContent = `⏱️ Form timing: ${seconds}s ✅`;
-                            timingInfo.style.display = 'block';
-                            setTimeout(() => {
-                                if (timingInfo) timingInfo.style.display = 'none';
-                            }, 3000);
-                        }
-                        
                         return { timing: formTime, seconds: seconds, valid: seconds >= 3 && seconds <= 3600 };
                     }
                     return { timing: 0, seconds: 0, valid: false };
                 },
                 
-                // Form-Data für Submission vorbereiten (inkl. Bot Protection)
                 prepareFormData: function(formType, baseData) {
-                    // Timing-Info hinzufügen
                     const timestampField = document.getElementById(formType + 'Timestamp');
                     if (timestampField && timestampField.value) {
                         baseData.formTimestamp = timestampField.value;
                     }
                     
-                    // Honeypot-Felder hinzufügen (sollten alle leer sein)
                     baseData.website = document.querySelector(`#${formType}Form input[name="website"]`)?.value || '';
                     baseData.email_confirm = document.querySelector(`#${formType}Form input[name="email_confirm"]`)?.value || '';
                     baseData.phone = document.querySelector(`#${formType}Form input[name="phone"]`)?.value || '';
@@ -731,7 +1010,6 @@
                     baseData.url = document.querySelector(`#${formType}Form input[name="url"]`)?.value || '';
                     baseData.homepage = document.querySelector(`#${formType}Form input[name="homepage"]`)?.value || '';
                     
-                    // Debug-Info
                     const timingInfo = this.getTimingInfo(formType);
                     console.log(`🛡️ ${formType} form prepared with bot protection:`);
                     console.log(`   Timing: ${timingInfo.seconds}s (${timingInfo.valid ? 'valid' : 'invalid'})`);
@@ -740,24 +1018,18 @@
                     return baseData;
                 },
                 
-                // Initialize Bot Protection
                 initialize: function() {
                     console.log('🛡️ Initializing Production Bot Protection...');
                     
-                    // Honeypots sichern
                     this.clearHoneypots();
-                    
-                    // Initial timestamps setzen
                     this.setFormTimestamps();
                     
-                    // Timestamps neu setzen wenn Modal geöffnet wird
                     const authModal = document.getElementById('authModal');
                     if (authModal) {
                         const observer = new MutationObserver((mutations) => {
                             mutations.forEach((mutation) => {
                                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                                     if (authModal.style.display === 'block') {
-                                        // Modal geöffnet - neue Timestamps setzen
                                         setTimeout(() => this.setFormTimestamps(), 100);
                                     }
                                 }
@@ -766,7 +1038,6 @@
                         observer.observe(authModal, { attributes: true });
                     }
                     
-                    // Zusätzlich: Timestamps bei Tab-Switch neu setzen
                     document.addEventListener('click', (e) => {
                         if (e.target.classList.contains('modal-tab')) {
                             setTimeout(() => this.setFormTimestamps(), 100);
@@ -777,14 +1048,9 @@
                 }
             };
             
-            // ===== FRONTEND E-MAIL VALIDIERUNG DEAKTIVIERT =====
-            // GMAIL FIX: Keine Client-seitige E-Mail-Validierung mehr!
-            // Alle E-Mail-Validierung passiert jetzt NUR auf dem Backend!
-            
+            // Simple Email Validator (Backend macht die echte Validierung)
             const SimpleEmailValidator = {
-                // Nur basic Format-Check (kein Domain-Blocking!)
                 isValidFormat: function(email) {
-                    // Nur einfacher Format-Check - KEIN Domain-Blocking!
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     const isValid = emailRegex.test(email) && email.length <= 254;
                     
@@ -793,7 +1059,6 @@
                     return isValid;
                 },
                 
-                // GMAIL FIX: Frontend macht KEINE Domain-Validierung mehr!
                 validateEmailSimple: function(email) {
                     if (!email || typeof email !== 'string') {
                         return {
@@ -804,7 +1069,6 @@
                     
                     const trimmedEmail = email.trim().toLowerCase();
                     
-                    // NUR Format prüfen - KEINE Domain-Checks!
                     if (!this.isValidFormat(trimmedEmail)) {
                         return {
                             valid: false,
@@ -812,7 +1076,6 @@
                         };
                     }
                     
-                    // Alles andere wird dem Backend überlassen!
                     console.log('✅ Frontend: E-Mail Format OK, Backend übernimmt Domain-Validierung');
                     
                     return {
@@ -823,9 +1086,45 @@
                 }
             };
             
-            console.log('🎉 GMAIL BUG FIXED: Frontend E-Mail-Validierung deaktiviert!');
-            console.log('✅ Alle Domain-Checks passieren jetzt NUR im Backend!');
-            console.log('✅ Gmail, Outlook, Yahoo werden jetzt akzeptiert!');
+            // Kalender-Funktionen
+            const CalendarUtils = {
+                formatDate: function(dateString) {
+                    if (!dateString) return null;
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('de-DE');
+                },
+                
+                getDaysDifference: function(dateString) {
+                    if (!dateString) return null;
+                    const today = new Date();
+                    const taskDate = new Date(dateString);
+                    const diffTime = taskDate - today;
+                    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                },
+                
+                getDateStatus: function(dateString) {
+                    if (!dateString) return 'no-date';
+                    const days = this.getDaysDifference(dateString);
+                    
+                    if (days < 0) return 'overdue';
+                    if (days === 0) return 'due-today';
+                    if (days === 1) return 'due-tomorrow';
+                    if (days <= 7) return 'due-soon';
+                    return 'future';
+                },
+                
+                getStatusIcon: function(status) {
+                    const icons = {
+                        'overdue': '🔴',
+                        'due-today': '🟡',
+                        'due-tomorrow': '🔵',
+                        'due-soon': '🟠',
+                        'future': '⚪',
+                        'no-date': ''
+                    };
+                    return icons[status] || '';
+                }
+            };
             
             // Connection Status Management
             const ConnectionManager = {
@@ -853,7 +1152,7 @@
                 },
                 
                 testConnection: async function () {
-                    console.log('🔄 Teste Backend mit Production Security... Versuch:', retryCount + 1);
+                    console.log('🔄 Teste Backend... Versuch:', retryCount + 1);
                     
                     try {
                         const controller = new AbortController();
@@ -869,7 +1168,7 @@
                         
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('✅ Backend online mit Production Security:', data);
+                            console.log('✅ Backend online:', data);
                             retryCount = 0;
                             this.updateStatus('connected', 'Online ✅');
                             return true;
@@ -1008,19 +1307,18 @@
                 }
             };
             
-            // Enhanced Auth API with Bot Protection & Debug Logs
+            // Enhanced Auth API with Bot Protection
             const AuthAPI = {
                 register: async function (username, email, password, extraData = {}) {
                     console.log('🆕 DEBUG: Register attempt to:', API_BASE + '/auth/register');
                     console.log('🆕 DEBUG: Username:', username, 'Email:', email);
-                    console.log('🆕 DEBUG: ExtraData:', extraData);
                     
                     const response = await fetch(API_BASE + '/auth/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             username, email, password, 
-                            ...extraData  // Honeypot + Timing Daten
+                            ...extraData
                         })
                     });
                     const result = await response.json();
@@ -1035,14 +1333,13 @@
                 login: async function (username, password, extraData = {}) {
                     console.log('🔑 DEBUG: Login attempt to:', API_BASE + '/auth/login');
                     console.log('🔑 DEBUG: Username:', username);
-                    console.log('🔑 DEBUG: ExtraData:', extraData);
                     
                     const response = await fetch(API_BASE + '/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             username, password,
-                            ...extraData  // Honeypot + Timing Daten
+                            ...extraData
                         })
                     });
                     const result = await response.json();
@@ -1059,6 +1356,7 @@
             const initializeElements = function () {
                 elements = {
                     taskText: document.getElementById('taskText'),
+                    taskDate: document.getElementById('taskDate'),
                     addButton: document.getElementById('addButton'),
                     cleanupButton: document.getElementById('cleanupButton'),
                     taskList: document.getElementById('taskList'),
@@ -1082,7 +1380,8 @@
                     resendVerificationBtn: document.getElementById('resendVerificationBtn'),
                     resendVerificationBtn2: document.getElementById('resendVerificationBtn2'),
                     emailVerificationSection: document.getElementById('emailVerificationSection'),
-                    verificationStatus: document.getElementById('verificationStatus')
+                    verificationStatus: document.getElementById('verificationStatus'),
+                    filterSection: document.getElementById('filterSection')
                 };
             };
             
@@ -1097,6 +1396,7 @@
                     elements.currentUsername.textContent = currentUser.username;
                     elements.guestModeNotice.style.display = 'none';
                     elements.userWelcome.style.display = 'block';
+                    elements.filterSection.style.display = 'block';
                     
                     elements.verificationStatus.className = 'verification-status verified';
                     elements.verificationStatus.textContent = '✅ Secure';
@@ -1105,6 +1405,7 @@
                     elements.userControls.style.display = 'none';
                     elements.guestModeNotice.style.display = 'block';
                     elements.userWelcome.style.display = 'none';
+                    elements.filterSection.style.display = 'none';
                     currentUser = null;
                 }
             };
@@ -1258,16 +1559,12 @@
                 }
             };
             
-            // Task-Management
+            // Task-Management mit Kalender-Integration
             const loadTasks = async function () {
-                console.log("📚 DEBUG: loadTasks() gestartet - Production Security Version");
-                console.log("📚 DEBUG: Current cachedTasks:", cachedTasks.length, cachedTasks);
-                console.log("📚 DEBUG: Current user:", currentUser);
-                console.log("📚 DEBUG: Token valid:", TokenManager.isValid());
+                console.log("📚 DEBUG: loadTasks() gestartet");
                 
-                // 🚫 SECURITY FIX: Keine Tasks laden ohne gültigen Token
                 if (!TokenManager.isValid()) {
-                    console.log('🚫 DEBUG: Kein gültiger Token - keine Tasks laden, zeige leere Liste');
+                    console.log('🚫 DEBUG: Kein gültiger Token - keine Tasks laden');
                     renderTasks([]);
                     updateStats([]);
                     ConnectionManager.updateStatus('connected', 'Online ✅');
@@ -1279,9 +1576,7 @@
                 try {
                     const tasks = await apiCall('/tasks');
                     console.log("✅ DEBUG: Tasks geladen, Anzahl:", tasks.length);
-                    console.log("✅ DEBUG: Tasks Details:", tasks);
                     cachedTasks = tasks;
-                    console.log("✅ DEBUG: Rufe renderTasks() auf mit:", tasks.length, "Tasks");
                     renderTasks(tasks);
                     updateStats(tasks);
                     
@@ -1289,7 +1584,6 @@
                     hideErrorBanner();
                 } catch (error) {
                     console.error("🚨 DEBUG: Fehler beim Laden der Tasks:", error);
-                    console.log("🚨 DEBUG: cachedTasks.length:", cachedTasks.length);
                     
                     if (cachedTasks.length > 0) {
                         console.log("⚠️ DEBUG: Zeige cached Tasks:", cachedTasks);
@@ -1304,8 +1598,43 @@
                 }
             };
             
+            // Filter-Funktionen
+            const filterTasks = function(filterType) {
+                currentFilter = filterType;
+                
+                // Filter-Buttons aktualisieren
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                // Tasks neu rendern mit Filter
+                renderTasks(cachedTasks);
+            };
+            
+            const shouldShowTask = function(task, filter) {
+                if (filter === 'all') return true;
+                
+                const dateStatus = CalendarUtils.getDateStatus(task.dueDate);
+                
+                switch (filter) {
+                    case 'overdue':
+                        return dateStatus === 'overdue' && task.status !== 'erledigt';
+                    case 'today':
+                        return dateStatus === 'due-today';
+                    case 'tomorrow':
+                        return dateStatus === 'due-tomorrow';
+                    case 'week':
+                        return ['due-today', 'due-tomorrow', 'due-soon'].includes(dateStatus);
+                    case 'no-date':
+                        return !task.dueDate;
+                    default:
+                        return true;
+                }
+            };
+            
             const renderTasks = function (tasks) {
-                console.log('🎨 DEBUG: renderTasks() aufgerufen mit:', tasks.length, 'Tasks:', tasks);
+                console.log('🎨 DEBUG: renderTasks() aufgerufen mit:', tasks.length, 'Tasks');
                 
                 if (!Array.isArray(tasks)) {
                     console.log('❌ DEBUG: tasks ist kein Array!', typeof tasks, tasks);
@@ -1317,29 +1646,55 @@
                     return;
                 }
                 
-                console.log('🎨 DEBUG: Leere taskList innerHTML (vorher):', elements.taskList.innerHTML.length);
                 elements.taskList.innerHTML = '';
-                console.log('🎨 DEBUG: Leere taskList innerHTML (nachher):', elements.taskList.innerHTML.length);
                 
-                if (tasks.length === 0) {
-                    console.log('🎨 DEBUG: Keine Tasks - zeige Empty Message');
+                // Tasks filtern
+                const filteredTasks = tasks.filter(task => shouldShowTask(task, currentFilter));
+                
+                if (filteredTasks.length === 0) {
+                    console.log('🎨 DEBUG: Keine Tasks nach Filter - zeige Empty Message');
                     const emptyMessage = document.createElement('li');
                     emptyMessage.className = 'task-item';
-                    emptyMessage.textContent = '🎉 Keine Aufgaben vorhanden!';
+                    emptyMessage.textContent = currentFilter === 'all' ? 
+                        '🎉 Keine Aufgaben vorhanden!' : 
+                        `📭 Keine Aufgaben für Filter "${currentFilter}"`;
                     emptyMessage.style.textAlign = 'center';
                     elements.taskList.appendChild(emptyMessage);
-                    console.log('🎨 DEBUG: Empty Message hinzugefügt, innerHTML:', elements.taskList.innerHTML.length);
                     return;
                 }
                 
-                console.log('🎨 DEBUG: Rendere', tasks.length, 'Tasks');
-                tasks.forEach(function (task) {
+                console.log('🎨 DEBUG: Rendere', filteredTasks.length, 'gefilterte Tasks');
+                filteredTasks.forEach(function (task) {
                     const item = document.createElement('li');
                     item.className = 'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open');
                     
                     const textSpan = document.createElement('span');
                     textSpan.className = 'task-text';
                     textSpan.textContent = task.text;
+                    
+                    // Datum-Anzeige
+                    const dateContainer = document.createElement('div');
+                    dateContainer.className = 'task-date';
+                    
+                    if (task.dueDate) {
+                        const dateStatus = CalendarUtils.getDateStatus(task.dueDate);
+                        const statusIcon = CalendarUtils.getStatusIcon(dateStatus);
+                        const formattedDate = CalendarUtils.formatDate(task.dueDate);
+                        
+                        dateContainer.className += ' ' + dateStatus;
+                        dateContainer.innerHTML = `
+                            <span>${statusIcon} ${formattedDate}</span>
+                            <input type="date" value="${task.dueDate}" onchange="updateTaskDate(${task.id}, this.value)">
+                        `;
+                    } else {
+                        dateContainer.innerHTML = `
+                            <input type="date" placeholder="Datum setzen" onchange="updateTaskDate(${task.id}, this.value)">
+                        `;
+                    }
+                    
+                    // Button-Container für bessere Mobile-UX
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.className = 'task-buttons';
                     
                     const toggleBtn = document.createElement('button');
                     toggleBtn.className = 'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete');
@@ -1348,21 +1703,24 @@
                     
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'status-button btn-delete';
-                    deleteBtn.textContent = '🗑️ Löschen';
+                    deleteBtn.textContent = '✖️ Löschen';
                     deleteBtn.addEventListener('click', () => deleteTask(task.id));
                     
+                    buttonContainer.appendChild(toggleBtn);
+                    buttonContainer.appendChild(deleteBtn);
+                    
                     item.appendChild(textSpan);
-                    item.appendChild(toggleBtn);
-                    item.appendChild(deleteBtn);
+                    item.appendChild(dateContainer);
+                    item.appendChild(buttonContainer);
                     
                     elements.taskList.appendChild(item);
                 });
                 
-                console.log('🎨 DEBUG: renderTasks() FERTIG, finale innerHTML Länge:', elements.taskList.innerHTML.length);
+                console.log('🎨 DEBUG: renderTasks() FERTIG');
             };
             
             const updateStats = function (tasks) {
-                console.log('📊 DEBUG: updateStats() aufgerufen mit:', tasks.length, 'Tasks:', tasks);
+                console.log('📊 DEBUG: updateStats() aufgerufen mit:', tasks.length, 'Tasks');
                 
                 if (!Array.isArray(tasks)) {
                     console.log('❌ DEBUG: updateStats - tasks ist kein Array!', typeof tasks, tasks);
@@ -1375,9 +1733,23 @@
                 const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
                 const userInfo = currentUser ? ' von ' + currentUser.username : ' (Demo)';
                 
-                const statsText = '📊 Gesamt: ' + total + ' | ' +
+                // Kalender-Statistiken
+                const overdue = tasks.filter(task => 
+                    CalendarUtils.getDateStatus(task.dueDate) === 'overdue' && task.status !== 'erledigt'
+                ).length;
+                const dueToday = tasks.filter(task => 
+                    CalendarUtils.getDateStatus(task.dueDate) === 'due-today'
+                ).length;
+                
+                let statsText = '📊 Gesamt: ' + total + ' | ' +
                     '✅ Erledigt: ' + completed + ' (' + percentage + '%) | ' +
                     '📝 Offen: ' + open + userInfo;
+                
+                if (overdue > 0 || dueToday > 0) {
+                    statsText += ' | ';
+                    if (overdue > 0) statsText += '🔴 Überfällig: ' + overdue + ' ';
+                    if (dueToday > 0) statsText += '🟡 Heute: ' + dueToday;
+                }
                 
                 console.log('📊 DEBUG: Setze Stats Text:', statsText);
                 
@@ -1391,6 +1763,7 @@
             
             const addTask = async function () {
                 const text = elements.taskText.value;
+                const dueDate = elements.taskDate.value || null;
                 
                 if (!text || text.trim() === '') {
                     showErrorBanner('⚠️ Bitte geben Sie einen Aufgabentext ein', 'warning');
@@ -1403,10 +1776,11 @@
                 try {
                     await apiCall('/tasks', {
                         method: 'POST',
-                        body: JSON.stringify({ text: text.trim() })
+                        body: JSON.stringify({ text: text.trim(), dueDate: dueDate })
                     });
                     
                     elements.taskText.value = '';
+                    elements.taskDate.value = '';
                     loadTasks();
                 } catch (error) {
                     console.error("🚨 FEHLER in addTask:", error);
@@ -1414,6 +1788,18 @@
                 } finally {
                     elements.addButton.disabled = false;
                     elements.addButton.textContent = '➕ Hinzufügen';
+                }
+            };
+            
+            const updateTaskDate = async function (taskId, newDate) {
+                try {
+                    await apiCall('/tasks/' + taskId + '/date', {
+                        method: 'PUT',
+                        body: JSON.stringify({ dueDate: newDate || null })
+                    });
+                    loadTasks();
+                } catch (error) {
+                    showErrorBanner('Fehler beim Aktualisieren des Datums: ' + error.message, 'error');
                 }
             };
             
@@ -1449,7 +1835,7 @@
                 }
             };
             
-            // Enhanced Auth Functions with Bot Protection (GMAIL FIXED)
+            // Enhanced Auth Functions (PROFESSIONELLE VERSION)
             const handleLogin = async function (event) {
                 event.preventDefault();
                 
@@ -1466,7 +1852,6 @@
                 submitBtn.textContent = '⏳ Anmelden...';
                 
                 try {
-                    // Form-Data mit Bot Protection vorbereiten
                     let formData = { username, password };
                     formData = FrontendBotProtection.prepareFormData('login', formData);
                     
@@ -1489,15 +1874,12 @@
                 } catch (error) {
                     console.error('Login error:', error);
                     
-                    // Enhanced Error Handling for Bot Protection
                     if (error.code === 'HONEYPOT_TRIGGERED') {
-                        showMessage('🤖 Security check failed. Please try again.', 'error');
+                        showMessage('🤖 Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.', 'error');
                     } else if (error.code === 'TOO_FAST') {
-                        showMessage('⚡ Please take more time filling out the form.', 'error');
+                        showMessage('⚡ Bitte nehmen Sie sich mehr Zeit beim Ausfüllen.', 'error');
                     } else if (error.code === 'TOO_SLOW') {
-                        showMessage('🕐 Form session expired. Please refresh and try again.', 'error');
-                    } else if (error.code === 'SUSPICIOUS_USER_AGENT') {
-                        showMessage('🌐 Please use a standard web browser.', 'error');
+                        showMessage('🕐 Sitzung abgelaufen. Bitte aktualisieren Sie die Seite.', 'error');
                     } else if (error.code === 'EMAIL_NOT_VERIFIED') {
                         showMessage('❌ E-Mail-Adresse noch nicht bestätigt.', 'error');
                         showVerificationBanner('📧 Bitte bestätige zuerst deine E-Mail-Adresse.', 'pending', true);
@@ -1505,7 +1887,7 @@
                     } else if (error.httpStatus === 429) {
                         showMessage('⏳ Zu viele Versuche. Bitte warten Sie einen Moment.', 'error');
                     } else if (error.httpStatus === 423) {
-                        showMessage('🔒 Account temporarily locked due to failed attempts.', 'error');
+                        showMessage('🔒 Konto vorübergehend gesperrt.', 'error');
                     } else {
                         showMessage('Anmeldung fehlgeschlagen: ' + (error.message || 'Ungültige Daten'), 'error');
                     }
@@ -1527,7 +1909,6 @@
                     return;
                 }
                 
-                // GMAIL FIX: Nur einfache Frontend-Validierung - Backend macht den Rest!
                 const emailValidation = SimpleEmailValidator.validateEmailSimple(email);
                 if (!emailValidation.valid) {
                     showMessage(emailValidation.error, 'error');
@@ -1541,7 +1922,6 @@
                 submitBtn.textContent = '⏳ Registrieren...';
                 
                 try {
-                    // Form-Data mit Bot Protection vorbereiten
                     let formData = { username, email: emailValidation.email, password };
                     formData = FrontendBotProtection.prepareFormData('register', formData);
                     
@@ -1583,15 +1963,12 @@
                 } catch (error) {
                     console.error('Register error:', error);
                     
-                    // Enhanced Error Handling for Bot Protection
                     if (error.code === 'HONEYPOT_TRIGGERED') {
-                        showMessage('🤖 Security check failed. Please refresh and try again.', 'error');
+                        showMessage('🤖 Sicherheitsprüfung fehlgeschlagen. Bitte aktualisieren Sie die Seite.', 'error');
                     } else if (error.code === 'TOO_FAST') {
-                        showMessage('⚡ Please take more time filling out the form.', 'error');
+                        showMessage('⚡ Bitte nehmen Sie sich mehr Zeit beim Ausfüllen.', 'error');
                     } else if (error.code === 'TOO_SLOW') {
-                        showMessage('🕐 Form session expired. Please refresh and try again.', 'error');
-                    } else if (error.code === 'SUSPICIOUS_USER_AGENT') {
-                        showMessage('🌐 Please use a standard web browser.', 'error');
+                        showMessage('🕐 Sitzung abgelaufen. Bitte aktualisieren Sie die Seite.', 'error');
                     } else if (error.httpStatus === 429) {
                         showMessage('⏳ Zu viele Versuche. Bitte warten Sie einen Moment.', 'error');
                     } else {
@@ -1606,22 +1983,15 @@
             const handleLogout = function () {
                 if (confirm('🚪 Wirklich abmelden?')) {
                     console.log('🚪 DEBUG: LOGOUT GESTARTET');
-                    console.log('🚪 DEBUG: Alte cachedTasks vor Logout:', cachedTasks.length, cachedTasks);
                     
                     TokenManager.remove();
                     currentUser = null;
                     pendingVerificationEmail = null;
-                    cachedTasks = []; // ← CACHE LEEREN - verhindert Anzeige alter User-Tasks
+                    cachedTasks = [];
+                    currentFilter = 'all';
                     
-                    console.log('🚪 DEBUG: Cache geleert, neue cachedTasks:', cachedTasks.length, cachedTasks);
-                    
-                    // DOM sofort leeren - Tasks verschwinden sofort
-                    console.log('🚪 DEBUG: Rufe renderTasks([]) auf...');
                     renderTasks([]);
-                    console.log('🚪 DEBUG: Rufe updateStats([]) auf...');
                     updateStats([]);
-                    
-                    console.log('🚪 DEBUG: DOM geleert - prüfe TaskList innerHTML:', elements.taskList?.innerHTML);
                     
                     updateAuthUI();
                     loadTasks();
@@ -1668,41 +2038,37 @@
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - GMAIL FIXED VERSION mit Environment Detection');
+                    console.log('🚀 Initialisiere TODO_APP - PROFESSIONELLE VERSION');
                     initializeElements();
                     
-                    // Bot Protection initialisieren
                     FrontendBotProtection.initialize();
                     
                     // Event-Handler zuweisen
                     elements.addButton.addEventListener('click', addTask);
                     elements.taskText.addEventListener('keypress', handleKeyPress);
-                    elements.cleanupButton.addEventListener('click', deleteCompletedTasks); // ← CLEANUP BUTTON HINZUGEFÜGT
+                    elements.cleanupButton.addEventListener('click', deleteCompletedTasks);
                     
                     // Auth Event-Handler
                     elements.loginForm.addEventListener('submit', handleLogin);
                     elements.registerForm.addEventListener('submit', handleRegister);
                     
-                    // E-Mail-Verifikation initialisieren
                     initializeEmailVerification();
                     
-                    // Auth-Status prüfen
                     updateAuthUI();
                     
-                    // Backend Connection Test
-                    console.log('🔍 Teste Backend-Verbindung mit Production Security...');
+                    console.log('🔍 Teste Backend-Verbindung...');
                     ConnectionManager.updateStatus('connecting', 'Verbinde...');
                     
                     const connectionOk = await ConnectionManager.testConnection();
                     
                     if (connectionOk) {
-                        console.log('✅ Backend mit Production Security online, lade Daten...');
+                        console.log('✅ Backend online, lade Daten...');
                         await loadTasks();
                     } else {
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
                     
-                    console.log('✅ TODO_APP mit GMAIL FIX & Environment Detection erfolgreich initialisiert');
+                    console.log('✅ TODO_APP PROFESSIONELLE VERSION erfolgreich initialisiert');
                 } catch (error) {
                     console.error('🚨 Fehler beim Initialisieren:', error);
                     showErrorBanner('Fehler beim Initialisieren der App: ' + error.message, 'error');
@@ -1711,6 +2077,8 @@
             
             // Globale Funktionen
             window.hideErrorBanner = hideErrorBanner;
+            window.updateTaskDate = updateTaskDate;
+            window.filterTasks = filterTasks;
             
             // Öffentliche API
             return {
@@ -1742,19 +2110,17 @@
                 debug: {
                     getStats: function () {
                         return {
-                            version: 'GMAIL FIXED v2.0 + Environment Detection + CLEANUP BUTTON FIXED',
+                            version: 'PROFESSIONELLE VERSION v3.1 + Mobile Responsive',
                             cachedTasks: cachedTasks.length,
                             apiBase: API_BASE,
-                            environmentDetection: 'ACTIVE',
                             currentUser: currentUser,
                             isLoggedIn: TokenManager.isValid(),
                             connectionStatus: connectionStatus,
                             retryCount: retryCount,
                             maxRetries: maxRetries,
                             pendingVerificationEmail: pendingVerificationEmail,
-                            botProtection: 'active',
-                            emailValidation: 'BACKEND_ONLY (Gmail Fix Applied)',
-                            cleanupButton: 'FIXED - Event Listener Added'
+                            currentFilter: currentFilter,
+                            features: ['Professional UI', 'Calendar Integration', 'Task Filtering', 'Due Date Management', 'Mobile Responsive', 'Touch-Friendly Design']
                         };
                     },
                     testConnection: () => ConnectionManager.testConnection()
@@ -1797,14 +2163,11 @@
         // Debug-Zugriff
         window.TODO_DEBUG = TODO_APP.debug;
         
-        console.log('✅ TODO APP LOADED - GMAIL FIXED VERSION v2.0 + Environment Detection + CLEANUP BUTTON FIXED');
-        console.log('🎉 Gmail Bug Fixed: No frontend email domain validation!');
-        console.log('✅ Frontend: Only basic format check');
-        console.log('✅ Backend: Full security validation with Gmail whitelist');
-        console.log('🛡️ Features: Rate limiting • Bot protection • Backend email validation only');
-        console.log('🌍 Environment Detection: Automatic localhost vs production API selection');
-        console.log('🧹 Cleanup Button: Event listener added - button should work now!');
-        console.log('📧 Email Test: Try testuser@gmail.com - should work now!');
+        console.log('✅ TODO APP LOADED - PROFESSIONELLE VERSION v3.1 + MOBILE OPTIMIERT');
+        console.log('🎨 Features: Professional UI • Calendar Integration • Mobile Responsive');
+        console.log('📱 Mobile: Touch-friendly buttons • Larger fonts • Better spacing');
+        console.log('📅 Calendar: Due dates • Filtering • Overdue tracking');
+        console.log('♿ Accessibility: Improved X-buttons • Better contrast • Focus indicators');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
 </body>
