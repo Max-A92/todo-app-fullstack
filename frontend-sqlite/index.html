@@ -544,12 +544,21 @@
             /* Filter-Buttons größer auf Mobile */
             .filter-section {
                 padding: 12px;
+                margin-bottom: 15px;
+                display: block !important; /* Immer anzeigen auf Mobile */
+            }
+            
+            .filter-buttons {
+                justify-content: center;
+                gap: 8px;
             }
             
             .filter-btn {
                 padding: 10px 16px;
                 font-size: 14px;
                 min-height: 44px; /* Touch-freundlich */
+                display: inline-block;
+                text-align: center;
             }
             
             /* Add-Section Mobile-optimiert */
@@ -568,6 +577,18 @@
                 border-radius: 8px;
                 margin: 0;
                 box-sizing: border-box;
+                display: block; /* Sicherstellen dass alle Inputs angezeigt werden */
+            }
+            
+            .add-section input[type="text"] {
+                order: 1; /* Text-Input zuerst */
+            }
+            
+            .add-section input[type="date"] {
+                order: 2; /* Datum-Input als zweites */
+                display: block !important; /* Wichtig: Datum-Input explizit anzeigen */
+                background-color: white;
+                border: 2px solid #ddd;
             }
             
             .add-section button {
@@ -576,6 +597,14 @@
                 font-size: 16px;
                 border-radius: 8px;
                 margin: 0;
+            }
+            
+            .add-section #addButton {
+                order: 3; /* Add-Button als drittes */
+            }
+            
+            .add-section #cleanupButton {
+                order: 4; /* Cleanup-Button als letztes */
             }
             
             /* Task Items Mobile-optimiert */
@@ -1405,7 +1434,8 @@
                     elements.userControls.style.display = 'none';
                     elements.guestModeNotice.style.display = 'block';
                     elements.userWelcome.style.display = 'none';
-                    elements.filterSection.style.display = 'none';
+                    // Filter auch im Guest-Mode anzeigen für Demo-Daten
+                    elements.filterSection.style.display = 'block';  
                     currentUser = null;
                 }
             };
