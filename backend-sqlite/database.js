@@ -1,4 +1,4 @@
-// database.js - better-sqlite3 Datenbank mit Authentication + E-Mail-Verifikation für Todo-App
+// database.js - better-sqlite3 Datenbank mit Authentication + E-Mail-Verifikation + KALENDER-INTEGRATION für Todo-App
 const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcryptjs'); // ✅ FIXED: bcryptjs statt bcrypt
@@ -46,9 +46,30 @@ const DatabaseModule = (function () {
         }
     };
     
+    // ===== KALENDER-HILFSFUNKTIONEN (NEU) =====
+    
+    // Datum-Validierung
+    const isValidDate = function(dateString) {
+        if (!dateString || typeof dateString !== 'string') {
+            return false;
+        }
+        
+        // Prüfe Format YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return false;
+        }
+        
+        // Prüfe ob gültiges Datum
+        const date = new Date(dateString + 'T00:00:00.000Z');
+        const isValid = date.toISOString().substring(0, 10) === dateString;
+        
+        console.log(`📅 DEBUG: Datum-Validierung für "${dateString}": ${isValid ? 'GÜLTIG' : 'UNGÜLTIG'}`);
+        return isValid;
+    };
+    
     // Datenbank initialisieren
     const initialize = async function () {
-        console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation:', DB_PATH);
+        console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation + KALENDER:', DB_PATH);
         
         try {
             // ✅ NEUE VALIDIERUNG: Database Path validieren
@@ -70,7 +91,7 @@ const DatabaseModule = (function () {
             // Migration von alter Struktur
             await migrateDatabase();
             
-            console.log('🎯 Datenbank mit E-Mail-Verifikation bereit!');
+            console.log('🎯 Datenbank mit E-Mail-Verifikation + KALENDER bereit!');
             
         } catch (error) {
             console.error('🚨 Datenbank Fehler:', error);
@@ -78,9 +99,9 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Tabellen erstellen
+    // Tabellen erstellen (MIT KALENDER-INTEGRATION) - FIXED
     const createTables = async function () {
-        console.log('📋 Erstelle/überprüfe Tabellen mit E-Mail-Verifikation...');
+        console.log('📋 Erstelle/überprüfe Tabellen mit E-Mail-Verifikation + KALENDER...');
         
         // ERWEITERTE Users Tabelle mit E-Mail-Verifikation
         const createUsersTable = `
@@ -97,13 +118,14 @@ const DatabaseModule = (function () {
             )
         `;
         
-        // Tasks Tabelle (neue Version mit user_id)
+        // 📅 KORREKTE Tasks Tabelle MIT KALENDER-UNTERSTÜTZUNG 
         const createTasksTable = `
-            CREATE TABLE IF NOT EXISTS tasks_new (
+            CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 text TEXT NOT NULL,
                 status TEXT DEFAULT 'offen' CHECK (status IN ('offen', 'erledigt')),
+                dueDate TEXT,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -114,54 +136,91 @@ const DatabaseModule = (function () {
         console.log('👥 Users-Tabelle mit E-Mail-Verifikation erstellt/überprüft');
         
         db.exec(createTasksTable);
-        console.log('📋 Tasks-Tabelle (mit user_id) erstellt/überprüft');
+        console.log('📋 Tasks-Tabelle mit KALENDER-INTEGRATION erstellt/überprüft');
         
-        // NEUE: Indizes für bessere Performance
+        // ✅ KORREKTE Indizes für finale tasks Tabelle
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verificationToken)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
-        console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation erstellt');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(dueDate)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
+        console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation + KALENDER erstellt');
     };
     
-    // Migration von alter zu neuer Datenbankstruktur
+    // Migration von alter zu neuer Datenbankstruktur (MIT KALENDER) - FIXED
     const migrateDatabase = async function () {
-        console.log('🔄 Prüfe Datenbank-Migration für E-Mail-Verifikation...');
+        console.log('🔄 Prüfe Datenbank-Migration für E-Mail-Verifikation + KALENDER...');
         
         try {
-            // Prüfen ob alte tasks Tabelle existiert (ohne user_id)
-            const oldTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
-            const hasUserId = oldTableInfo.some(column => column.name === 'user_id');
+            // Prüfen ob tasks Tabelle existiert und welche Spalten sie hat
+            const taskTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
+            const hasUserId = taskTableInfo.some(column => column.name === 'user_id');
+            const hasDueDate = taskTableInfo.some(column => column.name === 'dueDate');
             
-            if (oldTableInfo.length > 0 && !hasUserId) {
-                console.log('🔄 Migriere alte Tasks zu neuer Struktur...');
+            // 📅 FALL 1: Alte Tabelle ohne user_id (vor User-System)
+            if (taskTableInfo.length > 0 && !hasUserId) {
+                console.log('🔄 Migriere alte Tasks zu User-System mit KALENDER...');
                 
                 // Demo-User erstellen für Migration
                 const demoUser = await createDemoUser();
                 
-                // Alte Tasks in neue Tabelle kopieren
+                // Temporary Tabelle mit neuer Struktur erstellen
                 db.exec(`
-                    INSERT INTO tasks_new (user_id, text, status, createdAt, updatedAt)
+                    CREATE TABLE tasks_temp (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        text TEXT NOT NULL,
+                        status TEXT DEFAULT 'offen' CHECK (status IN ('offen', 'erledigt')),
+                        dueDate TEXT,
+                        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                    )
+                `);
+                
+                // Alte Tasks in neue Struktur kopieren (ohne dueDate)
+                db.exec(`
+                    INSERT INTO tasks_temp (user_id, text, status, createdAt, updatedAt)
                     SELECT ${demoUser.id}, text, status, createdAt, updatedAt FROM tasks
                 `);
                 
                 // Alte Tabelle löschen und neue umbenennen
                 db.exec('DROP TABLE tasks');
-                db.exec('ALTER TABLE tasks_new RENAME TO tasks');
+                db.exec('ALTER TABLE tasks_temp RENAME TO tasks');
                 
-                console.log('✅ Migration abgeschlossen! Alte Tasks dem Demo-User zugeordnet.');
-                console.log('👤 Demo-User erstellt - Username: demo, Password: demo123');
+                // Indizes neu erstellen
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)');
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(dueDate)');
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
+                
+                console.log('✅ Migration zu User-System + KALENDER abgeschlossen!');
+                console.log('👤 Demo-User erstellt - Username: demo, Password: demo123, Email: demo@gmail.com');
                 
                 // JSON-Backup-Migration
                 await migrateFromJson(demoUser.id);
-            } else if (oldTableInfo.length === 0) {
-                // Keine alte Tabelle, neue Struktur von Anfang an
-                db.exec('ALTER TABLE tasks_new RENAME TO tasks');
-                console.log('📊 Neue Tabellen-Struktur eingerichtet');
+                
+            // 📅 FALL 2: User-System vorhanden, aber kein Kalender
+            } else if (taskTableInfo.length > 0 && hasUserId && !hasDueDate) {
+                console.log('📅 Füge KALENDER-UNTERSTÜTZUNG zu bestehender User-Tabelle hinzu...');
+                await migrateCalendarFields();
+                
+            // 📅 FALL 3: Keine Tabelle vorhanden - alles neu
+            } else if (taskTableInfo.length === 0) {
+                console.log('📊 Neue Datenbank - Tasks-Tabelle bereits mit KALENDER erstellt');
+                
+                // Demo-User für neue Datenbank erstellen
+                await createDemoUser();
+                console.log('👤 Demo-User für neue Datenbank erstellt');
                 
                 // JSON-Migration für neuen Setup
                 await migrateFromJson(null);
+                
+            // ✅ FALL 4: Alles bereits vorhanden
             } else {
-                console.log('✅ Datenbank bereits auf neuestem Stand');
+                console.log('✅ Datenbank bereits auf neuestem Stand (User-System + KALENDER)');
+                // Stelle sicher, dass Demo-User existiert und verifiziert ist
+                await ensureDemoUserExists();
             }
             
             // NEUE: Migration für E-Mail-Verifikation Felder
@@ -169,6 +228,30 @@ const DatabaseModule = (function () {
             
         } catch (error) {
             console.error('🚨 Migration Fehler:', error);
+        }
+    };
+    
+    // 📅 NEUE: Migration für Kalender-Felder
+    const migrateCalendarFields = async function () {
+        console.log('📅 Prüfe Kalender-Felder Migration...');
+        
+        try {
+            const taskTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
+            const hasDueDate = taskTableInfo.some(column => column.name === 'dueDate');
+            
+            if (!hasDueDate) {
+                console.log('📅 Füge dueDate Spalte zur tasks Tabelle hinzu...');
+                db.exec('ALTER TABLE tasks ADD COLUMN dueDate TEXT');
+                console.log('✅ dueDate Spalte hinzugefügt');
+                
+                // Index für neue Spalte erstellen
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(dueDate)');
+                console.log('🔍 Index für dueDate erstellt');
+            }
+            
+            console.log('📅 Kalender-Migration abgeschlossen');
+        } catch (error) {
+            console.error('🚨 Kalender-Migration Fehler:', error);
         }
     };
     
@@ -203,35 +286,97 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Demo-User für Migration erstellen
+    // ✅ KORRIGIERT: Demo-User mit Gmail-Authentifizierung erstellen
     const createDemoUser = async function () {
         const demoUser = {
             username: 'demo',
-            email: 'demo@todoapp.local',
+            email: 'demo@gmail.com', // ← KORRIGIERT: Echte Gmail-Adresse
             password: 'demo123'
         };
         
         try {
-            return await createUser(demoUser.username, demoUser.email, demoUser.password, true); // Auto-verify demo user
+            const newUser = await createUser(demoUser.username, demoUser.email, demoUser.password, true); // Auto-verify demo user
+            
+            console.log('✅ Demo-User mit Gmail erstellt:');
+            console.log('👤 Username: demo');
+            console.log('📧 Email: demo@gmail.com (verifiziert)');
+            console.log('🔑 Password: demo123');
+            
+            return newUser;
         } catch (error) {
             console.log('Demo-User existiert bereits oder Fehler:', error.message);
             // Demo-User laden falls bereits vorhanden
             const existingUser = await getUserByUsername('demo');
-            if (existingUser && !existingUser.emailVerified) {
-                // Demo-User als verifiziert markieren
-                db.prepare('UPDATE users SET emailVerified = 1 WHERE id = ?').run(existingUser.id);
+            if (existingUser) {
+                // Stelle sicher, dass Demo-User verifiziert ist und richtige Email hat
+                if (!existingUser.emailVerified || existingUser.email !== 'demo@gmail.com') {
+                    console.log('🔧 Korrigiere Demo-User-Daten...');
+                    db.prepare('UPDATE users SET email = ?, emailVerified = 1, verificationToken = NULL, verificationTokenExpires = NULL WHERE username = ?').run('demo@gmail.com', 'demo');
+                    console.log('✅ Demo-User korrigiert: Email auf demo@gmail.com und als verifiziert markiert');
+                }
+                
+                // Aktualisierten User laden
+                const updatedUser = await getUserByUsername('demo');
+                console.log('✅ Demo-User bereit:');
+                console.log('👤 Username: demo');
+                console.log('📧 Email: demo@gmail.com (verifiziert)');
+                console.log('🔑 Password: demo123');
+                
+                return updatedUser;
             }
-            return existingUser;
+            return null;
         }
     };
     
-    // Migration von JSON zu SQLite (erweitert für User)
+    // ✅ NEUE: Stelle sicher dass Demo-User existiert und korrekt konfiguriert ist
+    const ensureDemoUserExists = async function () {
+        console.log('🔍 Prüfe Demo-User Existenz und Konfiguration...');
+        
+        try {
+            let demoUser = await getUserByUsername('demo');
+            
+            if (!demoUser) {
+                console.log('👤 Demo-User nicht gefunden - erstelle neuen...');
+                demoUser = await createDemoUser();
+            } else {
+                // Prüfe und korrigiere Demo-User-Konfiguration
+                if (!demoUser.emailVerified || demoUser.email !== 'demo@gmail.com') {
+                    console.log('🔧 Korrigiere Demo-User-Konfiguration...');
+                    db.prepare('UPDATE users SET email = ?, emailVerified = 1, verificationToken = NULL, verificationTokenExpires = NULL WHERE username = ?').run('demo@gmail.com', 'demo');
+                    console.log('✅ Demo-User korrigiert: Email auf demo@gmail.com und als verifiziert markiert');
+                    
+                    // Aktualisierten User laden
+                    demoUser = await getUserByUsername('demo');
+                }
+                
+                console.log('✅ Demo-User konfiguriert:');
+                console.log('👤 Username: demo');
+                console.log('📧 Email: demo@gmail.com (verifiziert)');
+                console.log('🔑 Password: demo123');
+            }
+            
+            return demoUser;
+        } catch (error) {
+            console.error('🚨 Fehler bei Demo-User-Prüfung:', error);
+        }
+    };
+    
+    // Migration von JSON zu SQLite (erweitert für User + Kalender) - ENHANCED
     const migrateFromJson = async function (defaultUserId) {
         const fs = require('fs');
         const jsonPath = path.join(__dirname, 'tasks.json');
         
         if (!fs.existsSync(jsonPath)) {
             console.log('📝 Keine tasks.json gefunden - keine JSON-Migration nötig');
+            
+            // Falls kein defaultUserId und kein JSON, stelle sicher dass Demo-User existiert
+            if (!defaultUserId) {
+                const demoUser = await getUserByUsername('demo');
+                if (!demoUser) {
+                    console.log('👤 Erstelle Demo-User für neue Datenbank...');
+                    await createDemoUser();
+                }
+            }
             return;
         }
         
@@ -240,7 +385,7 @@ const DatabaseModule = (function () {
             const tasks = JSON.parse(jsonData);
             
             if (Array.isArray(tasks) && tasks.length > 0) {
-                console.log('🔄 Migriere', tasks.length, 'Tasks von JSON...');
+                console.log('🔄 Migriere', tasks.length, 'Tasks von JSON mit KALENDER-UNTERSTÜTZUNG...');
                 
                 // Demo-User erstellen falls nicht vorhanden
                 let userId = defaultUserId;
@@ -249,18 +394,33 @@ const DatabaseModule = (function () {
                     userId = demoUser.id;
                 }
                 
-                // Tasks in neue Struktur migrieren
-                const insertStmt = db.prepare('INSERT INTO tasks (user_id, text, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)');
+                // Tasks in neue Struktur migrieren (mit dueDate Support)
+                const insertStmt = db.prepare('INSERT INTO tasks (user_id, text, status, dueDate, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)');
                 for (const task of tasks) {
-                    insertStmt.run(userId, task.text, task.status, task.createdAt, task.updatedAt);
+                    // Legacy-Tasks haben möglicherweise kein dueDate
+                    const dueDate = task.dueDate || null;
+                    insertStmt.run(userId, task.text, task.status, dueDate, task.createdAt, task.updatedAt);
                 }
                 
-                console.log('✅ JSON-Migration erfolgreich!');
+                console.log('✅ JSON-Migration mit KALENDER-UNTERSTÜTZUNG erfolgreich!');
                 fs.renameSync(jsonPath, jsonPath + '.backup');
                 console.log('💾 JSON-Datei als .backup gesichert');
+            } else {
+                // Leeres JSON aber kein defaultUserId - erstelle Demo-User
+                if (!defaultUserId) {
+                    await createDemoUser();
+                }
             }
         } catch (error) {
             console.error('🚨 JSON-Migration Fehler:', error);
+            // Bei Fehler trotzdem Demo-User erstellen falls nötig
+            if (!defaultUserId) {
+                try {
+                    await createDemoUser();
+                } catch (demoError) {
+                    console.error('🚨 Auch Demo-User-Erstellung fehlgeschlagen:', demoError);
+                }
+            }
         }
     };
     
@@ -275,7 +435,7 @@ const DatabaseModule = (function () {
     
     // Neuen User erstellen (Registration) mit E-Mail-Verifikation
     const createUser = async function (username, email, password, autoVerify = false) {
-        console.log('🆕 Erstelle neuen User mit E-Mail-Verifikation:', username);
+        console.log('🆕 Erstelle neuen User mit E-Mail-Verifikation:', username, 'Email:', email);
         
         try {
             // Passwort hashen
@@ -334,7 +494,7 @@ const DatabaseModule = (function () {
             // User-Daten ohne password_hash zurückgeben
             const { password_hash, ...userWithoutPassword } = user;
             
-            console.log('✅ Authentifizierung erfolgreich für User:', username);
+            console.log('✅ Authentifizierung erfolgreich für User:', username, 'Email:', userWithoutPassword.email);
             return userWithoutPassword;
         } catch (error) {
             console.error('🚨 Authentifizierung fehlgeschlagen:', error.message);
@@ -434,15 +594,23 @@ const DatabaseModule = (function () {
         }
     };
     
-    // ===== TASK FUNCTIONS (erweitert für User) =====
+    // ===== TASK FUNCTIONS MIT KALENDER-INTEGRATION (erweitert für User) =====
     
-    // Tasks für spezifischen User abrufen
+    // Tasks für spezifischen User abrufen (MIT KALENDER-DATEN)
     const getAllTasksForUser = async function (userId) {
-        console.log('📚 Lade Tasks für User:', userId);
+        console.log('📚 Lade Tasks mit KALENDER-DATEN für User:', userId);
         
         try {
-            const tasks = db.prepare('SELECT * FROM tasks WHERE user_id = ? ORDER BY createdAt DESC').all(userId);
-            console.log('✅ Tasks geladen:', tasks.length);
+            const tasks = db.prepare('SELECT id, user_id, text, status, dueDate, createdAt, updatedAt FROM tasks WHERE user_id = ? ORDER BY createdAt DESC').all(userId);
+            console.log('✅ Tasks mit KALENDER-DATEN geladen:', tasks.length);
+            
+            // Debug: Zeige Tasks mit Datum
+            tasks.forEach(task => {
+                if (task.dueDate) {
+                    console.log(`📅 DEBUG: Task "${task.text}" hat Fälligkeitsdatum: ${task.dueDate}`);
+                }
+            });
+            
             return tasks;
         } catch (error) {
             console.error('🚨 Fehler beim Laden der Tasks:', error);
@@ -450,17 +618,22 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Neue Task für User erstellen
-    const createTaskForUser = async function (userId, text) {
-        console.log('🆕 Erstelle Task für User:', userId, 'Text:', text);
+    // 📅 Task für User erstellen MIT KALENDER-UNTERSTÜTZUNG
+    const createTaskForUser = async function (userId, text, dueDate = null) {
+        console.log('🆕 Erstelle Task mit KALENDER für User:', userId, 'Text:', text, 'DueDate:', dueDate);
         
         try {
-            const result = db.prepare('INSERT INTO tasks (user_id, text) VALUES (?, ?)').run(userId, text);
+            // Datum-Validierung falls vorhanden
+            if (dueDate && !isValidDate(dueDate)) {
+                throw new Error('Ungültiges Datum-Format. Erwartet: YYYY-MM-DD');
+            }
+            
+            const result = db.prepare('INSERT INTO tasks (user_id, text, dueDate) VALUES (?, ?, ?)').run(userId, text, dueDate);
             
             // Neu erstellte Task abrufen
             const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
             
-            console.log('✅ Task erstellt mit ID:', result.lastInsertRowid);
+            console.log('✅ Task mit KALENDER erstellt - ID:', result.lastInsertRowid, 'DueDate:', dueDate);
             return newTask;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen der Task:', error);
@@ -493,6 +666,37 @@ const DatabaseModule = (function () {
             return updatedTask;
         } catch (error) {
             console.error('🚨 Fehler beim Status-Wechsel:', error);
+            throw error;
+        }
+    };
+    
+    // 📅 Task-Datum aktualisieren (nur für eigene Tasks)
+    const updateTaskDateForUser = async function (taskId, userId, dueDate) {
+        console.log('📅 Aktualisiere Datum für Task:', taskId, 'User:', userId, 'NewDate:', dueDate);
+        
+        try {
+            // Prüfen ob Task dem User gehört
+            const currentTask = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
+            
+            if (!currentTask) {
+                throw new Error('Task nicht gefunden oder gehört nicht dem User');
+            }
+            
+            // Datum-Validierung falls vorhanden
+            if (dueDate && !isValidDate(dueDate)) {
+                throw new Error('Ungültiges Datum-Format. Erwartet: YYYY-MM-DD');
+            }
+            
+            // Datum aktualisieren
+            db.prepare('UPDATE tasks SET dueDate = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(dueDate, taskId, userId);
+            
+            // Aktualisierte Task abrufen
+            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+            
+            console.log('✅ Task Datum aktualisiert:', currentTask.dueDate, '→', dueDate);
+            return updatedTask;
+        } catch (error) {
+            console.error('🚨 Fehler beim Datum-Update:', error);
             throw error;
         }
     };
@@ -568,11 +772,11 @@ const DatabaseModule = (function () {
         }
     };
     
-    // ===== LEGACY FUNCTIONS (für Rückwärtskompatibilität) =====
+    // ===== LEGACY FUNCTIONS MIT KALENDER-UNTERSTÜTZUNG (für Rückwärtskompatibilität) =====
     
-    // Alle Tasks abrufen (für Demo-User)
+    // Alle Tasks abrufen (für Demo-User) - MIT KALENDER
     const getAllTasks = async function () {
-        console.log('📚 Lade alle Tasks (Legacy-Modus)');
+        console.log('📚 Lade alle Tasks mit KALENDER (Legacy-Modus)');
         
         try {
             // Demo-User suchen
@@ -589,14 +793,14 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Task erstellen (für Demo-User)
-    const createTask = async function (text) {
-        console.log('🆕 Erstelle Task (Legacy-Modus)');
+    // 📅 Task erstellen MIT KALENDER (für Demo-User)
+    const createTask = async function (text, dueDate = null) {
+        console.log('🆕 Erstelle Task mit KALENDER (Legacy-Modus)');
         
         try {
             const demoUser = await getUserByUsername('demo');
             if (demoUser) {
-                return await createTaskForUser(demoUser.id, text);
+                return await createTaskForUser(demoUser.id, text, dueDate);
             } else {
                 throw new Error('Demo-User nicht gefunden für Legacy-Modus');
             }
@@ -611,6 +815,18 @@ const DatabaseModule = (function () {
         const demoUser = await getUserByUsername('demo');
         if (demoUser) {
             return await toggleTaskStatusForUser(taskId, demoUser.id);
+        } else {
+            throw new Error('Demo-User nicht gefunden für Legacy-Modus');
+        }
+    };
+    
+    // 📅 Task-Datum aktualisieren (für Demo-User)
+    const updateTaskDate = async function (taskId, dueDate) {
+        console.log('📅 Aktualisiere Task-Datum (Legacy-Modus)');
+        
+        const demoUser = await getUserByUsername('demo');
+        if (demoUser) {
+            return await updateTaskDateForUser(taskId, demoUser.id, dueDate);
         } else {
             throw new Error('Demo-User nicht gefunden für Legacy-Modus');
         }
@@ -646,6 +862,67 @@ const DatabaseModule = (function () {
         }
     };
     
+    // ===== KALENDER-SPEZIFISCHE UTILITY FUNCTIONS (NEU) =====
+    
+    // Tasks nach Datum filtern
+    const getTasksByDateRange = async function (userId, startDate, endDate) {
+        console.log('📅 Lade Tasks nach Datum-Range für User:', userId, 'von', startDate, 'bis', endDate);
+        
+        try {
+            const tasks = db.prepare(`
+                SELECT * FROM tasks 
+                WHERE user_id = ? AND dueDate BETWEEN ? AND ? 
+                ORDER BY dueDate ASC, createdAt DESC
+            `).all(userId, startDate, endDate);
+            
+            console.log('✅ Tasks nach Datum geladen:', tasks.length);
+            return tasks;
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden der Tasks nach Datum:', error);
+            throw error;
+        }
+    };
+    
+    // Überfällige Tasks abrufen
+    const getOverdueTasks = async function (userId) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        console.log('🔴 Lade überfällige Tasks für User:', userId, 'vor', today);
+        
+        try {
+            const tasks = db.prepare(`
+                SELECT * FROM tasks 
+                WHERE user_id = ? AND dueDate < ? AND status = 'offen'
+                ORDER BY dueDate ASC
+            `).all(userId, today);
+            
+            console.log('⚠️ Überfällige Tasks gefunden:', tasks.length);
+            return tasks;
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden überfälliger Tasks:', error);
+            throw error;
+        }
+    };
+    
+    // Tasks für heute abrufen
+    const getTodayTasks = async function (userId) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        console.log('🟡 Lade heutige Tasks für User:', userId, 'für', today);
+        
+        try {
+            const tasks = db.prepare(`
+                SELECT * FROM tasks 
+                WHERE user_id = ? AND dueDate = ?
+                ORDER BY createdAt DESC
+            `).all(userId, today);
+            
+            console.log('📅 Heutige Tasks gefunden:', tasks.length);
+            return tasks;
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden heutiger Tasks:', error);
+            throw error;
+        }
+    };
+    
     // Datenbank schließen
     const close = async function () {
         if (db) {
@@ -654,7 +931,7 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Öffentliche API
+    // 📅 ERWEITERTE ÖFFENTLICHE API MIT KALENDER-INTEGRATION
     return {
         // Initialisierung
         initialize,
@@ -671,21 +948,31 @@ const DatabaseModule = (function () {
         verifyUserEmail,
         resendVerificationToken,
         
-        // Task Management (User-spezifisch)
+        // Task Management (User-spezifisch) MIT KALENDER
         getAllTasksForUser,
-        createTaskForUser,
+        createTaskForUser,          // ← ERWEITERT mit dueDate
         toggleTaskStatusForUser,
+        updateTaskDateForUser,      // ← NEU: Datum-Update
         updateTaskTextForUser,
         deleteTaskForUser,
         deleteCompletedTasksForUser,
         
-        // Legacy API (für Rückwärtskompatibilität)
+        // Kalender-spezifische Funktionen (NEU)
+        getTasksByDateRange,        // ← NEU
+        getOverdueTasks,            // ← NEU
+        getTodayTasks,              // ← NEU
+        
+        // Legacy API MIT KALENDER-UNTERSTÜTZUNG (für Rückwärtskompatibilität)
         getAllTasks,
-        createTask,
+        createTask,                 // ← ERWEITERT mit dueDate
         toggleTaskStatus,
+        updateTaskDate,             // ← NEU: Legacy Datum-Update
         updateTaskText,
         deleteTask,
-        deleteCompletedTasks
+        deleteCompletedTasks,
+        
+        // Utility
+        isValidDate                 // ← NEU: Datum-Validierung
     };
 })();
 

@@ -390,13 +390,13 @@
         .btn-cleanup {
             background-color: #6c757d;
             color: white;
-            margin-left: 20px;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
         .btn-cleanup:hover {
             background-color: #545b62;
@@ -409,13 +409,28 @@
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
         .add-section input {
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
-            width: 300px;
-            margin-right: 10px;
+        }
+        #taskText {
+            flex: 1;
+        }
+        #taskDate {
+            width: 200px;
+            flex-shrink: 0;
         }
         .add-section input:focus {
             outline: none;
@@ -432,9 +447,21 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+        #addButton {
+            flex: 1;
+        }
+        #cleanupButton {
+            background-color: #6c757d;
+            flex: 1.2;
+            min-width: 180px;
+            white-space: nowrap;
+        }
         .add-section button:hover {
             background-color: #0056b3;
             transform: translateY(-1px);
+        }
+        #cleanupButton:hover {
+            background-color: #545b62;
         }
         .task-text {
             flex: 1;
@@ -561,74 +588,105 @@
                 text-align: center;
             }
             
-            /* Add-Section Mobile-optimiert */
+            /* Add-Section Mobile-optimiert - VERSTÄRKTE VERSION */
             .add-section {
-                padding: 15px;
+                padding: 15px !important;
                 margin-bottom: 15px;
-                display: flex;
-                flex-direction: column;
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 12px;
-            }
-            
-            .add-section input {
-                width: 100%;
-                padding: 15px;
-                font-size: 16px;
-                border-radius: 8px;
-                margin: 0;
-                box-sizing: border-box;
-                display: block; /* Sicherstellen dass alle Inputs angezeigt werden */
-                border: 2px solid #ddd;
                 background-color: white;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
             
-            .add-section input[type="text"] {
-                order: 1; /* Text-Input zuerst */
-                min-height: 50px;
-            }
-            
-            .add-section input[type="date"] {
-                order: 2; /* Datum-Input als zweites */
-                display: block !important; /* Wichtig: Datum-Input explizit anzeigen */
-                min-height: 50px;
-                background-color: white !important;
-                border: 2px solid #ddd !important;
-                appearance: none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e");
-                background-repeat: no-repeat;
-                background-position: right 12px center;
-                background-size: 20px;
-                padding-right: 45px;
-                color: #333;
-                font-family: inherit;
-            }
-            
-            .add-section input[type="date"]::-webkit-calendar-picker-indicator {
-                opacity: 0;
-                position: absolute;
-                right: 12px;
-                width: 20px;
-                height: 20px;
-                cursor: pointer;
-            }
-            
-            .add-section button {
+            /* INPUT ROW CONTAINER für professionelleres Layout */
+            .input-row {
+                display: flex !important;
+                gap: 10px;
                 width: 100%;
-                padding: 15px;
-                font-size: 16px;
-                border-radius: 8px;
-                margin: 0;
-                min-height: 50px;
             }
             
-            .add-section #addButton {
-                order: 3; /* Add-Button als drittes */
+            /* TEXT INPUT - 70% Breite */
+            #taskText {
+                flex: 7 !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                padding: 15px !important;
+                font-size: 16px !important;
+                border-radius: 8px !important;
+                border: 2px solid #ddd !important;
+                background-color: white !important;
+                min-height: 50px !important;
+                box-sizing: border-box !important;
             }
             
-            .add-section #cleanupButton {
-                order: 4; /* Cleanup-Button als letztes */
+            /* DATUM INPUT - 30% Breite, professionell */
+            #taskDate {
+                flex: 3 !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: relative !important;
+                background-color: white !important;
+                border: 2px solid #007bff !important;
+                border-radius: 8px !important;
+                padding: 15px !important;
+                font-size: 14px !important;
+                min-height: 50px !important;
+                box-sizing: border-box !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                color: #333 !important;
+                font-family: inherit !important;
+            }
+            
+            /* DATUM INPUT WEBKIT INDICATOR - Professionell */
+            #taskDate::-webkit-calendar-picker-indicator {
+                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: 18px;
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                opacity: 1 !important;
+            }
+            
+            /* BUTTONS STYLING - Vollbreite unter den Inputs */
+            .button-row {
+                display: flex !important;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            #addButton {
+                flex: 2 !important;
+                background-color: #007bff !important;
+                color: white !important;
+                border: none !important;
+                padding: 15px !important;
+                font-size: 16px !important;
+                border-radius: 8px !important;
+                min-height: 50px !important;
+                display: block !important;
+            }
+            
+            #cleanupButton {
+                flex: 1.2 !important;
+                background-color: #6c757d !important;
+                color: white !important;
+                border: none !important;
+                padding: 15px !important;
+                font-size: 13px !important;
+                border-radius: 8px !important;
+                min-height: 50px !important;
+                display: block !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             
             /* Task Items Mobile-optimiert */
@@ -656,6 +714,8 @@
                 font-size: 14px;
                 flex: 1;
                 max-width: 150px;
+                display: block !important;
+                min-height: 40px;
             }
             
             .status-button {
@@ -668,6 +728,11 @@
             .btn-delete {
                 font-size: 16px;
                 font-weight: bold;
+                background-color: #dc3545 !important;
+                color: white !important;
+            }
+            .btn-delete:hover {
+                background-color: #c82333 !important;
             }
             
             /* Button-Container für bessere Mobile-UX */
@@ -967,10 +1032,14 @@
         
         <!-- Neue Aufgabe hinzufügen -->
         <div class="add-section">
-            <input type="text" id="taskText" placeholder="Neue Aufgabe eingeben..." maxlength="500">
-            <input type="date" id="taskDate" title="Fälligkeitsdatum (optional)">
-            <button id="addButton">➕ Hinzufügen</button>
-            <button class="btn-cleanup" id="cleanupButton">🧹 Alle Erledigten löschen</button>
+            <div class="input-row">
+                <input type="text" id="taskText" placeholder="Neue Aufgabe eingeben..." maxlength="500">
+                <input type="date" id="taskDate" title="Fälligkeitsdatum (optional)">
+            </div>
+            <div class="button-row">
+                <button id="addButton">➕ Hinzufügen</button>
+                <button class="btn-cleanup" id="cleanupButton">🧹 Alle Erledigten löschen</button>
+            </div>
         </div>
         
         <!-- Aufgabenliste -->
@@ -1176,21 +1245,46 @@
                 
                 getDaysDifference: function(dateString) {
                     if (!dateString) return null;
+                    
+                    // DEBUG: Datums-Vergleich
                     const today = new Date();
                     const taskDate = new Date(dateString);
+                    
+                    // Nur Datum-Teil vergleichen (ohne Zeit)
+                    today.setHours(0, 0, 0, 0);
+                    taskDate.setHours(0, 0, 0, 0);
+                    
                     const diffTime = taskDate - today;
-                    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    console.log('📅 DEBUG getDaysDifference:', {
+                        dateString: dateString,
+                        today: today.toISOString().split('T')[0],
+                        taskDate: taskDate.toISOString().split('T')[0],
+                        diffTime: diffTime,
+                        diffDays: diffDays
+                    });
+                    
+                    return diffDays;
                 },
                 
                 getDateStatus: function(dateString) {
-                    if (!dateString) return 'no-date';
-                    const days = this.getDaysDifference(dateString);
+                    if (!dateString) {
+                        console.log('📅 DEBUG getDateStatus: no date → no-date');
+                        return 'no-date';
+                    }
                     
-                    if (days < 0) return 'overdue';
-                    if (days === 0) return 'due-today';
-                    if (days === 1) return 'due-tomorrow';
-                    if (days <= 7) return 'due-soon';
-                    return 'future';
+                    const days = this.getDaysDifference(dateString);
+                    let status;
+                    
+                    if (days < 0) status = 'overdue';
+                    else if (days === 0) status = 'due-today';
+                    else if (days === 1) status = 'due-tomorrow';
+                    else if (days <= 7) status = 'due-soon';
+                    else status = 'future';
+                    
+                    console.log('📅 DEBUG getDateStatus:', dateString, '→', status, '(days:', days, ')');
+                    return status;
                 },
                 
                 getStatusIcon: function(status) {
@@ -1694,28 +1788,44 @@
             };
             
             const shouldShowTask = function(task, filter) {
+                console.log('🔍 DEBUG shouldShowTask:', {
+                    taskText: task.text,
+                    taskDate: task.dueDate,
+                    filter: filter
+                });
+                
                 if (filter === 'all') return true;
                 
                 const dateStatus = CalendarUtils.getDateStatus(task.dueDate);
+                console.log('🔍 DEBUG shouldShowTask dateStatus:', dateStatus);
                 
+                let shouldShow;
                 switch (filter) {
                     case 'overdue':
-                        return dateStatus === 'overdue' && task.status !== 'erledigt';
+                        shouldShow = dateStatus === 'overdue' && task.status !== 'erledigt';
+                        break;
                     case 'today':
-                        return dateStatus === 'due-today';
+                        shouldShow = dateStatus === 'due-today'; // ← FIXED: today → due-today
+                        break;
                     case 'tomorrow':
-                        return dateStatus === 'due-tomorrow';
+                        shouldShow = dateStatus === 'due-tomorrow';
+                        break;
                     case 'week':
-                        return ['due-today', 'due-tomorrow', 'due-soon'].includes(dateStatus);
+                        shouldShow = ['due-today', 'due-tomorrow', 'due-soon'].includes(dateStatus);
+                        break;
                     case 'no-date':
-                        return !task.dueDate;
+                        shouldShow = !task.dueDate;
+                        break;
                     default:
-                        return true;
+                        shouldShow = true;
                 }
+                
+                console.log('🔍 DEBUG shouldShowTask result:', shouldShow);
+                return shouldShow;
             };
             
             const renderTasks = function (tasks) {
-                console.log('🎨 DEBUG: renderTasks() aufgerufen mit:', tasks.length, 'Tasks');
+                console.log('🎨 DEBUG: renderTasks() aufgerufen mit:', tasks.length, 'Tasks für Filter:', currentFilter);
                 
                 if (!Array.isArray(tasks)) {
                     console.log('❌ DEBUG: tasks ist kein Array!', typeof tasks, tasks);
@@ -1729,8 +1839,15 @@
                 
                 elements.taskList.innerHTML = '';
                 
-                // Tasks filtern
-                const filteredTasks = tasks.filter(task => shouldShowTask(task, currentFilter));
+                // Tasks filtern mit Debug
+                console.log('🔍 DEBUG: Filtere Tasks mit Filter:', currentFilter);
+                const filteredTasks = tasks.filter(task => {
+                    const show = shouldShowTask(task, currentFilter);
+                    console.log('🔍 DEBUG: Task', task.text, 'mit Datum', task.dueDate, '→', show ? 'ZEIGEN' : 'VERSTECKEN');
+                    return show;
+                });
+                
+                console.log('🎨 DEBUG: Nach Filterung:', filteredTasks.length, 'von', tasks.length, 'Tasks übrig');
                 
                 if (filteredTasks.length === 0) {
                     console.log('🎨 DEBUG: Keine Tasks nach Filter - zeige Empty Message');
@@ -1773,26 +1890,27 @@
                         `;
                     }
                     
-                    // Button-Container für bessere Mobile-UX
-                    const buttonContainer = document.createElement('div');
-                    buttonContainer.className = 'task-buttons';
+                    // URSPRÜNGLICHE LOGIK: Beide Buttons - Toggle UND Individual Delete
+                    const buttonsContainer = document.createElement('div');
+                    buttonsContainer.className = 'task-buttons';
                     
                     const toggleBtn = document.createElement('button');
                     toggleBtn.className = 'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete');
                     toggleBtn.textContent = task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt';
                     toggleBtn.addEventListener('click', () => toggleTask(task.id));
                     
+                    // WICHTIG: Individueller Lösch-Button pro Task (wie im ursprünglichen Code)
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'status-button btn-delete';
-                    deleteBtn.textContent = '✖️ Löschen';
+                    deleteBtn.textContent = '🗑️ Löschen';
                     deleteBtn.addEventListener('click', () => deleteTask(task.id));
                     
-                    buttonContainer.appendChild(toggleBtn);
-                    buttonContainer.appendChild(deleteBtn);
+                    buttonsContainer.appendChild(toggleBtn);
+                    buttonsContainer.appendChild(deleteBtn);
                     
                     item.appendChild(textSpan);
                     item.appendChild(dateContainer);
-                    item.appendChild(buttonContainer);
+                    item.appendChild(buttonsContainer);
                     
                     elements.taskList.appendChild(item);
                 });
@@ -1844,7 +1962,10 @@
             
             const addTask = async function () {
                 const text = elements.taskText.value;
-                const dueDate = elements.taskDate.value || null;
+                const dueDate = elements.taskDate ? elements.taskDate.value : null;
+                
+                console.log('📅 DEBUG addTask: Text:', text, 'Date Input Element:', elements.taskDate);
+                console.log('📅 DEBUG addTask: Date Value:', dueDate, 'Type:', typeof dueDate);
                 
                 if (!text || text.trim() === '') {
                     showErrorBanner('⚠️ Bitte geben Sie einen Aufgabentext ein', 'warning');
@@ -1855,14 +1976,24 @@
                 elements.addButton.textContent = '⏳ Wird hinzugefügt...';
                 
                 try {
-                    await apiCall('/tasks', {
+                    const taskData = { 
+                        text: text.trim(), 
+                        dueDate: dueDate || null  // Ensure null instead of empty string
+                    };
+                    console.log('📅 DEBUG: Final task data to backend:', taskData);
+                    
+                    const response = await apiCall('/tasks', {
                         method: 'POST',
-                        body: JSON.stringify({ text: text.trim(), dueDate: dueDate })
+                        body: JSON.stringify(taskData)
                     });
                     
+                    console.log('📅 DEBUG: Backend response:', response);
+                    
                     elements.taskText.value = '';
-                    elements.taskDate.value = '';
+                    if (elements.taskDate) elements.taskDate.value = '';
                     loadTasks();
+                    
+                    console.log('✅ DEBUG: Task created successfully');
                 } catch (error) {
                     console.error("🚨 FEHLER in addTask:", error);
                     showErrorBanner('Fehler beim Hinzufügen der Aufgabe: ' + error.message, 'error');
@@ -1873,14 +2004,35 @@
             };
             
             const updateTaskDate = async function (taskId, newDate) {
+                console.log('📅 DEBUG updateTaskDate: TaskID:', taskId, 'NewDate:', newDate);
+                
                 try {
-                    await apiCall('/tasks/' + taskId + '/date', {
+                    // Verwende die normale PUT /tasks/:id Route anstatt /tasks/:id/date
+                    const response = await apiCall('/tasks/' + taskId, {
                         method: 'PUT',
-                        body: JSON.stringify({ dueDate: newDate || null })
+                        body: JSON.stringify({ 
+                            action: 'updateDate',  // Spezielle Action für Datum-Update
+                            dueDate: newDate || null 
+                        })
                     });
+                    
+                    console.log('📅 DEBUG updateTaskDate response:', response);
                     loadTasks();
                 } catch (error) {
-                    showErrorBanner('Fehler beim Aktualisieren des Datums: ' + error.message, 'error');
+                    console.error('🚨 DEBUG updateTaskDate error:', error);
+                    
+                    // Fallback: Versuche die alte Methode ohne spezielle Action
+                    try {
+                        console.log('📅 DEBUG: Trying fallback method...');
+                        await apiCall('/tasks/' + taskId, {
+                            method: 'PUT',
+                            body: JSON.stringify({ dueDate: newDate || null })
+                        });
+                        loadTasks();
+                    } catch (fallbackError) {
+                        console.error('🚨 DEBUG fallback also failed:', fallbackError);
+                        showErrorBanner('Fehler beim Aktualisieren des Datums: ' + error.message, 'error');
+                    }
                 }
             };
             
@@ -2124,6 +2276,44 @@
                     
                     FrontendBotProtection.initialize();
                     
+                    // MOBILE DATE-INPUT FIX - JavaScript Backup (Professionell)
+                    const ensureDateInputVisible = function() {
+                        const dateInput = document.getElementById('taskDate');
+                        if (dateInput) {
+                            // Professionelle Sichtbarkeit setzen - nicht übertrieben
+                            dateInput.style.display = 'block';
+                            dateInput.style.visibility = 'visible';
+                            dateInput.style.opacity = '1';
+                            dateInput.style.position = 'relative';
+                            dateInput.style.backgroundColor = 'white';
+                            dateInput.style.border = '2px solid #007bff';
+                            dateInput.style.borderRadius = '8px';
+                            dateInput.style.padding = '15px';
+                            dateInput.style.fontSize = '14px';
+                            dateInput.style.minHeight = '50px';
+                            dateInput.style.boxSizing = 'border-box';
+                            
+                            console.log('📅 Date-Input Mobile-Sichtbarkeit professionell gesetzt');
+                        } else {
+                            console.error('❌ Date-Input Element nicht gefunden!');
+                        }
+                        
+                        // Double-check Element-Referenz
+                        setTimeout(() => {
+                            elements.taskDate = document.getElementById('taskDate');
+                            if (elements.taskDate) {
+                                console.log('✅ taskDate Element nachträglich referenziert');
+                            } else {
+                                console.error('❌ taskDate Element auch nach Timeout nicht gefunden!');
+                            }
+                        }, 500);
+                    };
+                    
+                    // Sofort und nach DOM-Updates ausführen
+                    ensureDateInputVisible();
+                    setTimeout(ensureDateInputVisible, 100);
+                    setTimeout(ensureDateInputVisible, 500);
+                    
                     // Event-Handler zuweisen
                     elements.addButton.addEventListener('click', addTask);
                     elements.taskText.addEventListener('keypress', handleKeyPress);
@@ -2148,6 +2338,9 @@
                     } else {
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
                     }
+                    
+                    // Finaler Date-Input Check nach vollständiger Initialisierung
+                    setTimeout(ensureDateInputVisible, 1000);
                     
                     console.log('✅ TODO_APP PROFESSIONELLE VERSION erfolgreich initialisiert');
                 } catch (error) {

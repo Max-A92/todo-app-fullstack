@@ -1,15 +1,16 @@
-# Todo App - Full-Stack Development with Advanced Security & Monitoring Suite
+# Todo App - Full-Stack Development with Advanced Security, Calendar Integration & Monitoring Suite
 
 ## Live Demo
 - **Frontend**: https://todo-app-fullstack-gamma.vercel.app
 - **Backend API**: https://todo-app-fullstack-fdvh.onrender.com
 
-Experience enterprise-grade security with international email validation, advanced monitoring, and comprehensive bot protection. Register with any real email address from around the world - the enhanced security system automatically detects and allows legitimate providers while blocking sophisticated attacks.
+Experience enterprise-grade security with international email validation, advanced monitoring, comprehensive bot protection, and **full calendar integration**. Register with any real email address from around the world - the enhanced security system automatically detects and allows legitimate providers while blocking sophisticated attacks.
 
 ## Project Overview
-A modern Todo application with **Advanced Security Suite**, **Real-time Monitoring**, **Multi-User Support**, **JWT Authentication**, **SQLite Database**, **International Email Validation**, and **GitHub Security Integration**. This project showcases the complete full-stack development journey from a simple basic app to an enterprise-ready application with production-grade security, monitoring capabilities, and automated security management.
+A modern Todo application with **Advanced Security Suite**, **Full Calendar Integration**, **Real-time Monitoring**, **Multi-User Support**, **JWT Authentication**, **SQLite Database**, **International Email Validation**, and **GitHub Security Integration**. This project showcases the complete full-stack development journey from a simple basic app to an enterprise-ready application with production-grade security, monitoring capabilities, automated security management, and comprehensive task scheduling.
 
 ### Key Features
+- **Full Calendar Integration** - Complete task scheduling with due dates, calendar filters, and deadline management
 - **Enterprise Security Suite** - Multi-layer protection with security headers, bot detection, and threat analysis
 - **GitHub Security Integration** - Automated vulnerability scanning, dependency updates, and security policies
 - **Real-time Monitoring** - Advanced analytics, health monitoring, and performance tracking
@@ -22,6 +23,50 @@ A modern Todo application with **Advanced Security Suite**, **Real-time Monitori
 - **Global Compatibility** - Perfect for worldwide GitHub projects with international support
 - **Complete Security Fix** - Zero unauthorized data access possible with dual-layer protection
 - **Zero Vulnerabilities** - All GitHub Security Alerts resolved with ReDoS protection
+
+## Calendar Integration Features
+
+### Task Scheduling & Management
+- **Due Date Assignment** - Set specific due dates for all tasks with YYYY-MM-DD format
+- **Smart Filtering System** - Filter tasks by timeline (Today, Overdue, Tomorrow, This Week, No Date)
+- **Deadline Tracking** - Visual indicators for overdue, today's, and upcoming tasks
+- **Calendar Analytics** - Task completion rates by date and deadline statistics
+- **Date Updates** - Modify task due dates with real-time calendar sync
+- **Calendar View** - Organized task display with date-based grouping
+
+### Calendar API Endpoints
+```
+# Create task with due date
+POST /tasks
+{
+  "text": "Important meeting preparation",
+  "dueDate": "2025-07-30"
+}
+
+# Update task due date
+PUT /tasks/:id
+{
+  "action": "updateDate",
+  "dueDate": "2025-07-31"
+}
+
+# Get tasks by date range
+GET /tasks/calendar?start=2025-07-28&end=2025-08-03
+
+# Get overdue tasks
+GET /tasks/overdue
+
+# Get today's tasks
+GET /tasks/today
+```
+
+### Calendar Features in Action
+- **Overdue Tasks** - Automatically highlighted past-due items with priority styling
+- **Today's Tasks** - Current day tasks with special emphasis and completion tracking
+- **Tomorrow's Tasks** - Next day planning with preparation indicators
+- **This Week View** - Weekly task overview with deadline distribution
+- **No Date Tasks** - Flexible tasks without specific deadlines
+- **Progress Tracking** - Calendar-based completion statistics and trends
 
 ## GitHub Security Integration
 
@@ -87,7 +132,7 @@ updates:
 
 ## Critical Security Fixes
 
-### ReDoS Vulnerability Elimination (v5.4)
+### ReDoS Vulnerability Elimination (v6.0)
 
 #### Problem Identified
 The email validation system contained a Regular Expression Denial of Service (ReDoS) vulnerability where maliciously crafted email inputs could cause exponential processing time, potentially leading to server overload and denial of service attacks.
@@ -262,7 +307,8 @@ GET /security/stats
     "xssProtection": true,
     "botProtection": true,
     "tasksEndpointSecurity": "FIXED",
-    "redosVulnerability": "ELIMINATED"
+    "redosVulnerability": "ELIMINATED",
+    "calendarIntegration": "ACTIVE"
   }
 }
 ```
@@ -295,6 +341,12 @@ GET /monitoring/analytics
     "tasksEndpointProtection": "ACTIVE",
     "unauthorizedBlocked": true,
     "redosVulnerability": "ELIMINATED"
+  },
+  "calendar": {
+    "tasksWithDates": 85,
+    "overdueTasksCount": 12,
+    "todayTasksCount": 8,
+    "calendarQueriesPerHour": 45
   }
 }
 ```
@@ -323,6 +375,11 @@ GET /monitoring/health
     "dataLeakPrevention": "ACTIVE",
     "redosVulnerability": "ELIMINATED",
     "githubSecurityAlerts": "ALL_RESOLVED"
+  },
+  "calendar": {
+    "status": "fully_integrated",
+    "dateValidation": "active",
+    "calendarFeatures": "all_operational"
   }
 }
 ```
@@ -345,6 +402,11 @@ GET /monitoring/realtime
     "blockedRequests": 0,
     "unauthorizedTaskAccess": 0,
     "redosAttemptsBlocked": 0
+  },
+  "calendar": {
+    "activeDateFilters": 3,
+    "todayTasksActive": 5,
+    "overdueDetections": 2
   }
 }
 ```
@@ -393,7 +455,8 @@ Static File Hosting   ←→    Security Headers + CSP
 Global CDN            ←→    Bot Protection + Rate Limiting  
 Auto SSL              ←→    Real-time Monitoring + Analytics
                             ReDoS-Safe Email Validation + JWT Auth
-                            SQLite Database + Health Monitoring
+                            SQLite Database + Calendar Integration
+                            Health Monitoring + Date Validation
                             Tasks Endpoint Security (FIXED)
                             GitHub Security Integration (Complete)
                             Zero Vulnerabilities Status (ACHIEVED)
@@ -402,16 +465,25 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 ### Deployment Stack
 - **Frontend**: Vercel (Static Hosting, Global CDN, Auto SSL)
 - **Backend**: Render (Node.js Server with Security Suite, Persistent Storage, Auto SSL)
-- **Database**: better-sqlite3 (High-performance, persistent, with user relations)
+- **Database**: better-sqlite3 (High-performance, persistent, with user relations and calendar support)
 - **Authentication**: JWT Token-based with bcryptjs hashing
 - **Security**: Multi-layer protection with CSP, XSS prevention, bot detection
 - **Monitoring**: Real-time analytics, health checks, and performance tracking
 - **Email Validation**: ReDoS-safe international disposable email blocking
+- **Calendar System**: Full date validation and task scheduling integration
 - **GitHub Security**: Automated vulnerability scanning, dependency updates, branch protection
 - **Data Protection**: Complete user isolation with zero unauthorized access
 - **Vulnerability Status**: All GitHub Security Alerts resolved
 
 ## Core Features
+
+### Calendar Integration Suite
+- **Task Scheduling**: Complete due date management with YYYY-MM-DD format validation
+- **Smart Filtering**: Today, Overdue, Tomorrow, This Week, No Date filters
+- **Date Validation**: Comprehensive input validation with error handling
+- **Calendar Analytics**: Date-based task completion tracking and statistics
+- **Deadline Management**: Visual indicators for task urgency and completion status
+- **Real-time Updates**: Instant calendar sync with task modifications
 
 ### Enterprise Security Suite
 - **Security Headers**: CSP, XSS protection, frame options, referrer policy
@@ -432,6 +504,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **Event Tracking**: Comprehensive security and user action logging
 - **Security Incident Tracking**: Unauthorized access attempts and prevention
 - **Vulnerability Monitoring**: Real-time tracking of security fix effectiveness
+- **Calendar Analytics**: Task scheduling patterns and completion statistics
 
 ### International Email Validation
 - **Comprehensive Coverage**: 268+ blocked disposable domains across multiple languages
@@ -453,15 +526,19 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 
 ### Advanced Task Management
 - **Complete CRUD Operations**: Create, Read, Update, Delete
+- **Calendar Features**: Due date assignment, date updates, calendar filtering
 - **Status Management**: Instant toggle between Open and Completed
 - **Inline Text Editing**: Click-to-edit functionality
+- **Smart Filtering**: Calendar-based task organization and deadline tracking
 - **Bulk Operations**: Delete all completed tasks with confirmation
 - **Real-time Statistics**: Progress tracking and completion percentages
 - **User-specific Tasks**: Complete data separation with security enforcement
 - **Secure Data Access**: Zero unauthorized task visibility
+- **Date Analytics**: Task completion tracking by due date and timeline
 
 ### Modern User Experience
 - **Responsive Design**: Optimized for mobile and desktop
+- **Calendar Interface**: Intuitive date picker and filter system
 - **Authentication Modal**: Smooth login/register transitions
 - **Loading States**: Progress indicators and timeout handling
 - **Error Handling**: User-friendly messages and retry mechanisms
@@ -469,12 +546,13 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **Offline Mode**: Cached data and connection retry logic
 - **International UX**: Email provider recognition and feedback
 - **Secure Logout**: Complete data clearing and unauthorized access prevention
+- **Calendar UX**: Visual deadline indicators and timeline organization
 
 ## Technology Stack
 
 ### Backend
 - **Node.js + Express.js** - High-performance server framework with security middleware
-- **better-sqlite3** - High-performance SQLite with user relations
+- **better-sqlite3** - High-performance SQLite with user relations and calendar support
 - **JWT** - JSON Web Tokens for stateless authentication
 - **bcryptjs** - Military-grade password hashing
 - **Security Headers Suite** - Custom CSP, XSS protection, and threat detection
@@ -482,6 +560,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **CORS** - Secure cross-origin resource sharing
 - **ReDoS-Safe Email Validation** - Split-based implementation blocking disposable services
 - **Security-Fixed Endpoints** - Dual-layer protection against unauthorized access
+- **Calendar System** - Date validation, task scheduling, and timeline management
 
 ### Frontend
 - **HTML5 + CSS3 + Vanilla JavaScript** - Modern web standards with security focus
@@ -491,6 +570,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **Responsive Design** - CSS Grid/Flexbox for all device sizes
 - **Progressive Enhancement** - Graceful degradation
 - **Security-Aware Frontend** - Token validation and unauthorized access prevention
+- **Calendar Interface** - Date picker, filters, and timeline visualization
 
 ### DevOps & Deployment
 - **Vercel** - Frontend deployment with global CDN and automatic SSL
@@ -510,7 +590,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 ## Repository Structure
 ```
 todo-app-fullstack/
-├── README.md                    # Professional documentation with security features
+├── README.md                    # Professional documentation with security and calendar features
 ├── SECURITY.md                  # Security policy and vulnerability reporting guidelines
 ├── LICENSE                      # MIT License
 ├── .gitignore                   # Git ignore patterns with security exclusions
@@ -518,12 +598,12 @@ todo-app-fullstack/
 │   └── dependabot.yml          # Automated dependency updates configuration
 ├── screenshots/                 # Application screenshots
 ├── frontend-sqlite/             # Frontend (Deployed on Vercel)
-│   └── index.html              # Complete SPA with international email validation
+│   └── index.html              # Complete SPA with calendar integration and security
 ├── backend-sqlite/              # Backend with Security Suite (Deployed on Render)
-│   ├── server.js               # Express server with ReDoS-safe validation (SECURITY-FIXED)
+│   ├── server.js               # Express server with calendar API (SECURITY-FIXED)
 │   ├── security-headers.js     # Security headers suite with CSP and threat detection
 │   ├── monitoring.js           # Advanced monitoring system with real-time analytics
-│   ├── database.js             # better-sqlite3 database with user relations
+│   ├── database.js             # better-sqlite3 database with calendar support
 │   ├── package.json            # Node.js dependencies with security enhancements
 │   └── .env.example            # Environment variables template
 ├── frontend-optimized/          # Version 2.0 - Enhanced UI (legacy)
@@ -557,7 +637,7 @@ Content-Type: application/json
         "username": "example_user",
         "email": "user@example-domain.com",
         "emailVerified": true,
-        "createdAt": "2025-07-22T21:00:00.000Z"
+        "createdAt": "2025-07-28T21:00:00.000Z"
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJ1c2VybmFtZSI6InVzZXIiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJpYXQiOjE2NDA5OTUyMDB9.ExampleTokenSignature",
     "emailInfo": {
@@ -597,7 +677,7 @@ Content-Type: application/json
 }
 ```
 
-### Protected Task Endpoints (Security-Fixed)
+### Protected Task Endpoints (Security-Fixed + Calendar Integration)
 
 #### Get User Tasks
 ```
@@ -605,15 +685,17 @@ GET /tasks
 Authorization: Bearer {your-jwt-token}
 ```
 **Security**: Returns empty array for unauthorized requests (no data leak possible)
+**Calendar**: Returns tasks with dueDate field for calendar integration
 
-#### Create Task
+#### Create Task (with Calendar Support)
 ```
 POST /tasks
 Authorization: Bearer {your-jwt-token}
 Content-Type: application/json
 
 {
-    "text": "Example task description"
+    "text": "Complete project proposal",
+    "dueDate": "2025-07-30"
 }
 ```
 
@@ -623,6 +705,18 @@ PUT /tasks/{task-id}
 Authorization: Bearer {your-jwt-token}
 ```
 
+#### Update Task Date (Calendar Feature)
+```
+PUT /tasks/{task-id}
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+    "action": "updateDate",
+    "dueDate": "2025-08-01"
+}
+```
+
 #### Update Task Text
 ```
 PUT /tasks/{task-id}/text
@@ -630,7 +724,7 @@ Authorization: Bearer {your-jwt-token}
 Content-Type: application/json
 
 {
-    "text": "Updated task description"
+    "text": "Updated task description with new requirements"
 }
 ```
 
@@ -643,6 +737,26 @@ Authorization: Bearer {your-jwt-token}
 #### Delete All Completed Tasks
 ```
 DELETE /tasks?status=completed
+Authorization: Bearer {your-jwt-token}
+```
+
+### Calendar-Specific Endpoints
+
+#### Get Tasks by Date Range
+```
+GET /tasks/calendar?start=2025-07-28&end=2025-08-03
+Authorization: Bearer {your-jwt-token}
+```
+
+#### Get Overdue Tasks
+```
+GET /tasks/overdue
+Authorization: Bearer {your-jwt-token}
+```
+
+#### Get Today's Tasks
+```
+GET /tasks/today
 Authorization: Bearer {your-jwt-token}
 ```
 
@@ -679,8 +793,8 @@ GET /health
 ```
 {
     "status": "ok",
-    "message": "EMAIL VERIFICATION TODO SERVER IS RUNNING",
-    "version": "EMAIL-VERIFICATION-2.0-REDOS-SECURITY-FIXED",
+    "message": "EMAIL VERIFICATION TODO SERVER WITH CALENDAR IS RUNNING",
+    "version": "EMAIL-VERIFICATION-CALENDAR-2.0-REDOS-SECURITY-FIXED",
     "emailValidation": {
         "type": "international",
         "blockedDomains": 268,
@@ -688,6 +802,13 @@ GET /health
         "approach": "liberal",
         "securityLevel": "production-grade",
         "redosVulnerability": "ELIMINATED"
+    },
+    "calendar": {
+        "status": "fully_integrated",
+        "features": ["due_dates", "date_filters", "overdue_detection", "calendar_analytics"],
+        "dateFormat": "YYYY-MM-DD",
+        "timezoneSupport": "UTC",
+        "validationLevel": "comprehensive"
     },
     "security": {
         "rateLimiting": "active",
@@ -725,7 +846,7 @@ npm install
 echo "JWT_SECRET=your-development-secret-key-minimum-32-characters-required" > .env
 echo "NODE_ENV=development" >> .env
 
-# Start backend with security & monitoring suite
+# Start backend with security, monitoring & calendar suite
 node server.js
 ```
 
@@ -733,6 +854,7 @@ node server.js
 - Health Check: http://localhost:3000/health
 - Security Stats: http://localhost:3000/security/stats
 - Monitoring: http://localhost:3000/monitoring/analytics
+- Calendar Features: Full integration active
 
 ### Frontend Setup
 ```
@@ -751,7 +873,7 @@ npx http-server -p 8000 --cors
 
 **Frontend runs on**: http://localhost:5500 (Live Server) or http://localhost:8000
 
-## Testing the Security Suite
+## Testing the Security & Calendar Suite
 
 ### Valid Registration Examples
 ```
@@ -766,6 +888,46 @@ curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
   -H "User-Agent: Mozilla/5.0" \
   -d '{"username":"business_user","email":"user@company-example.com","password":"business_password_456"}'
+```
+
+### Calendar Feature Testing
+
+#### Create Task with Due Date
+```
+# Login and get token first
+LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo123"}')
+
+TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
+
+# Create task with calendar date
+curl -X POST http://localhost:3000/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Complete project deadline","dueDate":"2025-07-30"}'
+```
+
+#### Update Task Due Date
+```
+# Update task date (calendar feature)
+curl -X PUT http://localhost:3000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"action":"updateDate","dueDate":"2025-08-01"}'
+```
+
+#### Get Calendar-filtered Tasks
+```
+# Get overdue tasks
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks/overdue
+
+# Get today's tasks
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks/today
+
+# Get tasks by date range
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/tasks/calendar?start=2025-07-28&end=2025-08-03"
 ```
 
 ### Security Feature Testing
@@ -846,11 +1008,11 @@ TOKEN=$(echo $REGISTER_RESPONSE | jq -r '.token')
 # Test authenticated endpoints
 curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks
 
-# Create task
+# Create task with calendar integration
 curl -X POST http://localhost:3000/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Example task with security testing"}'
+  -d '{"text":"Test calendar integration","dueDate":"2025-07-29"}'
 ```
 
 ## Development Evolution
@@ -862,9 +1024,17 @@ This project documents progressive development through 6 major versions:
 3. **Version 3.0**: Production ready (SQLite + Auth + multi-user)
 4. **Version 4.0**: International email validation (268+ blocked domains)
 5. **Version 5.0**: Security & Monitoring Suite (enterprise-grade protection)
-6. **Version 5.4**: ReDoS Vulnerability Elimination (zero security vulnerabilities)
+6. **Version 6.0**: Calendar Integration + ReDoS Vulnerability Elimination (complete feature set)
 
-### Version 5.4 Features (Latest) - ReDoS Vulnerability Elimination
+### Version 6.0 Features (Latest) - Calendar Integration + ReDoS Elimination
+
+#### Full Calendar Integration
+- **Task Scheduling System** - Complete due date management with YYYY-MM-DD format validation
+- **Smart Calendar Filters** - Today, Overdue, Tomorrow, This Week, No Date filtering system
+- **Date Validation Engine** - Comprehensive input validation with error handling
+- **Calendar Analytics** - Date-based task completion tracking and deadline statistics
+- **Real-time Calendar Sync** - Instant updates for task modifications and date changes
+- **Visual Deadline Indicators** - Color-coded task urgency and completion status
 
 #### Critical Security Enhancement
 - **ReDoS Vulnerability Elimination** - Complete removal of Regular Expression Denial of Service attack vectors
@@ -943,6 +1113,14 @@ This project documents progressive development through 6 major versions:
 
 ## Performance & Scalability
 
+### Calendar Performance
+- **Efficient date processing** with optimized parsing and validation
+- **Smart filtering algorithms** with indexed database queries for calendar views
+- **Minimal calendar overhead** with optimized date calculations and caching
+- **Real-time sync performance** with debounced updates and efficient state management
+- **Scalable date queries** with optimized SQL and calendar-specific indexes
+- **Timeline optimization** with efficient sorting and date range calculations
+
 ### Security Performance
 - **Efficient header generation** with environment-specific optimization
 - **Optimized threat detection** with pattern matching and caching
@@ -953,13 +1131,14 @@ This project documents progressive development through 6 major versions:
 - **ReDoS-free validation** with constant time complexity for all inputs
 
 ### Application Performance
-- **Enhanced database optimization** with indexed relations and foreign keys
+- **Enhanced database optimization** with indexed relations, foreign keys, and calendar support
 - **Frontend caching** with LocalStorage and intelligent task caching
 - **Global CDN delivery** via Vercel with security headers
 - **Comprehensive error handling** with user feedback and automatic retry
 - **Optimized DOM manipulation** with minimal reflows and security-aware events
 - **Secure data loading** without performance impact
 - **Split-based email validation** providing better performance than regex
+- **Calendar UI optimization** with efficient date rendering and filter performance
 
 ### Scalability Features
 - **Stateless JWT authentication** enables horizontal scaling with security tracking
@@ -969,6 +1148,7 @@ This project documents progressive development through 6 major versions:
 - **Health monitoring** with automated checks and alerting integration
 - **Scalable security architecture** with minimal resource overhead
 - **Performance-optimized validation** with deterministic processing times
+- **Calendar scalability** with efficient date indexing and query optimization
 
 ## Security Features
 
@@ -999,6 +1179,13 @@ This project documents progressive development through 6 major versions:
 - **Complete Data Protection** with frontend and backend security layers
 - **DoS Protection** with input length limits and deterministic processing
 
+### Calendar Security
+- **Date Input Validation** with comprehensive format checking and injection prevention
+- **Calendar Injection Prevention** with sanitized date processing and SQL protection
+- **Timezone Security** with UTC normalization and consistent date handling
+- **Calendar Data Isolation** with user-specific date filtering and access control
+- **Date Range Validation** with boundary checking and overflow protection
+
 ### International Security
 - **Multi-language Spam Protection** across 8+ languages with cultural awareness
 - **Sophisticated Pattern Recognition** for evolving spam techniques and domain variations
@@ -1014,11 +1201,16 @@ This project documents progressive development through 6 major versions:
 - **SSL**: Automatic HTTPS on both platforms with security header enforcement
 - **Monitoring**: Health checks, uptime monitoring, and security analytics
 - **Security**: Multi-layer protection with real-time threat detection
+- **Calendar System**: Full integration with date validation and filtering
 - **GitHub Integration**: Complete automated security scanning and dependency management
 - **Security Fixes Deployed**: Live application includes ReDoS protection and tasks endpoint security
 - **Zero Vulnerabilities**: All GitHub Security Alerts resolved in production
 
-## Recent Updates (v5.4)
+## Recent Updates (v6.0)
+- **Calendar Integration**: Complete task scheduling system with due dates and smart filtering
+- **Date Validation Engine**: Comprehensive YYYY-MM-DD format validation with error handling
+- **Calendar Analytics**: Task completion tracking by deadline and timeline statistics
+- **Smart Filtering System**: Today, Overdue, Tomorrow, This Week, No Date filters
 - **ReDoS Vulnerability Elimination**: Complete removal of Regular Expression Denial of Service attack vectors
 - **Split-based Email Validation**: Deterministic processing without exponential complexity
 - **GitHub Security Alerts Resolution**: All security vulnerabilities resolved (zero remaining)
@@ -1028,33 +1220,37 @@ This project documents progressive development through 6 major versions:
 
 ## Contributing
 
-I welcome contributions from developers worldwide! The complete security suite and monitoring features make this project enterprise-ready.
+I welcome contributions from developers worldwide! The complete security suite, monitoring features, and calendar integration make this project enterprise-ready.
 
-### Security-Focused Contributions Welcome
+### Security & Calendar-Focused Contributions Welcome
 - Security feature enhancements and vulnerability reports
+- Calendar system improvements and date handling optimizations
 - Monitoring improvements and analytics enhancements
 - International security testing from different regions
 - Performance optimization and scalability improvements
 - Security documentation and best practices
+- Calendar UI/UX enhancements and accessibility improvements
 
 ### How to Contribute
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/security-enhancement`)
+2. Create a feature branch (`git checkout -b feature/calendar-enhancement`)
 3. Test thoroughly with security tools and international scenarios
-4. Commit your changes (`git commit -m 'Add security enhancement'`)
-5. Push to the branch (`git push origin feature/security-enhancement`)
-6. Open a Pull Request with detailed security analysis
+4. Commit your changes (`git commit -m 'Add calendar enhancement'`)
+5. Push to the branch (`git push origin feature/calendar-enhancement`)
+6. Open a Pull Request with detailed security and calendar analysis
 
 **Note**: Due to branch protection rules, all changes to the main branch require pull requests. This ensures code quality and security review for all contributions.
 
 ### Testing Guidelines
 - Test all security features with various scenarios
+- Verify calendar functionality across different date ranges and timezones
 - Verify monitoring endpoints provide accurate data
 - Ensure rate limiting works across different ranges
 - Test bot protection with automated tools
 - Validate international email addresses work correctly
 - **Test unauthorized access scenarios** to verify data protection
 - **Test ReDoS protection** with complex email patterns
+- **Test calendar date validation** with edge cases and invalid formats
 - Follow the pull request workflow for all contributions
 
 ### Security Reporting
@@ -1078,6 +1274,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - International Developer Community for global testing and feedback
 - Open Source Security Projects for inspiration and best practices
 - Monitoring and Analytics Community for performance insights
+- Calendar and Task Management Community for scheduling system insights
 - GitHub Community for making this globally accessible with security focus
 - GitHub Security Team for excellent automated security tools and responsible disclosure features
 - Vercel & Render for excellent deployment platforms with security support
@@ -1114,6 +1311,24 @@ curl -X POST https://todo-app-fullstack-fdvh.onrender.com/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"redos_test","email":"a@aaaaaaaaaaaaaaaa.com","password":"test123"}'
 # Expected: Fast rejection without server hang
+
+# Test calendar features (with authentication)
+# 1. Login first to get token
+LOGIN_RESPONSE=$(curl -s -X POST https://todo-app-fullstack-fdvh.onrender.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"demo","password":"demo123"}')
+
+TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
+
+# 2. Create task with due date
+curl -X POST https://todo-app-fullstack-fdvh.onrender.com/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Test calendar integration","dueDate":"2025-07-30"}'
+
+# 3. Get today's tasks
+curl -H "Authorization: Bearer $TOKEN" \
+  https://todo-app-fullstack-fdvh.onrender.com/tasks/today
 ```
 
-**Full-Stack Development with Complete GitHub Security Integration - From Basic CRUD to Production-Ready Global Application with Enterprise-Grade Security, Zero Vulnerabilities, and Professional Development Workflow**
+**Full-Stack Development with Complete GitHub Security Integration and Calendar System - From Basic CRUD to Production-Ready Global Application with Enterprise-Grade Security, Calendar Integration, Zero Vulnerabilities, and Professional Development Workflow**
