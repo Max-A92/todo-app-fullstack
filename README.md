@@ -1071,7 +1071,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Author
 **Maximilian Adam**
 - GitHub: [@Max-A92](https://github.com/Max-A92)
-- Email: max.adam.92.mail@gmail.com
+- Email: max.adam.dev@gmail.com
 
 ## Acknowledgments
 - Security Community for testing and vulnerability feedback
