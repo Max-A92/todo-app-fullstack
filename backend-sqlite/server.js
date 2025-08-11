@@ -1,4 +1,4 @@
-// PRODUCTION BACKEND - International Email Validation + E-Mail-Verifikation + SQLite Database + Authentication + CALENDAR INTEGRATION
+// PRODUCTION BACKEND - International Email Validation + E-Mail-Verifikation + SQLite Database + Authentication + CALENDAR INTEGRATION + PROJECTS
 const express = require('express');
 const path = require('path');
 const jwt = require('jsonwebtoken');
@@ -152,7 +152,7 @@ const TaskServer = (function () {
     // Express App initialisieren
     const app = express();
     
-    console.log('🏭 === STARTING SECURITY-HARDENED EMAIL VERIFICATION TODO SERVER WITH CALENDAR ===');
+    console.log('🏭 === STARTING SECURITY-HARDENED EMAIL VERIFICATION TODO SERVER WITH CALENDAR + PROJECTS ===');
     console.log('📍 PORT:', PORT);
     console.log('🌍 NODE_ENV:', NODE_ENV);
     console.log('🔑 JWT_SECRET:', JWT_SECRET ? 'SET ✅' : 'NOT SET ❌');
@@ -162,6 +162,7 @@ const TaskServer = (function () {
     console.log('🌍 Email Validation: INTERNATIONAL (268+ disposable domains blocked)');
     console.log('🛡️ Security: CONFIGURABLE (no hard-coded values)');
     console.log('📅 Calendar Integration: ENABLED ✅');
+    console.log('📁 Project Management: ENABLED ✅');
     
     // ===== E-MAIL-SERVICE KONFIGURATION =====
     
@@ -1081,6 +1082,15 @@ const TaskServer = (function () {
         return Number.isInteger(numId) && numId > 0;
     };
     
+    const isValidProjectId = function (id) {
+        const numId = Number(id);
+        return Number.isInteger(numId) && numId > 0;
+    };
+    
+    const isValidProjectName = function (name) {
+        return typeof name === 'string' && name.trim() !== '' && name.trim().length <= 100;
+    };
+    
     const isValidUsername = function (username) {
         return typeof username === 'string' && 
                username.trim().length >= 3 && 
@@ -1254,7 +1264,7 @@ const TaskServer = (function () {
     
     // CORS-MIDDLEWARE (erweitert)
     const setupMiddleware = function () {
-        console.log('⚙️ Setting up EXTENDED CORS with email verification and calendar...');
+        console.log('⚙️ Setting up EXTENDED CORS with email verification and calendar and projects...');
         
         // ===== GENERELLES RATE LIMITING (NEU) =====
         app.use(generalLimit);
@@ -1322,7 +1332,7 @@ const TaskServer = (function () {
             next();
         });
         
-        console.log('✅ Extended CORS with email verification and calendar setup complete');
+        console.log('✅ Extended CORS with email verification and calendar and projects setup complete');
         
         // ===== SECURITY HEADERS & MONITORING INTEGRATION =====
         
@@ -1693,28 +1703,134 @@ const TaskServer = (function () {
         });
     };
     
-    // ===== TASK ROUTE HANDLERS (MIT SECURITY-FIX + KALENDER-INTEGRATION) =====
+    // ===== 📁 NEUE: PROJECT ROUTE HANDLERS =====
     
-    // GET /tasks - Tasks für eingeloggten User abrufen (🔒 SECURITY-FIXED)
+    // GET /projects - Alle Projekte für eingeloggten User abrufen
+    const handleGetProjects = async function (req, res) {
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
+        
+        try {
+            const projects = await Database.getAllProjectsForUser(req.user.id);
+            if (NODE_ENV === 'development') {
+                console.log("📁 Lade Projekte für User:", req.user.username);
+            }
+            res.json(projects);
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden der Projekte:', error);
+            res.status(500).json({
+                error: 'Fehler beim Laden der Projekte',
+                message: 'Ein interner Fehler ist aufgetreten'
+            });
+        }
+    };
+    
+    // POST /projects - Neues Projekt für User erstellen
+    const handleCreateProject = async function (req, res) {
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
+        
+        try {
+            const { name } = req.body;
+            
+            if (!isValidProjectName(name)) {
+                return res.status(400).json({
+                    error: 'Ungültiger Projektname',
+                    message: 'Projektname ist erforderlich, darf nicht leer sein und maximal 100 Zeichen haben'
+                });
+            }
+            
+            const newProject = await Database.createProjectForUser(req.user.id, name.trim());
+            console.log('📁 Projekt erstellt für User:', req.user.username, 'Projekt:', name);
+            
+            res.status(201).json(newProject);
+        } catch (error) {
+            console.error('🚨 Fehler beim Erstellen des Projekts:', error);
+            res.status(500).json({
+                error: 'Fehler beim Erstellen des Projekts',
+                message: 'Ein interner Fehler ist aufgetreten'
+            });
+        }
+    };
+    
+    // DELETE /projects/:id - Projekt löschen (nur eigene)
+    const handleDeleteProject = async function (req, res) {
+        if (!databaseAvailable) {
+            return res.status(503).json({
+                error: 'Service nicht verfügbar',
+                message: 'Datenbank nicht verfügbar.'
+            });
+        }
+        
+        try {
+            const projectId = req.params.id;
+            
+            if (!isValidProjectId(projectId)) {
+                return res.status(400).json({
+                    error: 'Ungültige Projekt-ID',
+                    message: 'ID muss eine positive Ganzzahl sein'
+                });
+            }
+            
+            const deletedProject = await Database.deleteProjectForUser(Number(projectId), req.user.id);
+            
+            res.json({
+                message: 'Projekt erfolgreich gelöscht',
+                project: deletedProject
+            });
+            
+        } catch (error) {
+            console.error('🚨 Fehler beim Löschen des Projekts:', error);
+            
+            if (error.message.includes('nicht gefunden') || error.message.includes('gehört nicht')) {
+                res.status(404).json({
+                    error: 'Projekt nicht gefunden',
+                    message: 'Projekt nicht gefunden oder gehört nicht dir'
+                });
+            } else if (error.message.includes('letzte Projekt')) {
+                res.status(400).json({
+                    error: 'Letztes Projekt',
+                    message: 'Das letzte Projekt kann nicht gelöscht werden'
+                });
+            } else {
+                res.status(500).json({
+                    error: 'Fehler beim Löschen des Projekts',
+                    message: 'Ein interner Fehler ist aufgetreten'
+                });
+            }
+        }
+    };
+    
+    // ===== TASK ROUTE HANDLERS (MIT SECURITY-FIX + KALENDER-INTEGRATION + PROJEKTE) =====
+    
+    // GET /tasks - Tasks für eingeloggten User abrufen (🔒 SECURITY-FIXED + PROJEKTE)
     const handleGetTasks = async function (req, res) {
         try {
             let tasks;
             
             if (!databaseAvailable) {
-                // Demo-Daten mit Kalender-Beispielen
+                // Demo-Daten mit Kalender-Beispielen und Projekten
                 const today = new Date().toISOString().split('T')[0];
                 const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
                 
                 tasks = [
-                    { id: 1, text: 'Demo-Aufgabe 1', status: 'offen', dueDate: today },
-                    { id: 2, text: 'Demo-Aufgabe 2', status: 'erledigt', dueDate: tomorrow },
-                    { id: 3, text: 'Database startet noch...', status: 'offen', dueDate: null }
+                    { id: 1, text: 'Demo-Aufgabe 1', status: 'offen', dueDate: today, project_name: 'Allgemein' },
+                    { id: 2, text: 'Demo-Aufgabe 2', status: 'erledigt', dueDate: tomorrow, project_name: 'Privat' },
+                    { id: 3, text: 'Database startet noch...', status: 'offen', dueDate: null, project_name: 'System' }
                 ];
             } else if (req.user) {
-                // Authentifizierter User - lade nur seine Tasks ✅
+                // Authentifizierter User - lade nur seine Tasks ✅ (MIT PROJEKT-INFO)
                 tasks = await Database.getAllTasksForUser(req.user.id);
                 if (NODE_ENV === 'development') {
-                    console.log("👤 Lade Tasks für User:", req.user.username);
+                    console.log("👤 Lade Tasks mit Projekten für User:", req.user.username);
                 }
             } else {
                 // ✅ SECURITY-FIX: Keine Tasks für unauthentifizierte Requests
@@ -1732,7 +1848,7 @@ const TaskServer = (function () {
         }
     };
     
-    // POST /tasks - Neue Task für User erstellen (MIT KALENDER-SUPPORT)
+    // POST /tasks - Neue Task für User erstellen (MIT KALENDER-SUPPORT + PROJEKTE)
     const handleCreateTask = async function (req, res) {
         if (!databaseAvailable) {
             return res.status(503).json({
@@ -1744,8 +1860,9 @@ const TaskServer = (function () {
         try {
             const text = req.body && req.body.text;
             const dueDate = req.body && req.body.dueDate;
+            const projectId = req.body && req.body.project_id; // ← NEU: Projekt-Unterstützung
             
-            console.log('📅 DEBUG handleCreateTask: Text:', text, 'DueDate:', dueDate);
+            console.log('📅📁 DEBUG handleCreateTask: Text:', text, 'DueDate:', dueDate, 'ProjectId:', projectId);
             
             if (!isValidTaskText(text)) {
                 return res.status(400).json({
@@ -1762,19 +1879,28 @@ const TaskServer = (function () {
                 });
             }
             
+            // Projekt-Validierung (optional)
+            if (projectId && !isValidProjectId(projectId)) {
+                return res.status(400).json({
+                    error: 'Ungültige Projekt-ID',
+                    message: 'Projekt-ID muss eine positive Ganzzahl sein'
+                });
+            }
+            
             let newTask;
             
             if (req.user) {
-                // Authentifizierter User - MIT KALENDER-UNTERSTÜTZUNG
+                // Authentifizierter User - MIT KALENDER-UNTERSTÜTZUNG + PROJEKTE
                 newTask = await Database.createTaskForUser(
                     req.user.id, 
                     text.trim(), 
-                    dueDate || null  // ← NEU: Kalender-Support
+                    dueDate || null,     // ← KALENDER-Support
+                    projectId || null    // ← NEU: Projekt-Support
                 );
-                console.log('👤 Erstelle Task für User:', req.user.username, 'mit Datum:', dueDate);
+                console.log('👤 Erstelle Task für User:', req.user.username, 'mit Datum:', dueDate, 'Projekt:', projectId);
             } else {
                 // Legacy-Modus für Demo-User
-                newTask = await Database.createTask(text.trim(), dueDate || null);
+                newTask = await Database.createTask(text.trim(), dueDate || null, projectId || null);
             }
             
             console.log('✅ DEBUG: Task created successfully:', newTask);
@@ -1789,7 +1915,7 @@ const TaskServer = (function () {
         }
     };
     
-    // PUT /tasks/:id - Task aktualisieren (Status ODER Datum) (MIT KALENDER-SUPPORT)
+    // PUT /tasks/:id - Task aktualisieren (Status ODER Datum ODER Projekt) (MIT KALENDER + PROJEKTE)
     const handleToggleTask = async function (req, res) {
         if (!databaseAvailable) {
             return res.status(503).json({
@@ -1800,9 +1926,9 @@ const TaskServer = (function () {
         
         try {
             const taskId = req.params.id;
-            const { action, dueDate } = req.body;
+            const { action, dueDate, project_id } = req.body;
             
-            console.log('📅 DEBUG handleToggleTask: TaskID:', taskId, 'Action:', action, 'DueDate:', dueDate);
+            console.log('📅📁 DEBUG handleToggleTask: TaskID:', taskId, 'Action:', action, 'DueDate:', dueDate, 'ProjectId:', project_id);
             
             if (!isValidTaskId(taskId)) {
                 return res.status(400).json({
@@ -1838,6 +1964,32 @@ const TaskServer = (function () {
                 }
                 
                 console.log('📅 DEBUG: Datum erfolgreich aktualisiert:', updatedTask);
+                
+            } else if (action === 'updateProject') {
+                // ===== PROJEKT-UPDATE (NEU) =====
+                console.log('📁 DEBUG: Projekt-Update erkannt');
+                
+                // Projekt-Validierung
+                if (project_id && !isValidProjectId(project_id)) {
+                    return res.status(400).json({
+                        error: 'Ungültige Projekt-ID',
+                        message: 'Projekt-ID muss eine positive Ganzzahl sein'
+                    });
+                }
+                
+                if (req.user) {
+                    // Authentifizierter User - nur eigene Tasks
+                    updatedTask = await Database.updateTaskProjectForUser(
+                        Number(taskId), 
+                        req.user.id, 
+                        Number(project_id)
+                    );
+                } else {
+                    throw new Error('Projekt-Update nur für authentifizierte User verfügbar');
+                }
+                
+                console.log('📁 DEBUG: Projekt erfolgreich aktualisiert:', updatedTask);
+                
             } else {
                 // ===== STATUS-TOGGLE (wie bisher) =====
                 console.log('📅 DEBUG: Status-Toggle erkannt');
@@ -1870,7 +2022,7 @@ const TaskServer = (function () {
         }
     };
     
-    // DELETE /tasks/:id - Task löschen (nur eigene)
+    // DELETE /tasks/:id - Task löschen MIT AUTO-DELETE (nur eigene)
     const handleDeleteTask = async function (req, res) {
         if (!databaseAvailable) {
             return res.status(503).json({
@@ -1892,17 +2044,26 @@ const TaskServer = (function () {
             let deletedTask;
             
             if (req.user) {
-                // Authentifizierter User - nur eigene Tasks
+                // Authentifizierter User - nur eigene Tasks (MIT AUTO-DELETE)
                 deletedTask = await Database.deleteTaskForUser(Number(taskId), req.user.id);
             } else {
-                // Legacy-Modus für Demo-User
+                // Legacy-Modus für Demo-User (MIT AUTO-DELETE)
                 deletedTask = await Database.deleteTask(Number(taskId));
             }
             
-            res.json({
+            // Response mit Auto-Delete-Info
+            const response = {
                 message: 'Aufgabe erfolgreich gelöscht',
                 task: deletedTask
-            });
+            };
+            
+            // Auto-Delete-Info hinzufügen falls vorhanden
+            if (deletedTask.autoDeletedProject) {
+                response.autoDeletedProject = deletedTask.autoDeletedProject;
+                response.message += ` (Projekt "${deletedTask.autoDeletedProject.name}" automatisch gelöscht)`;
+            }
+            
+            res.json(response);
             
         } catch (error) {
             console.error('🚨 Fehler beim Löschen der Task:', error);
@@ -2019,15 +2180,15 @@ const TaskServer = (function () {
     
     // Routen registrieren
     const setupRoutes = function () {
-        console.log('🛣️ Setting up routes with email verification and calendar integration...');
+        console.log('🛣️ Setting up routes with email verification and calendar integration and projects...');
         
         // Health Check Route (erweitert)
         app.get('/health', function (req, res) {
             res.json({
                 status: 'ok',
-                message: 'EMAIL VERIFICATION TODO SERVER WITH CALENDAR IS RUNNING',
+                message: 'EMAIL VERIFICATION TODO SERVER WITH CALENDAR + PROJECTS IS RUNNING',
                 timestamp: new Date().toISOString(),
-                version: 'EMAIL-VERIFICATION-CALENDAR-2.0-REDOS-SECURITY-FIXED',
+                version: 'EMAIL-VERIFICATION-CALENDAR-PROJECTS-2.0-REDOS-SECURITY-FIXED',
                 port: PORT,
                 environment: NODE_ENV,
                 cors: 'EXTENDED_MULTI_ORIGIN',
@@ -2050,6 +2211,12 @@ const TaskServer = (function () {
                     features: ['due-dates', 'date-filters', 'overdue-tracking', 'date-status'],
                     format: 'YYYY-MM-DD',
                     timezone: 'UTC'
+                },
+                projects: {
+                    enabled: true,
+                    features: ['project-creation', 'task-assignment', 'auto-delete', 'default-projects'],
+                    autoDelete: 'enabled (except default projects)',
+                    defaultProject: 'Allgemein'
                 },
                 security: {
                     rateLimiting: 'active',
@@ -2074,8 +2241,8 @@ const TaskServer = (function () {
         // Root route
         app.get('/', function (req, res) {
             res.json({
-                message: 'Todo App with Email Verification and Calendar - REDOS VULNERABILITY FIXED',
-                version: 'EMAIL-VERIFICATION-CALENDAR-2.0-REDOS-SECURITY-FIXED',
+                message: 'Todo App with Email Verification and Calendar and Projects - REDOS VULNERABILITY FIXED',
+                version: 'EMAIL-VERIFICATION-CALENDAR-PROJECTS-2.0-REDOS-SECURITY-FIXED',
                 environment: NODE_ENV,
                 database: databaseAvailable ? 'connected' : 'unavailable',
                 emailVerification: emailServiceAvailable ? 'enabled' : 'disabled',
@@ -2085,6 +2252,12 @@ const TaskServer = (function () {
                     format: 'YYYY-MM-DD',
                     validation: 'Server-side date validation included',
                     frontend: 'Calendar input fields supported'
+                },
+                projects: {
+                    enabled: true,
+                    features: ['Project creation', 'Task assignment to projects', 'Auto-delete empty projects', 'Default project management'],
+                    autoDelete: 'Empty projects automatically deleted (except default)',
+                    defaultProject: 'Every user gets "Allgemein" project'
                 },
                 emailFeatures: {
                     internationalSupport: true,
@@ -2114,11 +2287,16 @@ const TaskServer = (function () {
                         me: 'GET /auth/me',
                         logout: 'POST /auth/logout'
                     },
+                    projects: {
+                        list: 'GET /projects (all projects with task counts)',
+                        create: 'POST /projects (create new project)',
+                        delete: 'DELETE /projects/:id (with task reassignment)'
+                    },
                     tasks: {
-                        list: 'GET /tasks (SECURITY-FIXED - no unauthorized access, includes calendar data)',
-                        create: 'POST /tasks (with optional dueDate support)',
-                        toggle: 'PUT /tasks/:id (status toggle or date update via action parameter)',
-                        delete: 'DELETE /tasks/:id',
+                        list: 'GET /tasks (SECURITY-FIXED - no unauthorized access, includes calendar + project data)',
+                        create: 'POST /tasks (with optional dueDate and project_id support)',
+                        toggle: 'PUT /tasks/:id (status toggle, date update, or project change via action parameter)',
+                        delete: 'DELETE /tasks/:id (with auto-delete empty projects)',
                         edit: 'PUT /tasks/:id/text',
                         cleanup: 'DELETE /tasks?status=completed'
                     },
@@ -2159,15 +2337,20 @@ const TaskServer = (function () {
         app.post('/auth/logout', handleLogout);    // Kein Security für Logout
         app.get('/auth/me', authenticateToken, handleGetMe);
         
-        // Task Routes (MIT RATE LIMITING + AUTH + SECURITY-FIX + KALENDER-INTEGRATION)
+        // 📁 Project Routes (NEU) - MIT RATE LIMITING + AUTH
+        app.get('/projects', authenticateToken, handleGetProjects);
+        app.post('/projects', tasksLimit, authenticateToken, handleCreateProject);
+        app.delete('/projects/:id', tasksLimit, authenticateToken, handleDeleteProject);
+        
+        // Task Routes (MIT RATE LIMITING + AUTH + SECURITY-FIX + KALENDER-INTEGRATION + PROJEKTE)
         app.get('/tasks', optionalAuth, handleGetTasks);  // ← SECURITY-FIXED Handler
-        app.post('/tasks', tasksLimit, authenticateToken, handleCreateTask); // ← MIT KALENDER-SUPPORT
-        app.put('/tasks/:id', tasksLimit, authenticateToken, handleToggleTask); // ← MIT KALENDER-SUPPORT (Status UND Datum)
-        app.delete('/tasks/:id', tasksLimit, authenticateToken, handleDeleteTask);
+        app.post('/tasks', tasksLimit, authenticateToken, handleCreateTask); // ← MIT KALENDER + PROJEKT-SUPPORT
+        app.put('/tasks/:id', tasksLimit, authenticateToken, handleToggleTask); // ← MIT KALENDER + PROJEKT-SUPPORT (Status, Datum UND Projekt)
+        app.delete('/tasks/:id', tasksLimit, authenticateToken, handleDeleteTask); // ← MIT AUTO-DELETE
         app.put('/tasks/:id/text', tasksLimit, authenticateToken, handleEditTaskText);
         app.delete('/tasks', tasksLimit, authenticateToken, handleDeleteCompleted);
         
-        // Security Stats Endpoint
+        // Security Stats Endpoint (erweitert)
         app.get('/security/stats', function(req, res) {
             try {
                 const stats = {
@@ -2187,6 +2370,12 @@ const TaskServer = (function () {
                         dateValidation: 'server-side',
                         format: 'YYYY-MM-DD',
                         features: ['due-dates', 'filtering', 'overdue-tracking']
+                    },
+                    projects: {
+                        enabled: true,
+                        features: ['project-creation', 'task-assignment', 'auto-delete'],
+                        autoDelete: 'Empty projects automatically deleted (except default)',
+                        defaultProject: 'Allgemein'
                     },
                     tasksEndpointSecurity: {
                         status: 'FIXED',
@@ -2278,7 +2467,7 @@ const TaskServer = (function () {
             res.status(404).json({
                 error: 'Route nicht gefunden',
                 message: 'Die angeforderte URL ' + req.path + ' existiert nicht',
-                availableRoutes: ['/', '/health', '/auth/*', '/tasks/*', '/security/*', '/monitoring/*']
+                availableRoutes: ['/', '/health', '/auth/*', '/projects/*', '/tasks/*', '/security/*', '/monitoring/*']
             });
         });
         
@@ -2291,7 +2480,7 @@ const TaskServer = (function () {
             });
         });
         
-        console.log('✅ Routes with email verification, calendar integration and ReDoS security fixes setup complete');
+        console.log('✅ Routes with email verification, calendar integration, and projects setup complete');
     };
     
     // ✅ VERBESSERTE FUNKTION: Environment Variable Validierung (Development-freundlich)
@@ -2320,7 +2509,7 @@ const TaskServer = (function () {
     // Server Start
     const start = async function () {
         try {
-            console.log('🏭 === STARTING REDOS-SECURITY-FIXED EMAIL VERIFICATION TODO SERVER WITH CALENDAR ===');
+            console.log('🏭 === STARTING REDOS-SECURITY-FIXED EMAIL VERIFICATION TODO SERVER WITH CALENDAR + PROJECTS ===');
             console.log('📅 Timestamp:', new Date().toISOString());
             console.log('🌍 Environment:', NODE_ENV);
             console.log('📍 Port:', PORT);
@@ -2330,6 +2519,7 @@ const TaskServer = (function () {
             console.log('  • User:', process.env.EMAIL_USER || 'NOT SET');
             console.log('  • From:', process.env.EMAIL_FROM || process.env.EMAIL_USER || 'NOT SET');
             console.log('📅 Calendar Integration: ENABLED ✅');
+            console.log('📁 Project Management: ENABLED ✅');
             
             // ✅ VERBESSERTE VALIDIERUNG: Environment Variables prüfen (Development-freundlich)
             console.log('🔍 Validating required environment variables...');
@@ -2356,7 +2546,7 @@ const TaskServer = (function () {
             
             const server = app.listen(PORT, function () {
                 console.log('');
-                console.log('🎉 === REDOS-SECURITY-FIXED EMAIL VERIFICATION TODO SERVER WITH CALENDAR STARTED ===');
+                console.log('🎉 === REDOS-SECURITY-FIXED EMAIL VERIFICATION TODO SERVER WITH CALENDAR + PROJECTS STARTED ===');
                 console.log('📍 Port:', PORT);
                 console.log('🌍 Environment:', NODE_ENV);
                 console.log('🌐 Frontend URL:', FRONTEND_URL);
@@ -2377,6 +2567,14 @@ const TaskServer = (function () {
                 console.log('  • Overdue tracking: Automatic ✅');
                 console.log('  • Date updates: PUT /tasks/:id with action=updateDate ✅');
                 console.log('  • Task creation: POST /tasks with optional dueDate ✅');
+                
+                console.log('📁 PROJECT MANAGEMENT SYSTEM:');
+                console.log('  • Project creation: POST /projects ✅');
+                console.log('  • Task assignment: project_id in task creation ✅');
+                console.log('  • Auto-delete: Empty projects deleted automatically ✅');
+                console.log('  • Default project: "Allgemein" for all users ✅');
+                console.log('  • Project updates: PUT /tasks/:id with action=updateProject ✅');
+                console.log('  • Protection: Default project cannot be deleted ✅');
                 
                 console.log('🌍 ENHANCED EMAIL VALIDATION (REDOS VULNERABILITY FIXED):');
                 console.log('  • Blocked disposable domains:', DISPOSABLE_EMAIL_DOMAINS.size);
@@ -2413,30 +2611,34 @@ const TaskServer = (function () {
                 console.log('  • https://localhost:3000');
                 
                 console.log('');
-                console.log('📡 Endpoints (RATE LIMITED + CALENDAR INTEGRATION):');
+                console.log('📡 Endpoints (RATE LIMITED + CALENDAR + PROJECTS INTEGRATION):');
                 console.log('  • POST /auth/register         - Registration (Enhanced + Rate Limited + ReDoS Safe) ✅');
                 console.log('  • POST /auth/login            - Login (Rate Limited) ✅');
                 console.log('  • GET  /auth/verify-email/:token - Verify Email (Rate Limited) ✅');
                 console.log('  • POST /auth/resend-verification - Resend Email (Rate Limited) ✅');
                 console.log('  • GET  /auth/me               - User-Info ✅');
                 console.log('  • POST /auth/logout           - Logout ✅');
-                console.log('  • GET    /tasks               - Get tasks (🔒 SECURITY-FIXED + Calendar data) ✅');
-                console.log('  • POST   /tasks               - Create task (Rate Limited + Calendar support) ✅');
-                console.log('  • PUT    /tasks/:id           - Toggle status OR update date (Rate Limited + Calendar) ✅');
-                console.log('  • DELETE /tasks/:id           - Delete task (Rate Limited) ✅');
+                console.log('  • GET    /projects            - Get projects with task counts ✅');
+                console.log('  • POST   /projects            - Create project (Rate Limited) ✅');
+                console.log('  • DELETE /projects/:id        - Delete project (Rate Limited + Task reassignment) ✅');
+                console.log('  • GET    /tasks               - Get tasks (🔒 SECURITY-FIXED + Calendar + Project data) ✅');
+                console.log('  • POST   /tasks               - Create task (Rate Limited + Calendar + Project support) ✅');
+                console.log('  • PUT    /tasks/:id           - Toggle status OR update date OR change project (Rate Limited) ✅');
+                console.log('  • DELETE /tasks/:id           - Delete task (Rate Limited + Auto-delete projects) ✅');
                 console.log('  • PUT    /tasks/:id/text      - Edit task text (Rate Limited) ✅');
                 console.log('  • DELETE /tasks?status=completed - Delete completed tasks (Rate Limited) ✅');
                 console.log('');
                 console.log('🔍 SECURITY & MONITORING ENDPOINTS:');
-                console.log('  • GET /security/stats         - Security Statistics (+ Calendar info) ✅');
+                console.log('  • GET /security/stats         - Security Statistics (+ Calendar + Projects info) ✅');
                 console.log('  • GET /monitoring/analytics   - Analytics Dashboard ✅');
                 console.log('  • GET /monitoring/health      - Health Status ✅');
                 console.log('  • GET /monitoring/realtime    - Real-time Metrics ✅');
                 console.log('');
                 
-                console.log('🚀 === REDOS-SECURITY-FIXED EMAIL VERIFICATION + CALENDAR SERVER READY ===');
+                console.log('🚀 === REDOS-SECURITY-FIXED EMAIL VERIFICATION + CALENDAR + PROJECTS SERVER READY ===');
                 console.log('📧 Perfect for production with complete security suite!');
                 console.log('📅 Calendar Integration: Create tasks with due dates, filter by date, track overdue!');
+                console.log('📁 Project Management: Organize tasks in projects, auto-delete empty projects!');
                 console.log('🛡️ ALL GitHub Security Alerts RESOLVED!');
                 console.log('✅ Gmail Bug FIXED with explicit recognition!');
                 console.log('🔒 Rate limiting on ALL critical endpoints!');
@@ -2444,6 +2646,7 @@ const TaskServer = (function () {
                 console.log('🔐 TASKS ENDPOINT SECURITY: COMPLETELY FIXED!');
                 console.log('🔒 REDOS VULNERABILITY: COMPLETELY ELIMINATED!');
                 console.log('📅 CALENDAR FEATURES: Fully integrated and ready!');
+                console.log('📁 PROJECT FEATURES: Complete project management with auto-delete!');
                 console.log('⚡ Production-ready with ZERO security vulnerabilities!');
                 
                 if (!emailServiceAvailable) {
@@ -2470,6 +2673,13 @@ const TaskServer = (function () {
                 console.log('  • Update task date: PUT /tasks/1 {"action": "updateDate", "dueDate": "2025-07-30"}');
                 console.log('  • Frontend filter: Tasks automatically filtered by date status');
                 console.log('');
+                console.log('📁 PROJECT TEST READY!');
+                console.log('  • Create project: POST /projects {"name": "Neues Projekt"}');
+                console.log('  • Create task in project: POST /tasks {"text": "Test", "project_id": 1}');
+                console.log('  • Change task project: PUT /tasks/1 {"action": "updateProject", "project_id": 2}');
+                console.log('  • Delete project: DELETE /projects/1 (tasks moved to default project)');
+                console.log('  • Auto-delete: Delete last task → project auto-deleted');
+                console.log('');
                 console.log('🔒 TASKS ENDPOINT SECURITY STATUS:');
                 console.log('  • Unauthorized requests: Returns empty array ✅');
                 console.log('  • No data leak possible: Security fix applied ✅');
@@ -2482,10 +2692,11 @@ const TaskServer = (function () {
                 console.log('  • Vulnerable dependencies: ✅ FIXED (Updated packages)');
                 console.log('  • Tasks endpoint data leak: ✅ FIXED (Backend Security Fix)');
                 console.log('');
-                console.log('🎉 ALL SECURITY ISSUES RESOLVED + CALENDAR READY - PRODUCTION READY! 🎉');
+                console.log('🎉 ALL SECURITY ISSUES RESOLVED + CALENDAR + PROJECTS READY - PRODUCTION READY! 🎉');
                 console.log('🔐 ZERO SECURITY VULNERABILITIES REMAINING! 🔐');
                 console.log('🛡️ REDOS ATTACKS IMPOSSIBLE - SAFE VALIDATION! 🛡️');
                 console.log('📅 CALENDAR INTEGRATION COMPLETE - READY FOR USE! 📅');
+                console.log('📁 PROJECT MANAGEMENT COMPLETE - ORGANIZE YOUR TASKS! 📁');
             });
             
             return server;
@@ -2503,5 +2714,5 @@ const TaskServer = (function () {
 })();
 
 // Server initialisieren und starten
-console.log('🏭 Initializing ReDoS-Security-Fixed Email Verification + Calendar TaskServer...');
+console.log('🏭 Initializing ReDoS-Security-Fixed Email Verification + Calendar + Projects TaskServer...');
 TaskServer.start();

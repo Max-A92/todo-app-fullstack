@@ -1,4 +1,4 @@
-// database.js - better-sqlite3 Datenbank mit Authentication + E-Mail-Verifikation + KALENDER-INTEGRATION für Todo-App
+// database.js - better-sqlite3 Datenbank mit Authentication + E-Mail-Verifikation + KALENDER-INTEGRATION + PROJEKTE für Todo-App
 const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcryptjs'); // ✅ FIXED: bcryptjs statt bcrypt
@@ -69,7 +69,7 @@ const DatabaseModule = (function () {
     
     // Datenbank initialisieren
     const initialize = async function () {
-        console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation + KALENDER:', DB_PATH);
+        console.log('📂 Initialisiere better-sqlite3 Datenbank mit E-Mail-Verifikation + KALENDER + PROJEKTE:', DB_PATH);
         
         try {
             // ✅ NEUE VALIDIERUNG: Database Path validieren
@@ -91,7 +91,7 @@ const DatabaseModule = (function () {
             // Migration von alter Struktur
             await migrateDatabase();
             
-            console.log('🎯 Datenbank mit E-Mail-Verifikation + KALENDER bereit!');
+            console.log('🎯 Datenbank mit E-Mail-Verifikation + KALENDER + PROJEKTE bereit!');
             
         } catch (error) {
             console.error('🚨 Datenbank Fehler:', error);
@@ -99,9 +99,9 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Tabellen erstellen (MIT KALENDER-INTEGRATION) - FIXED
+    // Tabellen erstellen (MIT KALENDER-INTEGRATION + PROJEKTE) - ERWEITERT
     const createTables = async function () {
-        console.log('📋 Erstelle/überprüfe Tabellen mit E-Mail-Verifikation + KALENDER...');
+        console.log('📋 Erstelle/überprüfe Tabellen mit E-Mail-Verifikation + KALENDER + PROJEKTE...');
         
         // ERWEITERTE Users Tabelle mit E-Mail-Verifikation
         const createUsersTable = `
@@ -118,71 +118,121 @@ const DatabaseModule = (function () {
             )
         `;
         
-        // 📅 KORREKTE Tasks Tabelle MIT KALENDER-UNTERSTÜTZUNG 
+        // 📁 NEUE: Projects Tabelle
+        const createProjectsTable = `
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `;
+        
+        // 📅 ERWEITERTE Tasks Tabelle MIT KALENDER-UNTERSTÜTZUNG + PROJEKTE
         const createTasksTable = `
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
+                project_id INTEGER,
                 text TEXT NOT NULL,
                 status TEXT DEFAULT 'offen' CHECK (status IN ('offen', 'erledigt')),
                 dueDate TEXT,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
             )
         `;
         
         db.exec(createUsersTable);
         console.log('👥 Users-Tabelle mit E-Mail-Verifikation erstellt/überprüft');
         
-        db.exec(createTasksTable);
-        console.log('📋 Tasks-Tabelle mit KALENDER-INTEGRATION erstellt/überprüft');
+        db.exec(createProjectsTable);
+        console.log('📁 Projects-Tabelle erstellt/überprüft');
         
-        // ✅ KORREKTE Indizes für finale tasks Tabelle
+        db.exec(createTasksTable);
+        console.log('📋 Tasks-Tabelle mit KALENDER-INTEGRATION + PROJEKTE erstellt/überprüft');
+        
+        // ✅ ERWEITERTE Indizes für finale Struktur
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verificationToken)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)');
+        db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(dueDate)');
         db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
-        console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation + KALENDER erstellt');
+        console.log('🔍 Datenbank-Indizes für E-Mail-Verifikation + KALENDER + PROJEKTE erstellt');
     };
     
-    // Migration von alter zu neuer Datenbankstruktur (MIT KALENDER) - FIXED
+    // Migration von alter zu neuer Datenbankstruktur (MIT KALENDER + PROJEKTE) - ERWEITERT
     const migrateDatabase = async function () {
-        console.log('🔄 Prüfe Datenbank-Migration für E-Mail-Verifikation + KALENDER...');
+        console.log('🔄 Prüfe Datenbank-Migration für E-Mail-Verifikation + KALENDER + PROJEKTE...');
         
         try {
+            // Prüfen ob projects Tabelle existiert
+            const projectTableInfo = db.prepare("PRAGMA table_info(projects)").all();
+            const projectsTableExists = projectTableInfo.length > 0;
+            
             // Prüfen ob tasks Tabelle existiert und welche Spalten sie hat
             const taskTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
             const hasUserId = taskTableInfo.some(column => column.name === 'user_id');
             const hasDueDate = taskTableInfo.some(column => column.name === 'dueDate');
+            const hasProjectId = taskTableInfo.some(column => column.name === 'project_id');
+            
+            // 📁 NEUE: Projekt-Migration hinzufügen
+            if (!hasProjectId && taskTableInfo.length > 0) {
+                console.log('📁 Füge project_id zur tasks Tabelle hinzu...');
+                
+                try {
+                    db.exec('ALTER TABLE tasks ADD COLUMN project_id INTEGER');
+                    console.log('✅ project_id Spalte hinzugefügt');
+                    
+                    // Index für neue Spalte erstellen
+                    db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)');
+                    console.log('🔍 Index für project_id erstellt');
+                    
+                    // Default-Projekt für alle Users erstellen
+                    await createDefaultProjectsForAllUsers();
+                    
+                } catch (error) {
+                    console.log('⚠️ project_id Spalte existiert bereits oder Fehler:', error.message);
+                }
+            }
             
             // 📅 FALL 1: Alte Tabelle ohne user_id (vor User-System)
             if (taskTableInfo.length > 0 && !hasUserId) {
-                console.log('🔄 Migriere alte Tasks zu User-System mit KALENDER...');
+                console.log('🔄 Migriere alte Tasks zu User-System mit KALENDER + PROJEKTE...');
                 
                 // Demo-User erstellen für Migration
                 const demoUser = await createDemoUser();
+                
+                // Default-Projekt für Demo-User erstellen
+                const defaultProject = await createDefaultProject(demoUser.id);
                 
                 // Temporary Tabelle mit neuer Struktur erstellen
                 db.exec(`
                     CREATE TABLE tasks_temp (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id INTEGER NOT NULL,
+                        project_id INTEGER,
                         text TEXT NOT NULL,
                         status TEXT DEFAULT 'offen' CHECK (status IN ('offen', 'erledigt')),
                         dueDate TEXT,
                         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
                     )
                 `);
                 
-                // Alte Tasks in neue Struktur kopieren (ohne dueDate)
+                // Alte Tasks in neue Struktur kopieren (mit Default-Projekt)
                 db.exec(`
-                    INSERT INTO tasks_temp (user_id, text, status, createdAt, updatedAt)
-                    SELECT ${demoUser.id}, text, status, createdAt, updatedAt FROM tasks
+                    INSERT INTO tasks_temp (user_id, project_id, text, status, createdAt, updatedAt)
+                    SELECT ${demoUser.id}, ${defaultProject.id}, text, status, createdAt, updatedAt FROM tasks
                 `);
                 
                 // Alte Tabelle löschen und neue umbenennen
@@ -191,36 +241,49 @@ const DatabaseModule = (function () {
                 
                 // Indizes neu erstellen
                 db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id)');
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)');
                 db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(dueDate)');
                 db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
                 
-                console.log('✅ Migration zu User-System + KALENDER abgeschlossen!');
+                console.log('✅ Migration zu User-System + KALENDER + PROJEKTE abgeschlossen!');
                 console.log('👤 Demo-User erstellt - Username: demo, Password: demo123, Email: demo@gmail.com');
+                console.log('📁 Default-Projekt "Allgemein" erstellt');
                 
                 // JSON-Backup-Migration
-                await migrateFromJson(demoUser.id);
+                await migrateFromJson(demoUser.id, defaultProject.id);
                 
-            // 📅 FALL 2: User-System vorhanden, aber kein Kalender
-            } else if (taskTableInfo.length > 0 && hasUserId && !hasDueDate) {
-                console.log('📅 Füge KALENDER-UNTERSTÜTZUNG zu bestehender User-Tabelle hinzu...');
-                await migrateCalendarFields();
+            // 📅 FALL 2: User-System vorhanden, aber kein Kalender oder Projekte
+            } else if (taskTableInfo.length > 0 && hasUserId && (!hasDueDate || !hasProjectId)) {
+                console.log('📅📁 Füge KALENDER-UNTERSTÜTZUNG und/oder PROJEKTE zu bestehender User-Tabelle hinzu...');
+                
+                if (!hasDueDate) {
+                    await migrateCalendarFields();
+                }
+                
+                if (!hasProjectId) {
+                    await migrateProjectFields();
+                }
                 
             // 📅 FALL 3: Keine Tabelle vorhanden - alles neu
             } else if (taskTableInfo.length === 0) {
-                console.log('📊 Neue Datenbank - Tasks-Tabelle bereits mit KALENDER erstellt');
+                console.log('📊 Neue Datenbank - Tasks-Tabelle bereits mit KALENDER + PROJEKTE erstellt');
                 
                 // Demo-User für neue Datenbank erstellen
-                await createDemoUser();
+                const demoUser = await createDemoUser();
+                const defaultProject = await createDefaultProject(demoUser.id);
                 console.log('👤 Demo-User für neue Datenbank erstellt');
+                console.log('📁 Default-Projekt "Allgemein" erstellt');
                 
                 // JSON-Migration für neuen Setup
-                await migrateFromJson(null);
+                await migrateFromJson(demoUser.id, defaultProject.id);
                 
             // ✅ FALL 4: Alles bereits vorhanden
             } else {
-                console.log('✅ Datenbank bereits auf neuestem Stand (User-System + KALENDER)');
+                console.log('✅ Datenbank bereits auf neuestem Stand (User-System + KALENDER + PROJEKTE)');
                 // Stelle sicher, dass Demo-User existiert und verifiziert ist
                 await ensureDemoUserExists();
+                // Stelle sicher, dass alle User Default-Projekte haben
+                await ensureDefaultProjectsExist();
             }
             
             // NEUE: Migration für E-Mail-Verifikation Felder
@@ -228,6 +291,106 @@ const DatabaseModule = (function () {
             
         } catch (error) {
             console.error('🚨 Migration Fehler:', error);
+        }
+    };
+    
+    // 📁 NEUE: Migration für Projekt-Felder
+    const migrateProjectFields = async function () {
+        console.log('📁 Prüfe Projekt-Felder Migration...');
+        
+        try {
+            const taskTableInfo = db.prepare("PRAGMA table_info(tasks)").all();
+            const hasProjectId = taskTableInfo.some(column => column.name === 'project_id');
+            
+            if (!hasProjectId) {
+                console.log('📁 Füge project_id Spalte zur tasks Tabelle hinzu...');
+                db.exec('ALTER TABLE tasks ADD COLUMN project_id INTEGER');
+                console.log('✅ project_id Spalte hinzugefügt');
+                
+                // Index für neue Spalte erstellen
+                db.exec('CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)');
+                console.log('🔍 Index für project_id erstellt');
+                
+                // Default-Projekte für alle bestehenden User erstellen
+                await createDefaultProjectsForAllUsers();
+            }
+            
+            console.log('📁 Projekt-Migration abgeschlossen');
+        } catch (error) {
+            console.error('🚨 Projekt-Migration Fehler:', error);
+        }
+    };
+    
+    // 📁 NEUE: Default-Projekte für alle User erstellen
+    const createDefaultProjectsForAllUsers = async function () {
+        console.log('📁 Erstelle Default-Projekte für alle bestehenden User...');
+        
+        try {
+            // Alle User abrufen
+            const users = db.prepare('SELECT id FROM users').all();
+            
+            for (const user of users) {
+                // Prüfen ob User bereits ein Projekt hat
+                const existingProject = db.prepare('SELECT id FROM projects WHERE user_id = ?').get(user.id);
+                
+                if (!existingProject) {
+                    // Default-Projekt erstellen
+                    const defaultProject = await createDefaultProject(user.id);
+                    console.log(`📁 Default-Projekt erstellt für User ${user.id}: ${defaultProject.name}`);
+                    
+                    // Alle Tasks ohne Projekt diesem Default-Projekt zuordnen
+                    const updateStmt = db.prepare('UPDATE tasks SET project_id = ? WHERE user_id = ? AND project_id IS NULL');
+                    const result = updateStmt.run(defaultProject.id, user.id);
+                    
+                    console.log(`✅ ${result.changes} Tasks dem Default-Projekt zugeordnet`);
+                }
+            }
+            
+            console.log('✅ Default-Projekte für alle User erstellt');
+        } catch (error) {
+            console.error('🚨 Fehler beim Erstellen der Default-Projekte:', error);
+        }
+    };
+    
+    // 📁 NEUE: Default-Projekt erstellen
+    const createDefaultProject = async function (userId) {
+        console.log('📁 Erstelle Default-Projekt für User:', userId);
+        
+        try {
+            const insertStmt = db.prepare('INSERT INTO projects (name, user_id) VALUES (?, ?)');
+            const result = insertStmt.run('Allgemein', userId);
+            
+            const newProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
+            
+            console.log('✅ Default-Projekt erstellt:', newProject);
+            return newProject;
+        } catch (error) {
+            console.error('🚨 Fehler beim Erstellen des Default-Projekts:', error);
+            throw error;
+        }
+    };
+    
+    // 📁 NEUE: Stelle sicher dass alle User Default-Projekte haben
+    const ensureDefaultProjectsExist = async function () {
+        console.log('🔍 Prüfe ob alle User Default-Projekte haben...');
+        
+        try {
+            // User ohne Projekte finden
+            const usersWithoutProjects = db.prepare(`
+                SELECT u.id, u.username 
+                FROM users u 
+                LEFT JOIN projects p ON u.id = p.user_id 
+                WHERE p.id IS NULL
+            `).all();
+            
+            for (const user of usersWithoutProjects) {
+                console.log(`📁 Erstelle Default-Projekt für User ohne Projekte: ${user.username}`);
+                await createDefaultProject(user.id);
+            }
+            
+            console.log('✅ Alle User haben Default-Projekte');
+        } catch (error) {
+            console.error('🚨 Fehler beim Prüfen der Default-Projekte:', error);
         }
     };
     
@@ -361,8 +524,8 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Migration von JSON zu SQLite (erweitert für User + Kalender) - ENHANCED
-    const migrateFromJson = async function (defaultUserId) {
+    // Migration von JSON zu SQLite (erweitert für User + Kalender + Projekte) - ENHANCED
+    const migrateFromJson = async function (defaultUserId, defaultProjectId) {
         const fs = require('fs');
         const jsonPath = path.join(__dirname, 'tasks.json');
         
@@ -374,7 +537,8 @@ const DatabaseModule = (function () {
                 const demoUser = await getUserByUsername('demo');
                 if (!demoUser) {
                     console.log('👤 Erstelle Demo-User für neue Datenbank...');
-                    await createDemoUser();
+                    const newDemoUser = await createDemoUser();
+                    await createDefaultProject(newDemoUser.id);
                 }
             }
             return;
@@ -385,30 +549,34 @@ const DatabaseModule = (function () {
             const tasks = JSON.parse(jsonData);
             
             if (Array.isArray(tasks) && tasks.length > 0) {
-                console.log('🔄 Migriere', tasks.length, 'Tasks von JSON mit KALENDER-UNTERSTÜTZUNG...');
+                console.log('🔄 Migriere', tasks.length, 'Tasks von JSON mit KALENDER-UNTERSTÜTZUNG + PROJEKTE...');
                 
                 // Demo-User erstellen falls nicht vorhanden
                 let userId = defaultUserId;
+                let projectId = defaultProjectId;
                 if (!userId) {
                     const demoUser = await createDemoUser();
                     userId = demoUser.id;
+                    const defaultProject = await createDefaultProject(userId);
+                    projectId = defaultProject.id;
                 }
                 
-                // Tasks in neue Struktur migrieren (mit dueDate Support)
-                const insertStmt = db.prepare('INSERT INTO tasks (user_id, text, status, dueDate, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)');
+                // Tasks in neue Struktur migrieren (mit dueDate und project_id Support)
+                const insertStmt = db.prepare('INSERT INTO tasks (user_id, project_id, text, status, dueDate, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)');
                 for (const task of tasks) {
-                    // Legacy-Tasks haben möglicherweise kein dueDate
+                    // Legacy-Tasks haben möglicherweise kein dueDate oder project_id
                     const dueDate = task.dueDate || null;
-                    insertStmt.run(userId, task.text, task.status, dueDate, task.createdAt, task.updatedAt);
+                    insertStmt.run(userId, projectId, task.text, task.status, dueDate, task.createdAt, task.updatedAt);
                 }
                 
-                console.log('✅ JSON-Migration mit KALENDER-UNTERSTÜTZUNG erfolgreich!');
+                console.log('✅ JSON-Migration mit KALENDER-UNTERSTÜTZUNG + PROJEKTE erfolgreich!');
                 fs.renameSync(jsonPath, jsonPath + '.backup');
                 console.log('💾 JSON-Datei als .backup gesichert');
             } else {
                 // Leeres JSON aber kein defaultUserId - erstelle Demo-User
                 if (!defaultUserId) {
-                    await createDemoUser();
+                    const demoUser = await createDemoUser();
+                    await createDefaultProject(demoUser.id);
                 }
             }
         } catch (error) {
@@ -416,7 +584,8 @@ const DatabaseModule = (function () {
             // Bei Fehler trotzdem Demo-User erstellen falls nötig
             if (!defaultUserId) {
                 try {
-                    await createDemoUser();
+                    const demoUser = await createDemoUser();
+                    await createDefaultProject(demoUser.id);
                 } catch (demoError) {
                     console.error('🚨 Auch Demo-User-Erstellung fehlgeschlagen:', demoError);
                 }
@@ -456,7 +625,11 @@ const DatabaseModule = (function () {
             // Neu erstellten User abrufen (ohne password_hash)
             const newUser = db.prepare('SELECT id, username, email, emailVerified, verificationToken, createdAt FROM users WHERE id = ?').get(result.lastInsertRowid);
             
+            // 📁 NEUE: Default-Projekt für neuen User erstellen
+            await createDefaultProject(newUser.id);
+            
             console.log('✅ User erstellt mit ID:', result.lastInsertRowid, autoVerify ? '(Auto-verifiziert)' : '(E-Mail-Verifikation erforderlich)');
+            console.log('📁 Default-Projekt "Allgemein" erstellt');
             return newUser;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen des Users:', error);
@@ -594,20 +767,115 @@ const DatabaseModule = (function () {
         }
     };
     
-    // ===== TASK FUNCTIONS MIT KALENDER-INTEGRATION (erweitert für User) =====
+    // ===== 📁 NEUE: PROJECT MANAGEMENT FUNCTIONS =====
     
-    // Tasks für spezifischen User abrufen (MIT KALENDER-DATEN)
-    const getAllTasksForUser = async function (userId) {
-        console.log('📚 Lade Tasks mit KALENDER-DATEN für User:', userId);
+    // Alle Projekte für einen User abrufen
+    const getAllProjectsForUser = async function (userId) {
+        console.log('📁 Lade Projekte für User:', userId);
         
         try {
-            const tasks = db.prepare('SELECT id, user_id, text, status, dueDate, createdAt, updatedAt FROM tasks WHERE user_id = ? ORDER BY createdAt DESC').all(userId);
-            console.log('✅ Tasks mit KALENDER-DATEN geladen:', tasks.length);
+            const projects = db.prepare(`
+                SELECT p.*, COUNT(t.id) as task_count 
+                FROM projects p 
+                LEFT JOIN tasks t ON p.id = t.project_id 
+                WHERE p.user_id = ? 
+                GROUP BY p.id 
+                ORDER BY p.created_at ASC
+            `).all(userId);
             
-            // Debug: Zeige Tasks mit Datum
+            console.log('✅ Projekte geladen:', projects.length);
+            return projects;
+        } catch (error) {
+            console.error('🚨 Fehler beim Laden der Projekte:', error);
+            throw error;
+        }
+    };
+    
+    // Neues Projekt für User erstellen
+    const createProjectForUser = async function (userId, name) {
+        console.log('🆕 Erstelle Projekt für User:', userId, 'Name:', name);
+        
+        try {
+            const result = db.prepare('INSERT INTO projects (name, user_id) VALUES (?, ?)').run(name.trim(), userId);
+            
+            // Neu erstelltes Projekt abrufen
+            const newProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
+            
+            console.log('✅ Projekt erstellt - ID:', result.lastInsertRowid, 'Name:', name);
+            return newProject;
+        } catch (error) {
+            console.error('🚨 Fehler beim Erstellen des Projekts:', error);
+            throw error;
+        }
+    };
+    
+    // Projekt löschen (nur für eigene Projekte)
+    const deleteProjectForUser = async function (projectId, userId) {
+        console.log('🗑️ Lösche Projekt:', projectId, 'User:', userId);
+        
+        try {
+            // Projekt vor dem Löschen abrufen und prüfen
+            const projectToDelete = db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').get(projectId, userId);
+            
+            if (!projectToDelete) {
+                throw new Error('Projekt nicht gefunden oder gehört nicht dem User');
+            }
+            
+            // Prüfen ob es das letzte Projekt ist
+            const projectCount = db.prepare('SELECT COUNT(*) as count FROM projects WHERE user_id = ?').get(userId);
+            if (projectCount.count <= 1) {
+                throw new Error('Das letzte Projekt kann nicht gelöscht werden');
+            }
+            
+            // Default-Projekt finden für Umverteilung der Tasks
+            const defaultProject = db.prepare('SELECT id FROM projects WHERE user_id = ? AND name = ? LIMIT 1').get(userId, 'Allgemein');
+            
+            if (!defaultProject) {
+                throw new Error('Default-Projekt nicht gefunden');
+            }
+            
+            // Alle Tasks des zu löschenden Projekts zum Default-Projekt verschieben
+            const updateTasksStmt = db.prepare('UPDATE tasks SET project_id = ? WHERE project_id = ?');
+            const taskUpdateResult = updateTasksStmt.run(defaultProject.id, projectId);
+            
+            console.log(`📋 ${taskUpdateResult.changes} Tasks zu Default-Projekt verschoben`);
+            
+            // Projekt löschen
+            const result = db.prepare('DELETE FROM projects WHERE id = ? AND user_id = ?').run(projectId, userId);
+            
+            if (result.changes === 0) {
+                throw new Error('Projekt konnte nicht gelöscht werden');
+            }
+            
+            console.log('✅ Projekt gelöscht');
+            return projectToDelete;
+        } catch (error) {
+            console.error('🚨 Fehler beim Löschen des Projekts:', error);
+            throw error;
+        }
+    };
+    
+    // ===== TASK FUNCTIONS MIT KALENDER-INTEGRATION + PROJEKTE (erweitert für User) =====
+    
+    // Tasks für spezifischen User abrufen (MIT KALENDER-DATEN + PROJEKT-INFO)
+    const getAllTasksForUser = async function (userId) {
+        console.log('📚 Lade Tasks mit KALENDER-DATEN + PROJEKT-INFO für User:', userId);
+        
+        try {
+            const tasks = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.user_id = ? 
+                ORDER BY t.createdAt DESC
+            `).all(userId);
+            
+            console.log('✅ Tasks mit KALENDER-DATEN + PROJEKT-INFO geladen:', tasks.length);
+            
+            // Debug: Zeige Tasks mit Datum und Projekt
             tasks.forEach(task => {
-                if (task.dueDate) {
-                    console.log(`📅 DEBUG: Task "${task.text}" hat Fälligkeitsdatum: ${task.dueDate}`);
+                if (task.dueDate || task.project_name) {
+                    console.log(`📅📁 DEBUG: Task "${task.text}" - Projekt: ${task.project_name || 'Kein Projekt'}, Datum: ${task.dueDate || 'Kein Datum'}`);
                 }
             });
             
@@ -618,9 +886,9 @@ const DatabaseModule = (function () {
         }
     };
     
-    // 📅 Task für User erstellen MIT KALENDER-UNTERSTÜTZUNG
-    const createTaskForUser = async function (userId, text, dueDate = null) {
-        console.log('🆕 Erstelle Task mit KALENDER für User:', userId, 'Text:', text, 'DueDate:', dueDate);
+    // 📅📁 Task für User erstellen MIT KALENDER-UNTERSTÜTZUNG + PROJEKT-ZUORDNUNG
+    const createTaskForUser = async function (userId, text, dueDate = null, projectId = null) {
+        console.log('🆕 Erstelle Task mit KALENDER + PROJEKT für User:', userId, 'Text:', text, 'DueDate:', dueDate, 'ProjectId:', projectId);
         
         try {
             // Datum-Validierung falls vorhanden
@@ -628,12 +896,33 @@ const DatabaseModule = (function () {
                 throw new Error('Ungültiges Datum-Format. Erwartet: YYYY-MM-DD');
             }
             
-            const result = db.prepare('INSERT INTO tasks (user_id, text, dueDate) VALUES (?, ?, ?)').run(userId, text, dueDate);
+            // Falls kein Projekt angegeben, Default-Projekt verwenden
+            let finalProjectId = projectId;
+            if (!finalProjectId) {
+                const defaultProject = db.prepare(`
+                    SELECT id FROM projects WHERE user_id = ? AND name = 'Allgemein' LIMIT 1
+                `).get(userId);
+                
+                if (defaultProject) {
+                    finalProjectId = defaultProject.id;
+                } else {
+                    // Fallback: Erstes verfügbares Projekt
+                    const anyProject = db.prepare('SELECT id FROM projects WHERE user_id = ? LIMIT 1').get(userId);
+                    finalProjectId = anyProject ? anyProject.id : null;
+                }
+            }
             
-            // Neu erstellte Task abrufen
-            const newTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(result.lastInsertRowid);
+            const result = db.prepare('INSERT INTO tasks (user_id, project_id, text, dueDate) VALUES (?, ?, ?, ?)').run(userId, finalProjectId, text, dueDate);
             
-            console.log('✅ Task mit KALENDER erstellt - ID:', result.lastInsertRowid, 'DueDate:', dueDate);
+            // Neu erstellte Task mit Projekt-Info abrufen
+            const newTask = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ?
+            `).get(result.lastInsertRowid);
+            
+            console.log('✅ Task mit KALENDER + PROJEKT erstellt - ID:', result.lastInsertRowid, 'DueDate:', dueDate, 'Projekt:', newTask.project_name);
             return newTask;
         } catch (error) {
             console.error('🚨 Fehler beim Erstellen der Task:', error);
@@ -659,8 +948,13 @@ const DatabaseModule = (function () {
             // Task aktualisieren
             db.prepare('UPDATE tasks SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(newStatus, taskId, userId);
             
-            // Aktualisierte Task abrufen
-            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+            // Aktualisierte Task mit Projekt-Info abrufen
+            const updatedTask = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ?
+            `).get(taskId);
             
             console.log('✅ Task Status geändert:', currentTask.status, '→', newStatus);
             return updatedTask;
@@ -690,13 +984,56 @@ const DatabaseModule = (function () {
             // Datum aktualisieren
             db.prepare('UPDATE tasks SET dueDate = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(dueDate, taskId, userId);
             
-            // Aktualisierte Task abrufen
-            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+            // Aktualisierte Task mit Projekt-Info abrufen
+            const updatedTask = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ?
+            `).get(taskId);
             
             console.log('✅ Task Datum aktualisiert:', currentTask.dueDate, '→', dueDate);
             return updatedTask;
         } catch (error) {
             console.error('🚨 Fehler beim Datum-Update:', error);
+            throw error;
+        }
+    };
+    
+    // 📁 Task-Projekt ändern (nur für eigene Tasks)
+    const updateTaskProjectForUser = async function (taskId, userId, projectId) {
+        console.log('📁 Aktualisiere Projekt für Task:', taskId, 'User:', userId, 'NewProjectId:', projectId);
+        
+        try {
+            // Prüfen ob Task dem User gehört
+            const currentTask = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
+            
+            if (!currentTask) {
+                throw new Error('Task nicht gefunden oder gehört nicht dem User');
+            }
+            
+            // Prüfen ob Projekt dem User gehört
+            const project = db.prepare('SELECT * FROM projects WHERE id = ? AND user_id = ?').get(projectId, userId);
+            
+            if (!project) {
+                throw new Error('Projekt nicht gefunden oder gehört nicht dem User');
+            }
+            
+            // Projekt aktualisieren
+            db.prepare('UPDATE tasks SET project_id = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(projectId, taskId, userId);
+            
+            // Aktualisierte Task mit Projekt-Info abrufen
+            const updatedTask = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ?
+            `).get(taskId);
+            
+            console.log('✅ Task Projekt aktualisiert:', currentTask.project_id, '→', projectId, '(' + project.name + ')');
+            return updatedTask;
+        } catch (error) {
+            console.error('🚨 Fehler beim Projekt-Update:', error);
             throw error;
         }
     };
@@ -716,8 +1053,13 @@ const DatabaseModule = (function () {
             // Text aktualisieren
             db.prepare('UPDATE tasks SET text = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?').run(newText, taskId, userId);
             
-            // Aktualisierte Task abrufen
-            const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+            // Aktualisierte Task mit Projekt-Info abrufen
+            const updatedTask = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ?
+            `).get(taskId);
             
             console.log('✅ Task Text aktualisiert');
             return updatedTask;
@@ -727,17 +1069,24 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Task löschen (nur für eigene Tasks)
+    // 📁 Task löschen MIT AUTO-DELETE FUNKTIONALITÄT (nur für eigene Tasks)
     const deleteTaskForUser = async function (taskId, userId) {
         console.log('🗑️ Lösche Task:', taskId, 'User:', userId);
         
         try {
             // Task vor dem Löschen abrufen und prüfen
-            const taskToDelete = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(taskId, userId);
+            const taskToDelete = db.prepare(`
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.id = ? AND t.user_id = ?
+            `).get(taskId, userId);
             
             if (!taskToDelete) {
                 throw new Error('Task nicht gefunden oder gehört nicht dem User');
             }
+            
+            const projectId = taskToDelete.project_id;
             
             // Task löschen
             const result = db.prepare('DELETE FROM tasks WHERE id = ? AND user_id = ?').run(taskId, userId);
@@ -747,6 +1096,35 @@ const DatabaseModule = (function () {
             }
             
             console.log('✅ Task gelöscht');
+            
+            // 🎯 AUTO-DELETE: Prüfen ob Projekt noch Tasks hat
+            if (projectId) {
+                const remainingTasks = db.prepare(`
+                    SELECT COUNT(*) as count FROM tasks WHERE project_id = ?
+                `).get(projectId);
+                
+                console.log(`🔍 AUTO-DELETE: Projekt ${projectId} hat noch ${remainingTasks.count} Tasks`);
+                
+                // Wenn keine Tasks mehr da sind UND es nicht das Default-Projekt ist
+                if (remainingTasks.count === 0) {
+                    const project = db.prepare('SELECT name FROM projects WHERE id = ?').get(projectId);
+                    
+                    if (project && project.name !== 'Allgemein') {
+                        db.prepare('DELETE FROM projects WHERE id = ?').run(projectId);
+                        console.log(`🎯 AUTO-DELETE: Projekt "${project.name}" automatisch gelöscht (keine Tasks mehr)`);
+                        
+                        // Erweiterte Rückgabe-Info
+                        taskToDelete.autoDeletedProject = {
+                            id: projectId,
+                            name: project.name,
+                            reason: 'Keine Tasks mehr vorhanden'
+                        };
+                    } else {
+                        console.log(`⚠️ AUTO-DELETE: Default-Projekt "${project?.name}" nicht gelöscht`);
+                    }
+                }
+            }
+            
             return taskToDelete;
         } catch (error) {
             console.error('🚨 Fehler beim Löschen:', error);
@@ -772,11 +1150,11 @@ const DatabaseModule = (function () {
         }
     };
     
-    // ===== LEGACY FUNCTIONS MIT KALENDER-UNTERSTÜTZUNG (für Rückwärtskompatibilität) =====
+    // ===== LEGACY FUNCTIONS MIT KALENDER-UNTERSTÜTZUNG + PROJEKTE (für Rückwärtskompatibilität) =====
     
-    // Alle Tasks abrufen (für Demo-User) - MIT KALENDER
+    // Alle Tasks abrufen (für Demo-User) - MIT KALENDER + PROJEKTE
     const getAllTasks = async function () {
-        console.log('📚 Lade alle Tasks mit KALENDER (Legacy-Modus)');
+        console.log('📚 Lade alle Tasks mit KALENDER + PROJEKTE (Legacy-Modus)');
         
         try {
             // Demo-User suchen
@@ -793,14 +1171,14 @@ const DatabaseModule = (function () {
         }
     };
     
-    // 📅 Task erstellen MIT KALENDER (für Demo-User)
-    const createTask = async function (text, dueDate = null) {
-        console.log('🆕 Erstelle Task mit KALENDER (Legacy-Modus)');
+    // 📅📁 Task erstellen MIT KALENDER + PROJEKTE (für Demo-User)
+    const createTask = async function (text, dueDate = null, projectId = null) {
+        console.log('🆕 Erstelle Task mit KALENDER + PROJEKTE (Legacy-Modus)');
         
         try {
             const demoUser = await getUserByUsername('demo');
             if (demoUser) {
-                return await createTaskForUser(demoUser.id, text, dueDate);
+                return await createTaskForUser(demoUser.id, text, dueDate, projectId);
             } else {
                 throw new Error('Demo-User nicht gefunden für Legacy-Modus');
             }
@@ -842,7 +1220,7 @@ const DatabaseModule = (function () {
         }
     };
     
-    // Task löschen (für Demo-User)
+    // Task löschen MIT AUTO-DELETE (für Demo-User)
     const deleteTask = async function (taskId) {
         const demoUser = await getUserByUsername('demo');
         if (demoUser) {
@@ -870,9 +1248,11 @@ const DatabaseModule = (function () {
         
         try {
             const tasks = db.prepare(`
-                SELECT * FROM tasks 
-                WHERE user_id = ? AND dueDate BETWEEN ? AND ? 
-                ORDER BY dueDate ASC, createdAt DESC
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.user_id = ? AND t.dueDate BETWEEN ? AND ? 
+                ORDER BY t.dueDate ASC, t.createdAt DESC
             `).all(userId, startDate, endDate);
             
             console.log('✅ Tasks nach Datum geladen:', tasks.length);
@@ -890,9 +1270,11 @@ const DatabaseModule = (function () {
         
         try {
             const tasks = db.prepare(`
-                SELECT * FROM tasks 
-                WHERE user_id = ? AND dueDate < ? AND status = 'offen'
-                ORDER BY dueDate ASC
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.user_id = ? AND t.dueDate < ? AND t.status = 'offen'
+                ORDER BY t.dueDate ASC
             `).all(userId, today);
             
             console.log('⚠️ Überfällige Tasks gefunden:', tasks.length);
@@ -910,9 +1292,11 @@ const DatabaseModule = (function () {
         
         try {
             const tasks = db.prepare(`
-                SELECT * FROM tasks 
-                WHERE user_id = ? AND dueDate = ?
-                ORDER BY createdAt DESC
+                SELECT t.*, p.name as project_name 
+                FROM tasks t 
+                LEFT JOIN projects p ON t.project_id = p.id 
+                WHERE t.user_id = ? AND t.dueDate = ?
+                ORDER BY t.createdAt DESC
             `).all(userId, today);
             
             console.log('📅 Heutige Tasks gefunden:', tasks.length);
@@ -931,7 +1315,7 @@ const DatabaseModule = (function () {
         }
     };
     
-    // 📅 ERWEITERTE ÖFFENTLICHE API MIT KALENDER-INTEGRATION
+    // 📅📁 ERWEITERTE ÖFFENTLICHE API MIT KALENDER-INTEGRATION + PROJEKTEN
     return {
         // Initialisierung
         initialize,
@@ -948,13 +1332,19 @@ const DatabaseModule = (function () {
         verifyUserEmail,
         resendVerificationToken,
         
-        // Task Management (User-spezifisch) MIT KALENDER
+        // 📁 Project Management (User-spezifisch) - NEU
+        getAllProjectsForUser,
+        createProjectForUser,
+        deleteProjectForUser,
+        
+        // Task Management (User-spezifisch) MIT KALENDER + PROJEKTE
         getAllTasksForUser,
-        createTaskForUser,          // ← ERWEITERT mit dueDate
+        createTaskForUser,          // ← ERWEITERT mit dueDate + projectId
         toggleTaskStatusForUser,
         updateTaskDateForUser,      // ← NEU: Datum-Update
+        updateTaskProjectForUser,   // ← NEU: Projekt-Update
         updateTaskTextForUser,
-        deleteTaskForUser,
+        deleteTaskForUser,          // ← ERWEITERT mit Auto-Delete
         deleteCompletedTasksForUser,
         
         // Kalender-spezifische Funktionen (NEU)
@@ -962,13 +1352,13 @@ const DatabaseModule = (function () {
         getOverdueTasks,            // ← NEU
         getTodayTasks,              // ← NEU
         
-        // Legacy API MIT KALENDER-UNTERSTÜTZUNG (für Rückwärtskompatibilität)
+        // Legacy API MIT KALENDER-UNTERSTÜTZUNG + PROJEKTE (für Rückwärtskompatibilität)
         getAllTasks,
-        createTask,                 // ← ERWEITERT mit dueDate
+        createTask,                 // ← ERWEITERT mit dueDate + projectId
         toggleTaskStatus,
         updateTaskDate,             // ← NEU: Legacy Datum-Update
         updateTaskText,
-        deleteTask,
+        deleteTask,                 // ← ERWEITERT mit Auto-Delete
         deleteCompletedTasks,
         
         // Utility

@@ -303,6 +303,88 @@
             border: 1px solid #c3e6cb;
         }
         
+        /* PROJECT STYLES - NEU! */
+        .project-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .project-management {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .project-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .project-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+        
+        .btn-add-project {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-add-project:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .project-select {
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        .project-group {
+            margin-bottom: 30px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .project-group h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .project-tasks {
+            margin-left: 20px;
+        }
+        
+        .project-stats {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: normal;
+        }
+        
         /* Task Styles */
         .task-item {
             margin: 10px 0;
@@ -419,20 +501,24 @@
             display: flex;
             gap: 10px;
         }
-        .add-section input {
+        .add-section input, .add-section select {
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
         }
         #taskText {
-            flex: 1;
+            flex: 2;
         }
         #taskDate {
             width: 200px;
             flex-shrink: 0;
         }
-        .add-section input:focus {
+        #projectSelect {
+            width: 250px;
+            flex-shrink: 0;
+        }
+        .add-section input:focus, .add-section select:focus {
             outline: none;
             border-color: #007bff;
             box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
@@ -568,11 +654,26 @@
                 font-size: 14px;
             }
             
+            /* PROJECT MANAGEMENT MOBILE */
+            .project-management {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .project-input {
+                width: 100%;
+            }
+            
+            .btn-add-project {
+                width: 100%;
+                padding: 15px;
+            }
+            
             /* Filter-Buttons größer auf Mobile */
             .filter-section {
                 padding: 12px;
                 margin-bottom: 15px;
-                display: block !important; /* Immer anzeigen auf Mobile */
+                display: block !important;
             }
             
             .filter-buttons {
@@ -583,7 +684,7 @@
             .filter-btn {
                 padding: 10px 16px;
                 font-size: 14px;
-                min-height: 44px; /* Touch-freundlich */
+                min-height: 44px;
                 display: inline-block;
                 text-align: center;
             }
@@ -603,13 +704,15 @@
             /* INPUT ROW CONTAINER für professionelleres Layout */
             .input-row {
                 display: flex !important;
+                flex-direction: column !important;
                 gap: 10px;
                 width: 100%;
             }
             
-            /* TEXT INPUT - 70% Breite */
+            /* TEXT INPUT - Vollbreite */
             #taskText {
-                flex: 7 !important;
+                flex: none !important;
+                width: 100% !important;
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
@@ -622,9 +725,26 @@
                 box-sizing: border-box !important;
             }
             
-            /* DATUM INPUT - 30% Breite, professionell */
+            /* PROJEKT SELECT - Vollbreite */
+            #projectSelect {
+                flex: none !important;
+                width: 100% !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                padding: 15px !important;
+                font-size: 16px !important;
+                border-radius: 8px !important;
+                border: 2px solid #007bff !important;
+                background-color: white !important;
+                min-height: 50px !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* DATUM INPUT - Vollbreite */
             #taskDate {
-                flex: 3 !important;
+                flex: none !important;
+                width: 100% !important;
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
@@ -689,6 +809,23 @@
                 text-overflow: ellipsis;
             }
             
+            /* PROJECT GROUPS MOBILE */
+            .project-group {
+                margin-bottom: 20px;
+                padding: 12px;
+            }
+            
+            .project-group h3 {
+                font-size: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .project-tasks {
+                margin-left: 0;
+            }
+            
             /* Task Items Mobile-optimiert */
             .task-item {
                 padding: 15px;
@@ -721,7 +858,7 @@
             .status-button {
                 padding: 12px 16px;
                 font-size: 14px;
-                min-height: 44px; /* Touch-freundlich */
+                min-height: 44px;
                 border-radius: 8px;
             }
             
@@ -815,10 +952,10 @@
                 gap: 10px;
             }
             
-            .add-section input {
+            .add-section input, .add-section select {
                 padding: 12px;
                 min-height: 48px;
-                font-size: 16px; /* Wichtig: 16px verhindert Zoom auf iOS */
+                font-size: 16px;
             }
             
             .add-section input[type="date"] {
@@ -895,7 +1032,6 @@
 </head>
 <body>
     <div class="app-header">
-        <!-- PROFESSIONELLER HEADER - Version Badge entfernt, Todo App zentriert -->
         <h1>📋 Todo App</h1>
         
         <!-- Connection Status -->
@@ -923,7 +1059,6 @@
     <!-- Error Banner -->
     <div id="errorBanner" class="error-banner">
         <span id="errorMessage"></span>
-        <!-- VERBESSERTER X-BUTTON im Error Banner -->
         <button onclick="hideErrorBanner()" style="float: right; background: none; border: none; color: #721c24; cursor: pointer; font-size: 20px; font-weight: bold; width: 30px; height: 30px; border-radius: 50%; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(114,28,36,0.1)'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
     </div>
     
@@ -949,11 +1084,9 @@
     <!-- Auth Modal -->
     <div id="authModal" class="modal">
         <div class="modal-content">
-            <!-- VERBESSERTER X-BUTTON - größer, fetter, besser sichtbar -->
             <button class="close-modal" onclick="closeAuthModal()" aria-label="Modal schließen">&times;</button>
             
             <div class="modal-header">
-                <!-- PROFESSIONELLER HEADER - Debug-Texte entfernt -->
                 <h2>🔐 Anmeldung</h2>
             </div>
             
@@ -983,7 +1116,6 @@
             <!-- Register Form with Enhanced Bot Protection -->
             <form id="registerForm" class="auth-form">
                 <input type="text" id="registerUsername" placeholder="Benutzername (3-30 Zeichen)" required autocomplete="username">
-                <!-- PROFESSIONELLER E-MAIL PLACEHOLDER -->
                 <input type="email" id="registerEmail" placeholder="E-Mail-Adresse" required autocomplete="email">
                 <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required autocomplete="new-password">
                 
@@ -1012,6 +1144,15 @@
             🎉 Willkommen zurück! Hier sind Ihre persönlichen To-Dos.
         </div>
         
+        <!-- PROJECT MANAGEMENT SECTION - NEU! -->
+        <div id="projectSection" class="project-section" style="display: none;">
+            <h2>📁 Projekt-Verwaltung</h2>
+            <div class="project-management">
+                <input type="text" id="newProjectName" class="project-input" placeholder="Neues Projekt erstellen..." maxlength="100">
+                <button id="addProjectBtn" class="btn-add-project">📁 Projekt hinzufügen</button>
+            </div>
+        </div>
+        
         <!-- Filter-Sektion für Kalender -->
         <div class="filter-section" id="filterSection" style="display: none;">
             <div class="filter-buttons">
@@ -1029,6 +1170,9 @@
         <div class="add-section">
             <div class="input-row">
                 <input type="text" id="taskText" placeholder="Neue Aufgabe eingeben..." maxlength="500">
+                <select id="projectSelect" class="project-select">
+                    <option value="">Projekt auswählen...</option>
+                </select>
                 <input type="date" id="taskDate" title="Fälligkeitsdatum (optional)">
             </div>
             <div class="button-row">
@@ -1047,7 +1191,7 @@
     </div>
 
     <script>
-        // Module Pattern - PROFESSIONELLE VERSION
+        // Module Pattern - PROFESSIONELLE VERSION MIT PROJEKT-FUNKTIONALITÄT
         const TODO_APP = (function () {
             'use strict';
             
@@ -1064,6 +1208,7 @@
             
             let editingTaskId = null;
             let cachedTasks = [];
+            let cachedProjects = [];  // NEU: Cached Projects
             let currentUser = null;
             let connectionStatus = 'connecting';
             let retryCount = 0;
@@ -1071,6 +1216,7 @@
             let retryInterval = 30000;
             let pendingVerificationEmail = null;
             let currentFilter = 'all';
+            let currentViewMode = 'normal';  // NEU: 'normal' oder 'grouped'
             
             // DOM-Referenzen cachen
             let elements = {};
@@ -1526,6 +1672,7 @@
                 elements = {
                     taskText: document.getElementById('taskText'),
                     taskDate: document.getElementById('taskDate'),
+                    projectSelect: document.getElementById('projectSelect'),  // NEU
                     addButton: document.getElementById('addButton'),
                     cleanupButton: document.getElementById('cleanupButton'),
                     taskList: document.getElementById('taskList'),
@@ -1549,7 +1696,11 @@
                     resendVerificationBtn2: document.getElementById('resendVerificationBtn2'),
                     emailVerificationSection: document.getElementById('emailVerificationSection'),
                     verificationStatus: document.getElementById('verificationStatus'),
-                    filterSection: document.getElementById('filterSection')
+                    filterSection: document.getElementById('filterSection'),
+                    // NEU: Projekt-Elemente
+                    projectSection: document.getElementById('projectSection'),
+                    newProjectName: document.getElementById('newProjectName'),
+                    addProjectBtn: document.getElementById('addProjectBtn')
                 };
             };
             
@@ -1564,6 +1715,7 @@
                     elements.currentUsername.textContent = currentUser.username;
                     elements.userWelcome.style.display = 'block';
                     elements.filterSection.style.display = 'block';
+                    elements.projectSection.style.display = 'block';  // NEU: Projekt-Sektion anzeigen
                     
                     elements.verificationStatus.className = 'verification-status verified';
                     elements.verificationStatus.textContent = '✅ Secure';
@@ -1571,6 +1723,7 @@
                     elements.guestControls.style.display = 'block';
                     elements.userControls.style.display = 'none';
                     elements.userWelcome.style.display = 'none';
+                    elements.projectSection.style.display = 'none';  // NEU: Projekt-Sektion verstecken
                     // Filter auch im Guest-Mode anzeigen für Demo-Daten
                     elements.filterSection.style.display = 'block';  
                     currentUser = null;
@@ -1726,7 +1879,219 @@
                 }
             };
             
-            // Task-Management mit Kalender-Integration
+            // ===== NEU: PROJECT MANAGEMENT FUNKTIONEN =====
+            
+            const loadProjects = async function() {
+                if (!TokenManager.isValid()) {
+                    console.log('🚫 DEBUG: Kein gültiger Token - keine Projekte laden');
+                    cachedProjects = [];
+                    renderProjects([]);
+                    return;
+                }
+                
+                console.log('📁 DEBUG: loadProjects() gestartet');
+                
+                try {
+                    const projects = await apiCall('/projects');
+                    console.log('✅ DEBUG: Projekte geladen, Anzahl:', projects.length);
+                    cachedProjects = projects;
+                    renderProjects(projects);
+                } catch (error) {
+                    console.error('🚨 DEBUG: Fehler beim Laden der Projekte:', error);
+                    
+                    if (cachedProjects.length > 0) {
+                        console.log('⚠️ DEBUG: Zeige cached Projekte:', cachedProjects);
+                        renderProjects(cachedProjects);
+                    } else {
+                        console.log('✅ DEBUG: Keine cached Projekte - zeige leere Liste');
+                        renderProjects([]);
+                    }
+                }
+            };
+            
+            const renderProjects = function(projects) {
+                console.log('🎨 DEBUG: renderProjects() aufgerufen mit:', projects.length, 'Projekten');
+                
+                if (!elements.projectSelect) {
+                    console.log('❌ DEBUG: elements.projectSelect ist null/undefined!');
+                    return;
+                }
+                
+                // Projekt-Auswahl aktualisieren
+                elements.projectSelect.innerHTML = '<option value="">Projekt auswählen...</option>';
+                
+                if (Array.isArray(projects) && projects.length > 0) {
+                    projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.id;
+                        option.textContent = `${project.name} (${project.task_count || 0} Tasks)`;
+                        elements.projectSelect.appendChild(option);
+                    });
+                }
+                
+                console.log('🎨 DEBUG: renderProjects() FERTIG');
+            };
+            
+            const addProject = async function() {
+                const name = elements.newProjectName.value;
+                
+                if (!name || name.trim() === '') {
+                    showErrorBanner('⚠️ Bitte geben Sie einen Projektnamen ein', 'warning');
+                    return;
+                }
+                
+                elements.addProjectBtn.disabled = true;
+                elements.addProjectBtn.textContent = '⏳ Wird erstellt...';
+                
+                try {
+                    const response = await apiCall('/projects', {
+                        method: 'POST',
+                        body: JSON.stringify({ name: name.trim() })
+                    });
+                    
+                    elements.newProjectName.value = '';
+                    loadProjects();
+                    loadTasks();  // Tasks neu laden um Projekt-Zuordnungen zu aktualisieren
+                    
+                    showErrorBanner('✅ Projekt "' + name + '" erfolgreich erstellt!', 'info');
+                    console.log('✅ DEBUG: Projekt erstellt:', response);
+                } catch (error) {
+                    console.error('🚨 FEHLER in addProject:', error);
+                    showErrorBanner('Fehler beim Erstellen des Projekts: ' + error.message, 'error');
+                } finally {
+                    elements.addProjectBtn.disabled = false;
+                    elements.addProjectBtn.textContent = '📁 Projekt hinzufügen';
+                }
+            };
+            
+            const renderTasksGrouped = function(tasks) {
+                console.log('🎨 DEBUG: renderTasksGrouped() aufgerufen mit:', tasks.length, 'Tasks');
+                
+                if (!Array.isArray(tasks)) {
+                    console.log('❌ DEBUG: tasks ist kein Array!', typeof tasks, tasks);
+                    return;
+                }
+                
+                if (!elements.taskList) {
+                    console.log('❌ DEBUG: elements.taskList ist null/undefined!');
+                    return;
+                }
+                
+                elements.taskList.innerHTML = '';
+                
+                // Tasks filtern
+                const filteredTasks = tasks.filter(task => shouldShowTask(task, currentFilter));
+                
+                if (filteredTasks.length === 0) {
+                    const emptyMessage = document.createElement('li');
+                    emptyMessage.className = 'task-item';
+                    emptyMessage.textContent = currentFilter === 'all' ? 
+                        '🎉 Keine Aufgaben vorhanden!' : 
+                        `📭 Keine Aufgaben für Filter "${currentFilter}"`;
+                    emptyMessage.style.textAlign = 'center';
+                    elements.taskList.appendChild(emptyMessage);
+                    return;
+                }
+                
+                // Tasks nach Projekten gruppieren
+                const tasksByProject = {};
+                filteredTasks.forEach(task => {
+                    const projectName = task.project_name || 'Kein Projekt';
+                    if (!tasksByProject[projectName]) {
+                        tasksByProject[projectName] = [];
+                    }
+                    tasksByProject[projectName].push(task);
+                });
+                
+                // Gruppen erstellen
+                Object.keys(tasksByProject).forEach(projectName => {
+                    const projectTasks = tasksByProject[projectName];
+                    
+                    // Projekt-Gruppe Container
+                    const projectGroup = document.createElement('li');
+                    projectGroup.className = 'project-group';
+                    
+                    // Projekt-Header
+                    const projectHeader = document.createElement('h3');
+                    const completedCount = projectTasks.filter(t => t.status === 'erledigt').length;
+                    const totalCount = projectTasks.length;
+                    
+                    projectHeader.innerHTML = `
+                        📁 ${projectName}
+                        <span class="project-stats">${completedCount}/${totalCount} erledigt</span>
+                    `;
+                    
+                    // Tasks-Container
+                    const tasksContainer = document.createElement('div');
+                    tasksContainer.className = 'project-tasks';
+                    
+                    // Tasks rendern
+                    projectTasks.forEach(task => {
+                        const taskElement = createTaskElement(task);
+                        tasksContainer.appendChild(taskElement);
+                    });
+                    
+                    projectGroup.appendChild(projectHeader);
+                    projectGroup.appendChild(tasksContainer);
+                    elements.taskList.appendChild(projectGroup);
+                });
+                
+                console.log('🎨 DEBUG: renderTasksGrouped() FERTIG');
+            };
+            
+            const createTaskElement = function(task) {
+                const item = document.createElement('div');
+                item.className = 'task-item ' + (task.status === 'erledigt' ? 'task-completed' : 'task-open');
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'task-text';
+                textSpan.textContent = task.text;
+                
+                // Datum-Anzeige
+                const dateContainer = document.createElement('div');
+                dateContainer.className = 'task-date';
+                
+                if (task.dueDate) {
+                    const dateStatus = CalendarUtils.getDateStatus(task.dueDate);
+                    const statusIcon = CalendarUtils.getStatusIcon(dateStatus);
+                    const formattedDate = CalendarUtils.formatDate(task.dueDate);
+                    
+                    dateContainer.className += ' ' + dateStatus;
+                    dateContainer.innerHTML = `
+                        <span>${statusIcon} ${formattedDate}</span>
+                        <input type="date" value="${task.dueDate}" onchange="updateTaskDate(${task.id}, this.value)">
+                    `;
+                } else {
+                    dateContainer.innerHTML = `
+                        <input type="date" placeholder="Datum setzen" onchange="updateTaskDate(${task.id}, this.value)">
+                    `;
+                }
+                
+                // Buttons
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'task-buttons';
+                
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'status-button ' + (task.status === 'erledigt' ? 'btn-reopen' : 'btn-complete');
+                toggleBtn.textContent = task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt';
+                toggleBtn.addEventListener('click', () => toggleTask(task.id));
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'status-button btn-delete';
+                deleteBtn.textContent = '🗑️ Löschen';
+                deleteBtn.addEventListener('click', () => deleteTask(task.id));
+                
+                buttonsContainer.appendChild(toggleBtn);
+                buttonsContainer.appendChild(deleteBtn);
+                
+                item.appendChild(textSpan);
+                item.appendChild(dateContainer);
+                item.appendChild(buttonsContainer);
+                
+                return item;
+            };
+            
+            // Task-Management mit Kalender-Integration (ERWEITERT)
             const loadTasks = async function () {
                 console.log("📚 DEBUG: loadTasks() gestartet");
                 
@@ -1744,7 +2109,14 @@
                     const tasks = await apiCall('/tasks');
                     console.log("✅ DEBUG: Tasks geladen, Anzahl:", tasks.length);
                     cachedTasks = tasks;
-                    renderTasks(tasks);
+                    
+                    // Entscheiden zwischen normaler und gruppierter Ansicht
+                    if (currentViewMode === 'grouped' && cachedProjects.length > 0) {
+                        renderTasksGrouped(tasks);
+                    } else {
+                        renderTasks(tasks);
+                    }
+                    
                     updateStats(tasks);
                     
                     ConnectionManager.updateStatus('connected', 'Online ✅');
@@ -1754,7 +2126,11 @@
                     
                     if (cachedTasks.length > 0) {
                         console.log("⚠️ DEBUG: Zeige cached Tasks:", cachedTasks);
-                        renderTasks(cachedTasks);
+                        if (currentViewMode === 'grouped' && cachedProjects.length > 0) {
+                            renderTasksGrouped(cachedTasks);
+                        } else {
+                            renderTasks(cachedTasks);
+                        }
                         updateStats(cachedTasks);
                         showErrorBanner('⚠️ Offline-Modus: Zeige letzte gespeicherte Aufgaben', 'warning');
                     } else {
@@ -1776,7 +2152,11 @@
                 event.target.classList.add('active');
                 
                 // Tasks neu rendern mit Filter
-                renderTasks(cachedTasks);
+                if (currentViewMode === 'grouped' && cachedProjects.length > 0) {
+                    renderTasksGrouped(cachedTasks);
+                } else {
+                    renderTasks(cachedTasks);
+                }
             };
             
             const shouldShowTask = function(task, filter) {
@@ -1797,7 +2177,7 @@
                         shouldShow = dateStatus === 'overdue' && task.status !== 'erledigt';
                         break;
                     case 'today':
-                        shouldShow = dateStatus === 'due-today'; // ← FIXED: today → due-today
+                        shouldShow = dateStatus === 'due-today';
                         break;
                     case 'tomorrow':
                         shouldShow = dateStatus === 'due-tomorrow';
@@ -1862,6 +2242,17 @@
                     textSpan.className = 'task-text';
                     textSpan.textContent = task.text;
                     
+                    // NEU: Projekt-Info anzeigen (wenn vorhanden)
+                    if (task.project_name) {
+                        const projectSpan = document.createElement('span');
+                        projectSpan.className = 'task-project';
+                        projectSpan.textContent = ` [${task.project_name}]`;
+                        projectSpan.style.fontSize = '12px';
+                        projectSpan.style.color = '#6c757d';
+                        projectSpan.style.fontWeight = 'normal';
+                        textSpan.appendChild(projectSpan);
+                    }
+                    
                     // Datum-Anzeige
                     const dateContainer = document.createElement('div');
                     dateContainer.className = 'task-date';
@@ -1882,7 +2273,7 @@
                         `;
                     }
                     
-                    // URSPRÜNGLICHE LOGIK: Beide Buttons - Toggle UND Individual Delete
+                    // Beide Buttons - Toggle UND Individual Delete
                     const buttonsContainer = document.createElement('div');
                     buttonsContainer.className = 'task-buttons';
                     
@@ -1891,7 +2282,7 @@
                     toggleBtn.textContent = task.status === 'erledigt' ? '🔄 Wieder öffnen' : '✅ Erledigt';
                     toggleBtn.addEventListener('click', () => toggleTask(task.id));
                     
-                    // WICHTIG: Individueller Lösch-Button pro Task (wie im ursprünglichen Code)
+                    // Individueller Lösch-Button pro Task
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'status-button btn-delete';
                     deleteBtn.textContent = '🗑️ Löschen';
@@ -1932,9 +2323,16 @@
                     CalendarUtils.getDateStatus(task.dueDate) === 'due-today'
                 ).length;
                 
+                // NEU: Projekt-Statistiken
+                const projectCount = cachedProjects.length;
+                
                 let statsText = '📊 Gesamt: ' + total + ' | ' +
                     '✅ Erledigt: ' + completed + ' (' + percentage + '%) | ' +
                     '📝 Offen: ' + open + userInfo;
+                
+                if (projectCount > 0) {
+                    statsText += ' | 📁 Projekte: ' + projectCount;
+                }
                 
                 if (overdue > 0 || dueToday > 0) {
                     statsText += ' | ';
@@ -1955,9 +2353,9 @@
             const addTask = async function () {
                 const text = elements.taskText.value;
                 const dueDate = elements.taskDate ? elements.taskDate.value : null;
+                const projectId = elements.projectSelect ? elements.projectSelect.value : null;  // NEU: Projekt-ID
                 
-                console.log('📅 DEBUG addTask: Text:', text, 'Date Input Element:', elements.taskDate);
-                console.log('📅 DEBUG addTask: Date Value:', dueDate, 'Type:', typeof dueDate);
+                console.log('📅 DEBUG addTask: Text:', text, 'Date:', dueDate, 'ProjectID:', projectId);
                 
                 if (!text || text.trim() === '') {
                     showErrorBanner('⚠️ Bitte geben Sie einen Aufgabentext ein', 'warning');
@@ -1970,7 +2368,8 @@
                 try {
                     const taskData = { 
                         text: text.trim(), 
-                        dueDate: dueDate || null  // Ensure null instead of empty string
+                        dueDate: dueDate || null,
+                        project_id: projectId || null  // NEU: Projekt-Zuordnung
                     };
                     console.log('📅 DEBUG: Final task data to backend:', taskData);
                     
@@ -1983,7 +2382,10 @@
                     
                     elements.taskText.value = '';
                     if (elements.taskDate) elements.taskDate.value = '';
+                    if (elements.projectSelect) elements.projectSelect.value = '';  // NEU: Projekt-Auswahl zurücksetzen
+                    
                     loadTasks();
+                    loadProjects();  // NEU: Projekte neu laden für aktualisierte Task-Counts
                     
                     console.log('✅ DEBUG: Task created successfully');
                 } catch (error) {
@@ -2032,6 +2434,7 @@
                 try {
                     await apiCall('/tasks/' + taskId, { method: 'PUT' });
                     loadTasks();
+                    loadProjects();  // NEU: Projekte neu laden für aktualisierte Task-Counts
                 } catch (error) {
                     showErrorBanner('Fehler beim Ändern des Status: ' + error.message, 'error');
                 }
@@ -2041,8 +2444,15 @@
                 if (!confirm('❓ Aufgabe wirklich löschen?')) return;
                 
                 try {
-                    await apiCall('/tasks/' + taskId, { method: 'DELETE' });
+                    const response = await apiCall('/tasks/' + taskId, { method: 'DELETE' });
+                    
+                    // NEU: Auto-Delete Nachricht anzeigen wenn Projekt gelöscht wurde
+                    if (response && response.autoDeletedProject) {
+                        showErrorBanner('✅ Aufgabe gelöscht! Leeres Projekt wurde automatisch entfernt.', 'info');
+                    }
+                    
                     loadTasks();
+                    loadProjects();  // NEU: Projekte neu laden (wegen potentiellem Auto-Delete)
                 } catch (error) {
                     showErrorBanner('Fehler beim Löschen der Aufgabe: ' + error.message, 'error');
                 }
@@ -2052,8 +2462,10 @@
                 if (!confirm('🧹 Alle erledigten Aufgaben wirklich löschen?')) return;
                 
                 try {
-                    await apiCall('/tasks?status=completed', { method: 'DELETE' });
+                    const response = await apiCall('/tasks?status=completed', { method: 'DELETE' });
+                    
                     loadTasks();
+                    loadProjects();  // NEU: Projekte neu laden (wegen potentiellem Auto-Delete)
                     showErrorBanner('✅ Alle erledigten Aufgaben gelöscht!', 'info');
                 } catch (error) {
                     showErrorBanner('Fehler beim Löschen: ' + error.message, 'error');
@@ -2089,6 +2501,7 @@
                         setTimeout(function () {
                             closeAuthModal();
                             updateAuthUI();
+                            loadProjects();  // NEU: Projekte laden
                             loadTasks();
                             hideVerificationBanner();
                             showEmailVerificationSection(false);
@@ -2171,6 +2584,7 @@
                             setTimeout(function () {
                                 closeAuthModal();
                                 updateAuthUI();
+                                loadProjects();  // NEU: Projekte laden
                                 loadTasks();
                             }, 1500);
                         }
@@ -2213,9 +2627,12 @@
                     currentUser = null;
                     pendingVerificationEmail = null;
                     cachedTasks = [];
+                    cachedProjects = [];  // NEU: Projekte-Cache leeren
                     currentFilter = 'all';
+                    currentViewMode = 'normal';  // NEU: View-Mode zurücksetzen
                     
                     renderTasks([]);
+                    renderProjects([]);  // NEU: Projekt-Auswahl leeren
                     updateStats([]);
                     
                     updateAuthUI();
@@ -2263,7 +2680,7 @@
             // Hauptinitialisierung
             const initialize = async function () {
                 try {
-                    console.log('🚀 Initialisiere TODO_APP - PROFESSIONELLE VERSION');
+                    console.log('🚀 Initialisiere TODO_APP - PROFESSIONELLE VERSION MIT PROJEKTEN');
                     initializeElements();
                     
                     FrontendBotProtection.initialize();
@@ -2293,10 +2710,12 @@
                         // Double-check Element-Referenz
                         setTimeout(() => {
                             elements.taskDate = document.getElementById('taskDate');
+                            elements.projectSelect = document.getElementById('projectSelect');  // NEU
                             if (elements.taskDate) {
                                 console.log('✅ taskDate Element nachträglich referenziert');
-                            } else {
-                                console.error('❌ taskDate Element auch nach Timeout nicht gefunden!');
+                            }
+                            if (elements.projectSelect) {
+                                console.log('✅ projectSelect Element nachträglich referenziert');
                             }
                         }, 500);
                     };
@@ -2310,6 +2729,19 @@
                     elements.addButton.addEventListener('click', addTask);
                     elements.taskText.addEventListener('keypress', handleKeyPress);
                     elements.cleanupButton.addEventListener('click', deleteCompletedTasks);
+                    
+                    // NEU: Projekt Event-Handler
+                    if (elements.addProjectBtn) {
+                        elements.addProjectBtn.addEventListener('click', addProject);
+                    }
+                    
+                    if (elements.newProjectName) {
+                        elements.newProjectName.addEventListener('keypress', function(event) {
+                            if (event.key === 'Enter') {
+                                addProject();
+                            }
+                        });
+                    }
                     
                     // Auth Event-Handler
                     elements.loginForm.addEventListener('submit', handleLogin);
@@ -2326,6 +2758,7 @@
                     
                     if (connectionOk) {
                         console.log('✅ Backend online, lade Daten...');
+                        await loadProjects();  // NEU: Projekte zuerst laden
                         await loadTasks();
                     } else {
                         console.log('🔥 Backend Cold Start erkannt - Background-Retries aktiv...');
@@ -2334,7 +2767,7 @@
                     // Finaler Date-Input Check nach vollständiger Initialisierung
                     setTimeout(ensureDateInputVisible, 1000);
                     
-                    console.log('✅ TODO_APP PROFESSIONELLE VERSION erfolgreich initialisiert');
+                    console.log('✅ TODO_APP PROFESSIONELLE VERSION MIT PROJEKTEN erfolgreich initialisiert');
                 } catch (error) {
                     console.error('🚨 Fehler beim Initialisieren:', error);
                     showErrorBanner('Fehler beim Initialisieren der App: ' + error.message, 'error');
@@ -2373,11 +2806,24 @@
                     },
                     logout: handleLogout
                 },
+                projects: {  // NEU: Projekt-API
+                    load: loadProjects,
+                    add: addProject,
+                    toggleGroupView: function() {
+                        currentViewMode = currentViewMode === 'normal' ? 'grouped' : 'normal';
+                        if (currentViewMode === 'grouped' && cachedProjects.length > 0) {
+                            renderTasksGrouped(cachedTasks);
+                        } else {
+                            renderTasks(cachedTasks);
+                        }
+                    }
+                },
                 debug: {
                     getStats: function () {
                         return {
-                            version: 'PROFESSIONELLE VERSION v3.1 + Mobile Responsive',
+                            version: 'PROFESSIONELLE VERSION v3.2 + PROJEKTE + Mobile Responsive',
                             cachedTasks: cachedTasks.length,
+                            cachedProjects: cachedProjects.length,  // NEU
                             apiBase: API_BASE,
                             currentUser: currentUser,
                             isLoggedIn: TokenManager.isValid(),
@@ -2386,7 +2832,18 @@
                             maxRetries: maxRetries,
                             pendingVerificationEmail: pendingVerificationEmail,
                             currentFilter: currentFilter,
-                            features: ['Professional UI', 'Calendar Integration', 'Task Filtering', 'Due Date Management', 'Mobile Responsive', 'Touch-Friendly Design']
+                            currentViewMode: currentViewMode,  // NEU
+                            features: [
+                                'Professional UI', 
+                                'Calendar Integration', 
+                                'Task Filtering', 
+                                'Due Date Management', 
+                                'Mobile Responsive', 
+                                'Touch-Friendly Design',
+                                'Project Management',  // NEU
+                                'Auto-Delete Projects',  // NEU
+                                'Grouped Task View'  // NEU
+                            ]
                         };
                     },
                     testConnection: () => ConnectionManager.testConnection()
@@ -2429,10 +2886,11 @@
         // Debug-Zugriff
         window.TODO_DEBUG = TODO_APP.debug;
         
-        console.log('✅ TODO APP LOADED - PROFESSIONELLE VERSION v3.1 + MOBILE OPTIMIERT');
+        console.log('✅ TODO APP LOADED - PROFESSIONELLE VERSION v3.2 + PROJEKTE');
         console.log('🎨 Features: Professional UI • Calendar Integration • Mobile Responsive');
         console.log('📱 Mobile: Touch-friendly buttons • Larger fonts • Better spacing');
         console.log('📅 Calendar: Due dates • Filtering • Overdue tracking');
+        console.log('📁 Projects: Create projects • Task assignment • Auto-delete • Grouped view');
         console.log('♿ Accessibility: Improved X-buttons • Better contrast • Focus indicators');
         console.log('🎯 Debug: TODO_DEBUG.testConnection() | TODO_DEBUG.getStats()');
     </script>
