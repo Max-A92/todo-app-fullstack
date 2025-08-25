@@ -1,15 +1,95 @@
-# Todo App - Full-Stack Development with Advanced Security, Calendar Integration & Monitoring Suite
+# Todo App - Full-Stack Development with Advanced Security, Calendar Integration, Project Management & Monitoring Suite
 
 ## Live Demo
 - **Frontend**: https://todo-app-fullstack-gamma.vercel.app
 - **Backend API**: https://todo-app-fullstack-fdvh.onrender.com
 
-Experience enterprise-grade security with international email validation, advanced monitoring, comprehensive bot protection, and **full calendar integration**. Register with any real email address from around the world - the enhanced security system automatically detects and allows legitimate providers while blocking sophisticated attacks.
+Experience enterprise-grade security with international email validation, advanced monitoring, comprehensive bot protection, **full calendar integration**, and **comprehensive project management**. Register with any real email address from around the world - the enhanced security system automatically detects and allows legitimate providers while blocking sophisticated attacks.
 
 ## Project Overview
-A modern Todo application with **Advanced Security Suite**, **Full Calendar Integration**, **Real-time Monitoring**, **Multi-User Support**, **JWT Authentication**, **SQLite Database**, **International Email Validation**, and **GitHub Security Integration**. This project showcases the complete full-stack development journey from a simple basic app to an enterprise-ready application with production-grade security, monitoring capabilities, automated security management, and comprehensive task scheduling.
+A modern Todo application with **Advanced Security Suite**, **Full Calendar Integration**, **Project Management System**, **Real-time Monitoring**, **Multi-User Support**, **JWT Authentication**, **SQLite Database**, **International Email Validation**, and **GitHub Security Integration**. This project showcases the complete full-stack development journey from a simple basic app to an enterprise-ready application with production-grade security, monitoring capabilities, automated security management, comprehensive task scheduling, and advanced project organization.
+
+**Now featuring professional modular architecture with enterprise-level code organization, following modern development best practices and clean architecture principles.**
+
+## Architecture Refactoring
+
+This project has undergone a comprehensive architectural transformation from monolithic structure to professional, modular architecture following industry best practices.
+
+### Frontend Refactoring Achievement
+**Transformation**: Monolithic 2898-line index.html → Modern modular architecture with 16 specialized files
+
+**Results**:
+- **90% code reduction** in main HTML file
+- **CSS modularization**: Split into main.css (300 lines), components.css (500 lines), mobile.css (200 lines)
+- **JavaScript modularization**: 12 ES6 modules with clean separation of concerns
+- **Maintainable structure**: Easy debugging, team development, and feature additions
+- **Framework-ready**: Prepared for React/Vue migration
+
+**Modular Structure**:
+```
+frontend-refactoring/
+├── index.html (300 lines)         # 90% reduction from original
+├── styles/
+│   ├── main.css                   # Base styles & layout
+│   ├── components.css             # UI components
+│   └── mobile.css                 # Responsive design
+└── js/
+    ├── app.js                     # Main coordinator
+    ├── config/config.js           # Configuration
+    ├── utils/                     # Helper functions
+    ├── services/                  # API communication
+    └── components/                # UI modules
+```
+
+### Backend Refactoring Achievement
+**Transformation**: Monolithic 2200-line server.js → Express.js best practices with 17 specialized modules
+
+**Results**:
+- **90% code reduction** in main server file
+- **Express best practices**: Clean separation of routes, middleware, services
+- **Enterprise architecture**: Config, middleware, routes, services, utils separation
+- **Maintainable codebase**: Easy testing, scaling, and feature development
+- **Production-ready**: Professional error handling and logging
+
+**Modular Structure**:
+```
+backend-refactoring/
+├── server.js (200 lines)          # 90% reduction from original
+├── config/                        # Configuration management
+│   ├── database.js
+│   ├── email.js
+│   └── security.js
+├── middleware/                    # Express middleware
+│   ├── auth.js
+│   ├── validation.js
+│   ├── rateLimiting.js
+│   └── botProtection.js
+├── routes/                        # API endpoints
+│   ├── auth.js
+│   ├── tasks.js
+│   └── projects.js
+├── services/                      # Business logic
+│   ├── AuthService.js
+│   ├── TaskService.js
+│   ├── ProjectService.js
+│   └── EmailService.js
+├── utils/                         # Helper functions
+│   ├── EmailValidator.js
+│   └── helpers.js
+└── models/                        # Database layer
+    └── database.js
+```
+
+### Architectural Benefits
+- **Team Development**: Parallel development without conflicts
+- **Code Maintainability**: Easy to locate and fix issues
+- **Testing**: Each module can be tested independently
+- **Scalability**: New features through new modules
+- **Performance**: Optimized loading and caching strategies
+- **Best Practices**: Following industry standards and clean architecture
 
 ### Key Features
+- **Project Management System** - Complete task organization with projects, hierarchical structure, and auto-cleanup
 - **Full Calendar Integration** - Complete task scheduling with due dates, calendar filters, and deadline management
 - **Enterprise Security Suite** - Multi-layer protection with security headers, bot detection, and threat analysis
 - **GitHub Security Integration** - Automated vulnerability scanning, dependency updates, and security policies
@@ -23,6 +103,59 @@ A modern Todo application with **Advanced Security Suite**, **Full Calendar Inte
 - **Global Compatibility** - Perfect for worldwide GitHub projects with international support
 - **Complete Security Fix** - Zero unauthorized data access possible with dual-layer protection
 - **Zero Vulnerabilities** - All GitHub Security Alerts resolved with ReDoS protection
+- **Modular Architecture** - Professional code organization following industry best practices
+
+## Project Management Features
+
+### Task Organization & Project Structure
+- **Project Creation** - Create and manage projects with automatic task counting
+- **Task Assignment** - Assign tasks to specific projects with one-to-many relationship
+- **Project Overview** - Visual project grouping with task count indicators
+- **Hierarchical Organization** - Structured task management with project-based filtering
+- **Auto-Delete Functionality** - Automatic cleanup of empty projects when last task is deleted
+- **Project Analytics** - Track completion rates and progress by project
+
+### Project Management API Endpoints
+```
+# Create new project
+POST /projects
+{
+  "name": "Website Redesign",
+  "description": "Complete website overhaul project"
+}
+
+# Get all user projects with task counts
+GET /projects
+
+# Update project details
+PUT /projects/:id
+{
+  "name": "Updated Project Name",
+  "description": "Updated description"
+}
+
+# Delete project (only if no tasks assigned)
+DELETE /projects/:id
+
+# Get tasks by project
+GET /projects/:id/tasks
+
+# Assign task to project
+POST /tasks
+{
+  "text": "Design new homepage",
+  "projectId": 1,
+  "dueDate": "2025-07-30"
+}
+```
+
+### Project Features in Action
+- **Grouped Task View** - Tasks organized by project with collapsible sections
+- **Project Statistics** - Real-time task count and completion tracking per project
+- **Smart Project Management** - Automatic cleanup prevents empty project clutter
+- **Project-Based Filtering** - Filter tasks by project for focused work sessions
+- **Cross-Project Analytics** - Compare progress across different projects
+- **Project Assignment UI** - Intuitive dropdown selection when creating tasks
 
 ## Calendar Integration Features
 
@@ -33,14 +166,16 @@ A modern Todo application with **Advanced Security Suite**, **Full Calendar Inte
 - **Calendar Analytics** - Task completion rates by date and deadline statistics
 - **Date Updates** - Modify task due dates with real-time calendar sync
 - **Calendar View** - Organized task display with date-based grouping
+- **Project-Calendar Integration** - Calendar views showing tasks grouped by both project and date
 
 ### Calendar API Endpoints
 ```
-# Create task with due date
+# Create task with due date and project
 POST /tasks
 {
   "text": "Important meeting preparation",
-  "dueDate": "2025-07-30"
+  "dueDate": "2025-07-30",
+  "projectId": 1
 }
 
 # Update task due date
@@ -50,23 +185,23 @@ PUT /tasks/:id
   "dueDate": "2025-07-31"
 }
 
-# Get tasks by date range
+# Get tasks by date range (includes project information)
 GET /tasks/calendar?start=2025-07-28&end=2025-08-03
 
-# Get overdue tasks
+# Get overdue tasks with project grouping
 GET /tasks/overdue
 
-# Get today's tasks
+# Get today's tasks organized by project
 GET /tasks/today
 ```
 
 ### Calendar Features in Action
-- **Overdue Tasks** - Automatically highlighted past-due items with priority styling
-- **Today's Tasks** - Current day tasks with special emphasis and completion tracking
-- **Tomorrow's Tasks** - Next day planning with preparation indicators
-- **This Week View** - Weekly task overview with deadline distribution
-- **No Date Tasks** - Flexible tasks without specific deadlines
-- **Progress Tracking** - Calendar-based completion statistics and trends
+- **Overdue Tasks** - Automatically highlighted past-due items with priority styling and project context
+- **Today's Tasks** - Current day tasks with special emphasis, completion tracking, and project grouping
+- **Tomorrow's Tasks** - Next day planning with preparation indicators organized by project
+- **This Week View** - Weekly task overview with deadline distribution across projects
+- **No Date Tasks** - Flexible tasks without specific deadlines organized by project
+- **Progress Tracking** - Calendar-based completion statistics and trends with project breakdowns
 
 ## GitHub Security Integration
 
@@ -245,6 +380,7 @@ const handleGetTasks = async function (req, res) {
 - **Backend Protection**: Empty array for unauthorized requests  
 - **Data Isolation**: Zero data leak possible
 - **User Privacy**: Complete separation of user data
+- **Project Data Security**: Project information protected with same security model
 - **Production Ready**: Deployed with all security fixes
 - **GitHub Security Alerts**: **ALL RESOLVED** - Zero vulnerabilities remaining
 
@@ -265,6 +401,7 @@ const handleGetTasks = async function (req, res) {
 - **Performance Analysis** - Response time tracking, slow request detection, and optimization insights
 - **Health Status Monitoring** - Automated system health checks with issue detection
 - **Security Event Tracking** - Bot attacks, rate limit violations, and threat analysis
+- **Project Analytics** - Project creation rates, task assignment patterns, and project completion statistics
 
 ### Enhanced Bot Protection
 - **Honeypot Detection** - Invisible form fields for bot identification
@@ -308,7 +445,8 @@ GET /security/stats
     "botProtection": true,
     "tasksEndpointSecurity": "FIXED",
     "redosVulnerability": "ELIMINATED",
-    "calendarIntegration": "ACTIVE"
+    "calendarIntegration": "ACTIVE",
+    "projectManagement": "ACTIVE"
   }
 }
 ```
@@ -347,6 +485,13 @@ GET /monitoring/analytics
     "overdueTasksCount": 12,
     "todayTasksCount": 8,
     "calendarQueriesPerHour": 45
+  },
+  "projects": {
+    "totalProjects": 15,
+    "projectsWithTasks": 12,
+    "averageTasksPerProject": 7.2,
+    "emptyProjectsAutoDeleted": 3,
+    "projectCreationRate": 2.1
   }
 }
 ```
@@ -380,6 +525,12 @@ GET /monitoring/health
     "status": "fully_integrated",
     "dateValidation": "active",
     "calendarFeatures": "all_operational"
+  },
+  "projects": {
+    "status": "fully_integrated",
+    "projectManagement": "active",
+    "autoDelete": "operational",
+    "taskAssignment": "functional"
   }
 }
 ```
@@ -407,6 +558,11 @@ GET /monitoring/realtime
     "activeDateFilters": 3,
     "todayTasksActive": 5,
     "overdueDetections": 2
+  },
+  "projects": {
+    "activeProjects": 8,
+    "projectTasksCreated": 2,
+    "autoDeleteTriggered": 0
   }
 }
 ```
@@ -455,27 +611,39 @@ Static File Hosting   ←→    Security Headers + CSP
 Global CDN            ←→    Bot Protection + Rate Limiting  
 Auto SSL              ←→    Real-time Monitoring + Analytics
                             ReDoS-Safe Email Validation + JWT Auth
-                            SQLite Database + Calendar Integration
+                            SQLite Database + Calendar + Projects Integration
                             Health Monitoring + Date Validation
                             Tasks Endpoint Security (FIXED)
+                            Project Management + Auto-Delete
                             GitHub Security Integration (Complete)
                             Zero Vulnerabilities Status (ACHIEVED)
+                            Modular Architecture (Frontend + Backend)
 ```
 
 ### Deployment Stack
-- **Frontend**: Vercel (Static Hosting, Global CDN, Auto SSL)
-- **Backend**: Render (Node.js Server with Security Suite, Persistent Storage, Auto SSL)
-- **Database**: better-sqlite3 (High-performance, persistent, with user relations and calendar support)
+- **Frontend**: Vercel (Static Hosting, Global CDN, Auto SSL, Modular Architecture)
+- **Backend**: Render (Node.js Server with Security Suite, Persistent Storage, Auto SSL, Express Best Practices)
+- **Database**: better-sqlite3 (High-performance, persistent, with user relations, calendar support, and project management)
 - **Authentication**: JWT Token-based with bcryptjs hashing
 - **Security**: Multi-layer protection with CSP, XSS prevention, bot detection
 - **Monitoring**: Real-time analytics, health checks, and performance tracking
 - **Email Validation**: ReDoS-safe international disposable email blocking
 - **Calendar System**: Full date validation and task scheduling integration
+- **Project Management**: Complete task organization with auto-cleanup functionality
 - **GitHub Security**: Automated vulnerability scanning, dependency updates, branch protection
 - **Data Protection**: Complete user isolation with zero unauthorized access
 - **Vulnerability Status**: All GitHub Security Alerts resolved
+- **Code Organization**: Modular architecture following industry best practices
 
 ## Core Features
+
+### Project Management Suite
+- **Project Creation & Management**: Complete CRUD operations for project organization
+- **Task Assignment**: Intuitive project selection during task creation
+- **Hierarchical Organization**: Tasks organized under projects with visual grouping
+- **Auto-Delete Functionality**: Automatic cleanup of empty projects when last task is removed
+- **Project Analytics**: Statistics and progress tracking per project
+- **Project-Task Relations**: One-to-many relationship with referential integrity
 
 ### Calendar Integration Suite
 - **Task Scheduling**: Complete due date management with YYYY-MM-DD format validation
@@ -484,6 +652,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **Calendar Analytics**: Date-based task completion tracking and statistics
 - **Deadline Management**: Visual indicators for task urgency and completion status
 - **Real-time Updates**: Instant calendar sync with task modifications
+- **Project-Calendar Integration**: Calendar views showing tasks grouped by both project and date
 
 ### Enterprise Security Suite
 - **Security Headers**: CSP, XSS protection, frame options, referrer policy
@@ -505,6 +674,7 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **Security Incident Tracking**: Unauthorized access attempts and prevention
 - **Vulnerability Monitoring**: Real-time tracking of security fix effectiveness
 - **Calendar Analytics**: Task scheduling patterns and completion statistics
+- **Project Analytics**: Project creation rates, task distribution, and completion tracking
 
 ### International Email Validation
 - **Comprehensive Coverage**: 268+ blocked disposable domains across multiple languages
@@ -526,18 +696,21 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 
 ### Advanced Task Management
 - **Complete CRUD Operations**: Create, Read, Update, Delete
+- **Project Assignment**: Assign tasks to specific projects with dropdown selection
 - **Calendar Features**: Due date assignment, date updates, calendar filtering
 - **Status Management**: Instant toggle between Open and Completed
 - **Inline Text Editing**: Click-to-edit functionality
-- **Smart Filtering**: Calendar-based task organization and deadline tracking
+- **Smart Filtering**: Calendar-based and project-based task organization
 - **Bulk Operations**: Delete all completed tasks with confirmation
 - **Real-time Statistics**: Progress tracking and completion percentages
 - **User-specific Tasks**: Complete data separation with security enforcement
 - **Secure Data Access**: Zero unauthorized task visibility
 - **Date Analytics**: Task completion tracking by due date and timeline
+- **Project Analytics**: Task completion rates and progress by project
 
 ### Modern User Experience
 - **Responsive Design**: Optimized for mobile and desktop
+- **Project Management Interface**: Intuitive project creation and task assignment
 - **Calendar Interface**: Intuitive date picker and filter system
 - **Authentication Modal**: Smooth login/register transitions
 - **Loading States**: Progress indicators and timeout handling
@@ -547,12 +720,13 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **International UX**: Email provider recognition and feedback
 - **Secure Logout**: Complete data clearing and unauthorized access prevention
 - **Calendar UX**: Visual deadline indicators and timeline organization
+- **Project UX**: Grouped task views and project-based organization
 
 ## Technology Stack
 
 ### Backend
-- **Node.js + Express.js** - High-performance server framework with security middleware
-- **better-sqlite3** - High-performance SQLite with user relations and calendar support
+- **Node.js + Express.js** - High-performance server framework with modular architecture
+- **better-sqlite3** - High-performance SQLite with user relations, calendar support, and project management
 - **JWT** - JSON Web Tokens for stateless authentication
 - **bcryptjs** - Military-grade password hashing
 - **Security Headers Suite** - Custom CSP, XSS protection, and threat detection
@@ -561,16 +735,20 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 - **ReDoS-Safe Email Validation** - Split-based implementation blocking disposable services
 - **Security-Fixed Endpoints** - Dual-layer protection against unauthorized access
 - **Calendar System** - Date validation, task scheduling, and timeline management
+- **Project Management System** - Complete project organization with auto-cleanup functionality
+- **Modular Architecture** - Express best practices with separated concerns
 
 ### Frontend
-- **HTML5 + CSS3 + Vanilla JavaScript** - Modern web standards with security focus
-- **Module Pattern** - Following Douglas Crockford best practices
+- **HTML5 + CSS3 + Vanilla JavaScript** - Modern web standards with modular organization
+- **ES6 Modules** - Clean separation of concerns and maintainable code structure
 - **Fetch API** - Comprehensive timeout and retry handling
 - **LocalStorage** - Secure token management and session persistence
 - **Responsive Design** - CSS Grid/Flexbox for all device sizes
 - **Progressive Enhancement** - Graceful degradation
 - **Security-Aware Frontend** - Token validation and unauthorized access prevention
 - **Calendar Interface** - Date picker, filters, and timeline visualization
+- **Project Management UI** - Project creation, task assignment, and grouped views
+- **Modular CSS** - Separated styles for maintainability and performance
 
 ### DevOps & Deployment
 - **Vercel** - Frontend deployment with global CDN and automatic SSL
@@ -590,22 +768,59 @@ Auto SSL              ←→    Real-time Monitoring + Analytics
 ## Repository Structure
 ```
 todo-app-fullstack/
-├── README.md                    # Professional documentation with security and calendar features
+├── README.md                    # Professional documentation with security, calendar, and project features
 ├── SECURITY.md                  # Security policy and vulnerability reporting guidelines
 ├── LICENSE                      # MIT License
 ├── .gitignore                   # Git ignore patterns with security exclusions
 ├── .github/                     # GitHub configuration and automation
 │   └── dependabot.yml          # Automated dependency updates configuration
 ├── screenshots/                 # Application screenshots
-├── frontend-sqlite/             # Frontend (Deployed on Vercel)
-│   └── index.html              # Complete SPA with calendar integration and security
-├── backend-sqlite/              # Backend with Security Suite (Deployed on Render)
-│   ├── server.js               # Express server with calendar API (SECURITY-FIXED)
-│   ├── security-headers.js     # Security headers suite with CSP and threat detection
-│   ├── monitoring.js           # Advanced monitoring system with real-time analytics
-│   ├── database.js             # better-sqlite3 database with calendar support
-│   ├── package.json            # Node.js dependencies with security enhancements
+├── frontend-sqlite/             # Legacy Frontend (Deployed on Vercel)
+│   └── index.html              # Complete SPA with calendar and project integration
+├── frontend-refactoring/        # NEW: Modular Frontend Architecture
+│   ├── index.html              # Clean HTML structure (300 lines)
+│   ├── styles/                 # Modular CSS architecture
+│   │   ├── main.css           # Base styles and layout
+│   │   ├── components.css     # Component styles
+│   │   └── mobile.css         # Responsive design
+│   └── js/                     # Modular JavaScript architecture
+│       ├── app.js             # Main application coordinator
+│       ├── config/config.js   # Configuration management
+│       ├── utils/             # Helper functions and utilities
+│       ├── services/          # API communication layer
+│       └── components/        # UI component modules
+├── backend-sqlite/              # Legacy Backend (Deployed on Render)
+│   ├── server.js               # Express server with calendar and project API
+│   ├── security-headers.js     # Security headers suite
+│   ├── monitoring.js           # Advanced monitoring system
+│   ├── database.js             # better-sqlite3 database
+│   ├── package.json            # Node.js dependencies
 │   └── .env.example            # Environment variables template
+├── backend-refactoring/         # NEW: Modular Backend Architecture
+│   ├── server.js               # Clean Express coordinator (200 lines)
+│   ├── config/                 # Configuration modules
+│   │   ├── database.js
+│   │   ├── email.js
+│   │   └── security.js
+│   ├── middleware/             # Express middleware modules
+│   │   ├── auth.js
+│   │   ├── validation.js
+│   │   ├── rateLimiting.js
+│   │   └── botProtection.js
+│   ├── routes/                 # API route modules
+│   │   ├── auth.js
+│   │   ├── tasks.js
+│   │   └── projects.js
+│   ├── services/               # Business logic modules
+│   │   ├── AuthService.js
+│   │   ├── TaskService.js
+│   │   ├── ProjectService.js
+│   │   └── EmailService.js
+│   ├── utils/                  # Utility modules
+│   │   ├── EmailValidator.js
+│   │   └── helpers.js
+│   └── models/                 # Database layer
+│       └── database.js
 ├── frontend-optimized/          # Version 2.0 - Enhanced UI (legacy)
 ├── backend-optimized/           # Version 2.0 - Crockford Patterns (legacy)
 └── backend/                     # Version 1.0 - Basic CRUD (legacy)
@@ -677,7 +892,68 @@ Content-Type: application/json
 }
 ```
 
-### Protected Task Endpoints (Security-Fixed + Calendar Integration)
+### Project Management Endpoints
+
+#### Get All User Projects
+```
+GET /projects
+Authorization: Bearer {your-jwt-token}
+```
+
+**Success Response:**
+```
+[
+    {
+        "id": 1,
+        "name": "Website Redesign",
+        "description": "Complete website overhaul",
+        "userId": 1,
+        "taskCount": 5,
+        "completedTasks": 2,
+        "createdAt": "2025-07-28T10:00:00.000Z"
+    }
+]
+```
+
+#### Create New Project
+```
+POST /projects
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+    "name": "Website Redesign",
+    "description": "Complete website overhaul project"
+}
+```
+
+#### Update Project
+```
+PUT /projects/{project-id}
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+    "name": "Updated Project Name",
+    "description": "Updated project description"
+}
+```
+
+#### Delete Project
+```
+DELETE /projects/{project-id}
+Authorization: Bearer {your-jwt-token}
+```
+
+**Note**: Projects can only be deleted if they have no associated tasks. Otherwise, use auto-delete by removing all tasks.
+
+#### Get Project Tasks
+```
+GET /projects/{project-id}/tasks
+Authorization: Bearer {your-jwt-token}
+```
+
+### Protected Task Endpoints (Security-Fixed + Calendar + Project Integration)
 
 #### Get User Tasks
 ```
@@ -686,8 +962,9 @@ Authorization: Bearer {your-jwt-token}
 ```
 **Security**: Returns empty array for unauthorized requests (no data leak possible)
 **Calendar**: Returns tasks with dueDate field for calendar integration
+**Projects**: Returns tasks with project information for organization
 
-#### Create Task (with Calendar Support)
+#### Create Task (with Calendar and Project Support)
 ```
 POST /tasks
 Authorization: Bearer {your-jwt-token}
@@ -695,7 +972,8 @@ Content-Type: application/json
 
 {
     "text": "Complete project proposal",
-    "dueDate": "2025-07-30"
+    "dueDate": "2025-07-30",
+    "projectId": 1
 }
 ```
 
@@ -717,6 +995,18 @@ Content-Type: application/json
 }
 ```
 
+#### Update Task Project Assignment
+```
+PUT /tasks/{task-id}
+Authorization: Bearer {your-jwt-token}
+Content-Type: application/json
+
+{
+    "action": "updateProject",
+    "projectId": 2
+}
+```
+
 #### Update Task Text
 ```
 PUT /tasks/{task-id}/text
@@ -734,6 +1024,8 @@ DELETE /tasks/{task-id}
 Authorization: Bearer {your-jwt-token}
 ```
 
+**Note**: If this is the last task in a project, the project will be automatically deleted (auto-delete functionality).
+
 #### Delete All Completed Tasks
 ```
 DELETE /tasks?status=completed
@@ -742,19 +1034,19 @@ Authorization: Bearer {your-jwt-token}
 
 ### Calendar-Specific Endpoints
 
-#### Get Tasks by Date Range
+#### Get Tasks by Date Range (with Project Information)
 ```
 GET /tasks/calendar?start=2025-07-28&end=2025-08-03
 Authorization: Bearer {your-jwt-token}
 ```
 
-#### Get Overdue Tasks
+#### Get Overdue Tasks (Grouped by Project)
 ```
 GET /tasks/overdue
 Authorization: Bearer {your-jwt-token}
 ```
 
-#### Get Today's Tasks
+#### Get Today's Tasks (with Project Context)
 ```
 GET /tasks/today
 Authorization: Bearer {your-jwt-token}
@@ -793,8 +1085,8 @@ GET /health
 ```
 {
     "status": "ok",
-    "message": "EMAIL VERIFICATION TODO SERVER WITH CALENDAR IS RUNNING",
-    "version": "EMAIL-VERIFICATION-CALENDAR-2.0-REDOS-SECURITY-FIXED",
+    "message": "EMAIL VERIFICATION TODO SERVER WITH CALENDAR AND PROJECT MANAGEMENT IS RUNNING",
+    "version": "EMAIL-VERIFICATION-CALENDAR-PROJECTS-2.1-REDOS-SECURITY-FIXED",
     "emailValidation": {
         "type": "international",
         "blockedDomains": 268,
@@ -810,6 +1102,12 @@ GET /health
         "timezoneSupport": "UTC",
         "validationLevel": "comprehensive"
     },
+    "projects": {
+        "status": "fully_integrated",
+        "features": ["project_creation", "task_assignment", "auto_delete", "project_analytics"],
+        "relationshipType": "one_to_many",
+        "autoDelete": "enabled"
+    },
     "security": {
         "rateLimiting": "active",
         "botProtection": "comprehensive", 
@@ -819,6 +1117,12 @@ GET /health
         "tasksEndpointSecurity": "COMPLETELY_FIXED",
         "redosProtection": "ACTIVE",
         "githubSecurityAlerts": "ALL_RESOLVED"
+    },
+    "architecture": {
+        "frontend": "modular",
+        "backend": "express_best_practices",
+        "codeReduction": "90_percent",
+        "maintainability": "enterprise_level"
     }
 }
 ```
@@ -836,8 +1140,10 @@ GET /health
 git clone https://github.com/Max-A92/todo-app-fullstack.git
 cd todo-app-fullstack
 
-# Backend setup
-cd backend-sqlite
+# Backend setup (choose legacy or refactored version)
+cd backend-sqlite          # Legacy version
+# OR
+cd backend-refactoring     # Refactored modular version
 
 # Install dependencies
 npm install
@@ -846,7 +1152,7 @@ npm install
 echo "JWT_SECRET=your-development-secret-key-minimum-32-characters-required" > .env
 echo "NODE_ENV=development" >> .env
 
-# Start backend with security, monitoring & calendar suite
+# Start backend with security, monitoring, calendar & project suite
 node server.js
 ```
 
@@ -855,11 +1161,14 @@ node server.js
 - Security Stats: http://localhost:3000/security/stats
 - Monitoring: http://localhost:3000/monitoring/analytics
 - Calendar Features: Full integration active
+- Project Management: Full integration active
 
 ### Frontend Setup
 ```
 # Open new terminal
-cd frontend-sqlite
+cd frontend-sqlite          # Legacy version
+# OR
+cd frontend-refactoring     # Refactored modular version
 
 # Option 1: VS Code Live Server (recommended)
 # Right-click on index.html → "Open with Live Server"
@@ -873,7 +1182,7 @@ npx http-server -p 8000 --cors
 
 **Frontend runs on**: http://localhost:5500 (Live Server) or http://localhost:8000
 
-## Testing the Security & Calendar Suite
+## Testing the Security, Calendar & Project Management Suite
 
 ### Valid Registration Examples
 ```
@@ -890,9 +1199,9 @@ curl -X POST http://localhost:3000/auth/register \
   -d '{"username":"business_user","email":"user@company-example.com","password":"business_password_456"}'
 ```
 
-### Calendar Feature Testing
+### Project Management Testing
 
-#### Create Task with Due Date
+#### Create and Manage Projects
 ```
 # Login and get token first
 LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/auth/login \
@@ -901,11 +1210,52 @@ LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/auth/login \
 
 TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
 
-# Create task with calendar date
+# Create new project
+curl -X POST http://localhost:3000/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Website Redesign","description":"Complete website overhaul"}'
+
+# Get all projects
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/projects
+
+# Create task assigned to project
 curl -X POST http://localhost:3000/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Complete project deadline","dueDate":"2025-07-30"}'
+  -d '{"text":"Design new homepage","projectId":1,"dueDate":"2025-07-30"}'
+```
+
+#### Test Auto-Delete Functionality
+```
+# Create project with single task, then delete task to trigger auto-delete
+curl -X POST http://localhost:3000/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Project","description":"Will be auto-deleted"}'
+
+curl -X POST http://localhost:3000/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Only task in project","projectId":2}'
+
+# Delete the task - project should be automatically deleted
+curl -X DELETE http://localhost:3000/tasks/2 \
+  -H "Authorization: Bearer $TOKEN"
+
+# Verify project was auto-deleted
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/projects
+```
+
+### Calendar Feature Testing
+
+#### Create Task with Due Date and Project
+```
+# Create task with calendar date and project assignment
+curl -X POST http://localhost:3000/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Complete project deadline","dueDate":"2025-07-30","projectId":1}'
 ```
 
 #### Update Task Due Date
@@ -917,15 +1267,15 @@ curl -X PUT http://localhost:3000/tasks/1 \
   -d '{"action":"updateDate","dueDate":"2025-08-01"}'
 ```
 
-#### Get Calendar-filtered Tasks
+#### Get Calendar-filtered Tasks with Project Information
 ```
-# Get overdue tasks
+# Get overdue tasks with project context
 curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks/overdue
 
-# Get today's tasks
+# Get today's tasks with project grouping
 curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks/today
 
-# Get tasks by date range
+# Get tasks by date range with project information
 curl -H "Authorization: Bearer $TOKEN" \
   "http://localhost:3000/tasks/calendar?start=2025-07-28&end=2025-08-03"
 ```
@@ -995,7 +1345,7 @@ curl http://localhost:3000/monitoring/realtime
 curl http://localhost:3000/health
 ```
 
-### Authentication Flow Testing
+### Complete Authentication + Project + Calendar Flow Testing
 ```
 # Register new user
 REGISTER_RESPONSE=$(curl -s -X POST http://localhost:3000/auth/register \
@@ -1005,28 +1355,89 @@ REGISTER_RESPONSE=$(curl -s -X POST http://localhost:3000/auth/register \
 # Extract token
 TOKEN=$(echo $REGISTER_RESPONSE | jq -r '.token')
 
-# Test authenticated endpoints
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks
+# Create project
+PROJECT_RESPONSE=$(curl -s -X POST http://localhost:3000/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Development Tasks","description":"Daily development work"}')
 
-# Create task with calendar integration
+PROJECT_ID=$(echo $PROJECT_RESPONSE | jq -r '.id')
+
+# Create task with project and calendar integration
 curl -X POST http://localhost:3000/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Test calendar integration","dueDate":"2025-07-29"}'
+  -d "{\"text\":\"Test complete integration\",\"dueDate\":\"2025-07-29\",\"projectId\":$PROJECT_ID}"
+
+# Get all tasks (should show project and calendar information)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/tasks
 ```
 
 ## Development Evolution
 
-This project documents progressive development through 6 major versions:
+This project documents progressive development through 7 major versions:
 
 1. **Version 1.0**: Basic CRUD operations + JSON file storage
 2. **Version 2.0**: Code optimization (Douglas Crockford best practices)
 3. **Version 3.0**: Production ready (SQLite + Auth + multi-user)
 4. **Version 4.0**: International email validation (268+ blocked domains)
 5. **Version 5.0**: Security & Monitoring Suite (enterprise-grade protection)
-6. **Version 6.0**: Calendar Integration + ReDoS Vulnerability Elimination (complete feature set)
+6. **Version 6.0**: Calendar Integration + ReDoS Vulnerability Elimination
+7. **Version 6.1**: Project Management System + Auto-Delete Functionality (complete organizational suite)
+8. **Version 7.0**: Architecture Refactoring (modular frontend and backend following industry best practices)
 
-### Version 6.0 Features (Latest) - Calendar Integration + ReDoS Elimination
+### Version 7.0 Features (Latest) - Architecture Refactoring
+
+#### Complete Code Modernization
+- **Frontend Modularization** - 2898-line monolithic HTML split into 16 specialized modules
+- **Backend Modularization** - 2200-line server.js transformed into Express best practices with 17 modules
+- **90% Code Reduction** - Main files reduced by 90% through proper separation of concerns
+- **ES6 Module System** - Modern JavaScript with clean imports/exports and class-based architecture
+- **CSS Architecture** - Organized styles with main.css, components.css, and mobile.css separation
+- **Express Best Practices** - Professional routing, middleware, services, and configuration management
+
+#### Professional Development Standards
+- **Clean Architecture** - Clear separation of concerns across all layers
+- **Maintainable Codebase** - Easy debugging, testing, and feature development
+- **Team Development Ready** - Parallel development without conflicts or merge issues
+- **Framework Migration Prepared** - Easy transition to React/Vue with existing modular structure
+- **Industry Standards** - Following modern development patterns and best practices
+- **Production-Grade Organization** - Enterprise-level code structure and documentation
+
+#### Development Workflow Improvements
+- **Isolated Module Development** - Each feature can be developed and tested independently
+- **Scalable Architecture** - New features through new modules without touching existing code
+- **Enhanced Testing** - Each module can be unit tested and integration tested separately
+- **Performance Optimization** - Lazy loading, modulular caching, and optimized resource management
+- **Code Quality** - Consistent patterns, clear naming conventions, and comprehensive documentation
+
+### Version 6.1 Features (Project Management System)
+
+#### Complete Project Management Integration
+- **Project-Task Relationship** - One-to-many relationship with referential integrity
+- **Project CRUD Operations** - Complete create, read, update, delete functionality for projects
+- **Task Assignment System** - Intuitive project selection during task creation and modification
+- **Auto-Delete Functionality** - Automatic cleanup of empty projects when last task is removed
+- **Project Analytics** - Real-time statistics including task count and completion tracking
+- **Hierarchical Organization** - Tasks organized under projects with visual grouping
+- **Project-Calendar Integration** - Calendar views showing tasks grouped by both project and date
+
+#### Enhanced User Experience
+- **Grouped Task Views** - Tasks automatically organized by project with collapsible sections
+- **Project Selection UI** - Dropdown interface for easy project assignment during task creation
+- **Project Statistics Display** - Real-time project metrics with task count indicators
+- **Smart Project Management** - Prevents empty project clutter through automatic cleanup
+- **Cross-Project Analytics** - Compare progress and completion rates across different projects
+- **Mobile-Optimized Project UI** - Touch-friendly project management on all devices
+
+#### Database Enhancements
+- **Projects Table** - Dedicated project storage with user relations and metadata
+- **Foreign Key Relationships** - Proper relational integrity between users, projects, and tasks
+- **Cascading Operations** - Automatic cleanup and referential integrity maintenance
+- **Performance Optimization** - Indexed queries for efficient project-based task retrieval
+- **Data Consistency** - Transactional operations ensuring data integrity across related tables
+
+### Version 6.0 Features (Calendar Integration + ReDoS Elimination)
 
 #### Full Calendar Integration
 - **Task Scheduling System** - Complete due date management with YYYY-MM-DD format validation
@@ -1113,6 +1524,22 @@ This project documents progressive development through 6 major versions:
 
 ## Performance & Scalability
 
+### Architecture Performance Benefits
+- **Modular Loading** - Frontend modules load independently for faster initial page loads
+- **Code Splitting** - CSS and JavaScript separated for optimal caching strategies
+- **Maintainability Performance** - 90% reduction in code complexity improves development speed
+- **Build Optimization** - Modular structure enables advanced build tool optimizations
+- **Team Development Speed** - Parallel development capabilities without conflicts
+- **Debugging Efficiency** - Issues isolated to specific modules for faster resolution
+
+### Project Management Performance
+- **Efficient project queries** with optimized database indexes for user-project relationships
+- **Smart auto-delete logic** with minimal overhead and transactional consistency
+- **Optimized project-task joins** with indexed foreign key relationships
+- **Real-time project statistics** with efficient aggregation queries
+- **Scalable project organization** supporting unlimited projects per user
+- **Minimal project overhead** with lazy loading and efficient data structures
+
 ### Calendar Performance
 - **Efficient date processing** with optimized parsing and validation
 - **Smart filtering algorithms** with indexed database queries for calendar views
@@ -1131,7 +1558,7 @@ This project documents progressive development through 6 major versions:
 - **ReDoS-free validation** with constant time complexity for all inputs
 
 ### Application Performance
-- **Enhanced database optimization** with indexed relations, foreign keys, and calendar support
+- **Enhanced database optimization** with indexed relations, foreign keys, calendar support, and project management
 - **Frontend caching** with LocalStorage and intelligent task caching
 - **Global CDN delivery** via Vercel with security headers
 - **Comprehensive error handling** with user feedback and automatic retry
@@ -1139,6 +1566,8 @@ This project documents progressive development through 6 major versions:
 - **Secure data loading** without performance impact
 - **Split-based email validation** providing better performance than regex
 - **Calendar UI optimization** with efficient date rendering and filter performance
+- **Project UI optimization** with efficient project grouping and hierarchical rendering
+- **Modular Architecture Benefits** with improved loading times and resource optimization
 
 ### Scalability Features
 - **Stateless JWT authentication** enables horizontal scaling with security tracking
@@ -1149,6 +1578,8 @@ This project documents progressive development through 6 major versions:
 - **Scalable security architecture** with minimal resource overhead
 - **Performance-optimized validation** with deterministic processing times
 - **Calendar scalability** with efficient date indexing and query optimization
+- **Project scalability** with indexed project-task relationships supporting unlimited projects
+- **Modular Scalability** with independent module scaling and optimization capabilities
 
 ## Security Features
 
@@ -1160,6 +1591,7 @@ This project documents progressive development through 6 major versions:
 - **Real-time Threat Detection** with security scoring and suspicious pattern analysis
 - **Tasks Endpoint Security** with dual-layer protection and zero data leak possibility
 - **ReDoS Protection** with complete elimination of Regular Expression Denial of Service vulnerabilities
+- **Project Data Security** with user isolation and access control for project information
 
 ### Authentication Security
 - **Enhanced JWT Security** with configurable expiration and secure signing
@@ -1179,6 +1611,14 @@ This project documents progressive development through 6 major versions:
 - **Complete Data Protection** with frontend and backend security layers
 - **DoS Protection** with input length limits and deterministic processing
 
+### Project Management Security
+- **Project Data Isolation** with user-specific project access and complete privacy between accounts
+- **Project Injection Prevention** with sanitized project name and description processing
+- **Auto-Delete Security** with transactional operations preventing data inconsistency
+- **Project Access Control** with JWT validation for all project operations
+- **Foreign Key Protection** with referential integrity enforcement
+- **Project Query Security** with user-scoped queries preventing cross-user access
+
 ### Calendar Security
 - **Date Input Validation** with comprehensive format checking and injection prevention
 - **Calendar Injection Prevention** with sanitized date processing and SQL protection
@@ -1196,54 +1636,64 @@ This project documents progressive development through 6 major versions:
 ## Deployment
 
 ### Production Deployment
-- **Frontend**: Deployed on Vercel with global CDN and security headers
-- **Backend**: Deployed on Render with persistent storage and comprehensive monitoring
+- **Frontend**: Deployed on Vercel with global CDN and security headers (using modular architecture)
+- **Backend**: Deployed on Render with persistent storage and comprehensive monitoring (using Express best practices)
 - **SSL**: Automatic HTTPS on both platforms with security header enforcement
 - **Monitoring**: Health checks, uptime monitoring, and security analytics
 - **Security**: Multi-layer protection with real-time threat detection
 - **Calendar System**: Full integration with date validation and filtering
+- **Project Management**: Complete project organization with auto-delete functionality
 - **GitHub Integration**: Complete automated security scanning and dependency management
 - **Security Fixes Deployed**: Live application includes ReDoS protection and tasks endpoint security
 - **Zero Vulnerabilities**: All GitHub Security Alerts resolved in production
+- **Modular Architecture**: Professional code organization deployed with optimal performance
 
-## Recent Updates (v6.0)
-- **Calendar Integration**: Complete task scheduling system with due dates and smart filtering
-- **Date Validation Engine**: Comprehensive YYYY-MM-DD format validation with error handling
-- **Calendar Analytics**: Task completion tracking by deadline and timeline statistics
-- **Smart Filtering System**: Today, Overdue, Tomorrow, This Week, No Date filters
-- **ReDoS Vulnerability Elimination**: Complete removal of Regular Expression Denial of Service attack vectors
-- **Split-based Email Validation**: Deterministic processing without exponential complexity
-- **GitHub Security Alerts Resolution**: All security vulnerabilities resolved (zero remaining)
-- **Performance Enhancement**: Constant time validation for all email inputs
-- **Production Security**: Zero attack surface with maintained functionality
-- **DoS Protection**: Input length limits and safe processing patterns
+## Recent Updates (v7.0)
+- **Architecture Refactoring**: Complete transformation from monolithic to modular architecture
+- **Frontend Modularization**: 2898-line index.html split into 16 specialized modules with 90% code reduction
+- **Backend Modularization**: 2200-line server.js transformed into Express best practices with 17 modules
+- **CSS Organization**: Separated into main.css, components.css, and mobile.css for maintainability
+- **JavaScript Modules**: ES6 module system with clean separation of concerns and modern architecture
+- **Express Best Practices**: Professional routing, middleware, services, and configuration management
+- **Team Development Ready**: Parallel development capabilities without conflicts
+- **Framework Migration Prepared**: Easy transition to React/Vue with existing modular structure
+- **Performance Optimization**: Enhanced loading times, caching strategies, and resource management
+- **Code Quality Standards**: Following industry best practices and clean architecture principles
+- **Enterprise-Level Organization**: Professional code structure suitable for large-scale applications
+- **Documentation Enhancement**: Comprehensive documentation of architectural decisions and patterns
 
 ## Contributing
 
-I welcome contributions from developers worldwide! The complete security suite, monitoring features, and calendar integration make this project enterprise-ready.
+I welcome contributions from developers worldwide! The complete security suite, monitoring features, calendar integration, project management system, and modular architecture make this project enterprise-ready.
 
-### Security & Calendar-Focused Contributions Welcome
+### Security, Calendar, Project & Architecture Focused Contributions Welcome
 - Security feature enhancements and vulnerability reports
 - Calendar system improvements and date handling optimizations
+- Project management enhancements and organizational features
+- Architecture improvements and code organization enhancements
 - Monitoring improvements and analytics enhancements
 - International security testing from different regions
 - Performance optimization and scalability improvements
 - Security documentation and best practices
 - Calendar UI/UX enhancements and accessibility improvements
+- Project organization and workflow improvements
+- Modular architecture enhancements and design pattern improvements
 
 ### How to Contribute
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/calendar-enhancement`)
+2. Create a feature branch (`git checkout -b feature/architecture-enhancement`)
 3. Test thoroughly with security tools and international scenarios
-4. Commit your changes (`git commit -m 'Add calendar enhancement'`)
-5. Push to the branch (`git push origin feature/calendar-enhancement`)
-6. Open a Pull Request with detailed security and calendar analysis
+4. Commit your changes (`git commit -m 'Add modular architecture enhancement'`)
+5. Push to the branch (`git push origin feature/architecture-enhancement`)
+6. Open a Pull Request with detailed security, calendar, project, and architecture analysis
 
 **Note**: Due to branch protection rules, all changes to the main branch require pull requests. This ensures code quality and security review for all contributions.
 
 ### Testing Guidelines
 - Test all security features with various scenarios
 - Verify calendar functionality across different date ranges and timezones
+- Test project management with various project-task relationships and auto-delete scenarios
+- Test modular architecture functionality and module independence
 - Verify monitoring endpoints provide accurate data
 - Ensure rate limiting works across different ranges
 - Test bot protection with automated tools
@@ -1251,6 +1701,8 @@ I welcome contributions from developers worldwide! The complete security suite, 
 - **Test unauthorized access scenarios** to verify data protection
 - **Test ReDoS protection** with complex email patterns
 - **Test calendar date validation** with edge cases and invalid formats
+- **Test project auto-delete functionality** with single and multiple task scenarios
+- **Test modular loading and performance** with various network conditions
 - Follow the pull request workflow for all contributions
 
 ### Security Reporting
@@ -1267,7 +1719,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Author
 **Maximilian Adam**
 - GitHub: [@Max-A92](https://github.com/Max-A92)
-- Email: max.adam.dev@gmail.com
 
 ## Acknowledgments
 - Security Community for testing and vulnerability feedback
@@ -1275,6 +1726,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Open Source Security Projects for inspiration and best practices
 - Monitoring and Analytics Community for performance insights
 - Calendar and Task Management Community for scheduling system insights
+- Project Management Community for organizational system feedback and best practices
+- Architecture and Design Pattern Community for modular development guidance
 - GitHub Community for making this globally accessible with security focus
 - GitHub Security Team for excellent automated security tools and responsible disclosure features
 - Vercel & Render for excellent deployment platforms with security support
@@ -1312,7 +1765,7 @@ curl -X POST https://todo-app-fullstack-fdvh.onrender.com/auth/register \
   -d '{"username":"redos_test","email":"a@aaaaaaaaaaaaaaaa.com","password":"test123"}'
 # Expected: Fast rejection without server hang
 
-# Test calendar features (with authentication)
+# Test project management features (with authentication)
 # 1. Login first to get token
 LOGIN_RESPONSE=$(curl -s -X POST https://todo-app-fullstack-fdvh.onrender.com/auth/login \
   -H "Content-Type: application/json" \
@@ -1320,15 +1773,25 @@ LOGIN_RESPONSE=$(curl -s -X POST https://todo-app-fullstack-fdvh.onrender.com/au
 
 TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.token')
 
-# 2. Create task with due date
+# 2. Create project
+curl -X POST https://todo-app-fullstack-fdvh.onrender.com/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Project","description":"Testing project management"}'
+
+# 3. Create task with project and calendar integration
 curl -X POST https://todo-app-fullstack-fdvh.onrender.com/tasks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"text":"Test calendar integration","dueDate":"2025-07-30"}'
+  -d '{"text":"Test complete integration","dueDate":"2025-07-30","projectId":1}'
 
-# 3. Get today's tasks
+# 4. Get today's tasks with project information
 curl -H "Authorization: Bearer $TOKEN" \
   https://todo-app-fullstack-fdvh.onrender.com/tasks/today
+
+# 5. Get all projects with task counts
+curl -H "Authorization: Bearer $TOKEN" \
+  https://todo-app-fullstack-fdvh.onrender.com/projects
 ```
 
-**Full-Stack Development with Complete GitHub Security Integration and Calendar System - From Basic CRUD to Production-Ready Global Application with Enterprise-Grade Security, Calendar Integration, Zero Vulnerabilities, and Professional Development Workflow**
+**Full-Stack Development with Complete GitHub Security Integration, Calendar System, Project Management, and Modular Architecture - From Basic CRUD to Production-Ready Global Application with Enterprise-Grade Security, Calendar Integration, Project Organization, Zero Vulnerabilities, Professional Development Workflow, and Industry-Standard Code Organization**

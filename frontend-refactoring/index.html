@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>📋 Todo App</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/mobile.css">
+</head>
+<body>
+    <div class="app-header">
+        <h1>📋 Todo App</h1>
+        
+        <!-- Connection Status -->
+        <div class="connection-status">
+            <div class="status-indicator" id="connectionStatus"></div>
+            <span id="connectionText">Connecting...</span>
+        </div>
+        
+        <!-- Auth Controls -->
+        <div class="auth-controls">
+            <div id="guestControls">
+                <button class="auth-button" onclick="showAuthModal('login')">🔑 Anmelden</button>
+                <button class="auth-button" onclick="showAuthModal('register')">👤 Registrieren</button>
+            </div>
+            <div id="userControls" style="display: none;">
+                <div class="user-info">
+                    <span>👋 <span id="currentUsername"></span></span>
+                    <span class="verification-status" id="verificationStatus"></span>
+                    <button class="auth-button" onclick="logout()">🚪 Abmelden</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error Banner -->
+    <div id="errorBanner" class="error-banner">
+        <span id="errorMessage"></span>
+        <button onclick="hideErrorBanner()" style="float: right; background: none; border: none; color: #721c24; cursor: pointer; font-size: 20px; font-weight: bold; width: 30px; height: 30px; border-radius: 50%; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(114,28,36,0.1)'" onmouseout="this.style.backgroundColor='transparent'">&times;</button>
+    </div>
+    
+    <!-- E-Mail-Verifikation Banner -->
+    <div id="verificationBanner" class="verification-banner">
+        <span id="verificationMessage"></span>
+        <button id="resendVerificationBtn" class="resend-verification" style="display: none;">
+            📧 E-Mail erneut senden
+        </button>
+    </div>
+
+    <!-- E-Mail-Verifikation Sektion -->
+    <div id="emailVerificationSection" class="email-verification-section">
+        <h3>📧 E-Mail-Bestätigung erforderlich</h3>
+        <p>Bitte prüfe deine E-Mails und klicke auf den Bestätigungslink.</p>
+        <p>Noch keine E-Mail erhalten? 
+            <button id="resendVerificationBtn2" class="resend-verification">
+                📧 Erneut senden
+            </button>
+        </p>
+    </div>
+    
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAuthModal()" aria-label="Modal schließen">&times;</button>
+            
+            <div class="modal-header">
+                <h2>🔐 Anmeldung</h2>
+            </div>
+            
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchAuthTab('login')">Anmelden</button>
+                <button class="modal-tab" onclick="switchAuthTab('register')">Registrieren</button>
+            </div>
+            
+            <div id="authMessages"></div>
+            
+            <!-- Login Form with Bot Protection -->
+            <form id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="Benutzername" required autocomplete="username">
+                <input type="password" id="loginPassword" placeholder="Passwort" required autocomplete="current-password">
+                
+                <!-- HONEYPOT FIELDS (unsichtbar für Menschen, sichtbar für Bots) -->
+                <input type="text" name="website" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="email" name="email_confirm" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="phone" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                
+                <!-- TIMING FIELD (für Eingabe-Geschwindigkeit) -->
+                <input type="hidden" name="formTimestamp" id="loginTimestamp">
+                
+                <button type="submit">🔑 Anmelden</button>
+            </form>
+            
+            <!-- Register Form with Enhanced Bot Protection -->
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="registerUsername" placeholder="Benutzername (3-30 Zeichen)" required autocomplete="username">
+                <input type="email" id="registerEmail" placeholder="E-Mail-Adresse" required autocomplete="email">
+                <input type="password" id="registerPassword" placeholder="Passwort (min. 6 Zeichen)" required autocomplete="new-password">
+                
+                <!-- ERWEITERTE HONEYPOT FIELDS (mehr Felder für Registration) -->
+                <input type="text" name="website" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="email" name="email_confirm" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="phone" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="fax" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="url" name="url" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <input type="text" name="homepage" style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important; height:0 !important; width:0 !important;" autocomplete="off" tabindex="-1" aria-hidden="true">
+                
+                <!-- TIMING FIELD -->
+                <input type="hidden" name="formTimestamp" id="registerTimestamp">
+                
+                <button type="submit">👤 Registrieren</button>
+                <div id="providerInfo" class="provider-info" style="display: none;"></div>
+                <div id="registerTimingInfo" class="timing-info" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Hauptinhalt -->
+    <div id="appContent">
+        <!-- User Welcome Message -->
+        <div id="userWelcome" class="welcome-message" style="display: none;">
+            🎉 Willkommen zurück! Hier sind Ihre persönlichen To-Dos.
+        </div>
+        
+        <!-- PROJECT MANAGEMENT SECTION - NEU! -->
+        <div id="projectSection" class="project-section" style="display: none;">
+            <h2>📁 Projekt-Verwaltung</h2>
+            <div class="project-management">
+                <input type="text" id="newProjectName" class="project-input" placeholder="Neues Projekt erstellen..." maxlength="100">
+                <button id="addProjectBtn" class="btn-add-project">📁 Projekt hinzufügen</button>
+            </div>
+        </div>
+        
+        <!-- Filter-Sektion für Kalender -->
+        <div class="filter-section" id="filterSection" style="display: none;">
+            <div class="filter-buttons">
+                <span><strong>📅 Filter:</strong></span>
+                <button class="filter-btn active" onclick="filterTasks('all')">Alle</button>
+                <button class="filter-btn" onclick="filterTasks('overdue')">🔴 Überfällig</button>
+                <button class="filter-btn" onclick="filterTasks('today')">🟡 Heute</button>
+                <button class="filter-btn" onclick="filterTasks('tomorrow')">🔵 Morgen</button>
+                <button class="filter-btn" onclick="filterTasks('week')">📅 Diese Woche</button>
+                <button class="filter-btn" onclick="filterTasks('no-date')">📝 Ohne Datum</button>
+            </div>
+        </div>
+        
+        <!-- Neue Aufgabe hinzufügen -->
+        <div class="add-section">
+            <div class="input-row">
+                <input type="text" id="taskText" placeholder="Neue Aufgabe eingeben..." maxlength="500">
+                <select id="projectSelect" class="project-select">
+                    <option value="">Projekt auswählen...</option>
+                </select>
+                <input type="date" id="taskDate" title="Fälligkeitsdatum (optional)">
+            </div>
+            <div class="button-row">
+                <button id="addButton">➕ Hinzufügen</button>
+                <button class="btn-cleanup" id="cleanupButton">🧹 Alle Erledigten löschen</button>
+            </div>
+        </div>
+        
+        <!-- Aufgabenliste -->
+        <ul id="taskList"></ul>
+        
+        <!-- Statistiken -->
+        <div class="stats" id="stats">
+            📊 Lade Statistiken...
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
